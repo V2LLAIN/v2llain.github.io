@@ -3,48 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>V2LLAIN - Researcher Homepage</title>
+  <title>V2LLAIN | Deep Learning Researcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0d1117;
+      --text: #c9d1d9;
+      --accent: #58a6ff;
+      --muted: #8b949e;
+    }
+
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0 auto;
-      max-width: 800px;
-      padding: 40px 20px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
       line-height: 1.6;
-      background-color: #fdfdfd;
-      color: #222;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
     }
+
     h1, h2 {
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 5px;
+      color: white;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 0.3em;
+      margin-top: 2em;
     }
+
     nav {
       text-align: center;
-      margin-bottom: 40px;
+      margin: 2rem 0;
     }
+
     nav a {
-      margin: 0 15px;
+      color: var(--accent);
+      margin: 0 1rem;
       text-decoration: none;
-      color: #333;
-      font-weight: bold;
+      font-weight: 600;
     }
-    section {
-      margin-bottom: 40px;
+
+    nav a:hover {
+      text-decoration: underline;
     }
-    .pub-title {
-      font-weight: bold;
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
     }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
     .links a {
-      margin-right: 10px;
-      color: royalblue;
-      text-decoration: none;
+      margin-right: 0.8rem;
     }
   </style>
 </head>
 <body>
 
   <h1>V2LLAIN</h1>
-  <p>Deep Learning Researcher | Computer Vision · NLP · Multimodal · Deepfake</p>
+  <p class="muted">Deep Learning Researcher · Vision · Multimodal · Deepfake</p>
 
   <nav>
     <a href="#about">About</a>
@@ -55,28 +84,35 @@
   </nav>
 
   <section id="about">
-    <h2>About Me</h2>
+    <h2>About</h2>
     <p>
-      I'm a graduate student and deep learning researcher interested in Computer Vision, Multimodal Language Models, and Deepfake Detection.
-      Currently working on drone detection models based on Fast R-CNN and multimodal dialogue systems.
+      I'm a deep learning researcher interested in computer vision, NLP, and multimodal models.  
+      My current focus is on drone detection, vision-language models, and AI safety related to deepfakes.
     </p>
   </section>
 
   <section id="research">
     <h2>Research Interests</h2>
     <ul>
-      <li>Computer Vision (CV)</li>
-      <li>Multimodal LLMs</li>
-      <li>Visual-Language Models</li>
-      <li>Deepfake Detection</li>
+      <li>Computer Vision (Object Detection, Tracking)</li>
+      <li>Multimodal Large Language Models (VLM, LMM)</li>
+      <li>Deepfake Detection & Generation</li>
+      <li>Human-AI Interaction & Feedback Systems</li>
     </ul>
   </section>
 
   <section id="projects">
     <h2>Projects</h2>
     <ul>
-      <li><strong>Dronacharya:</strong> A Fast R-CNN-based drone detection framework (Keras-Retinanet)</li>
-      <li><strong>Multimodal Chatbot:</strong> LoRA fine-tuning for real-time feedback and conversation evaluation</li>
+      <li>
+        <strong>Dronacharya:</strong> Fast R-CNN-based drone detection with Keras-Retinanet  
+        <span class="links">
+          <a href="https://github.com/V2LLAIN/Dronacharya">[GitHub]</a>
+        </span>
+      </li>
+      <li>
+        <strong>Multimodal Chatbot:</strong> LoRA-finetuned feedback-based conversation agent
+      </li>
     </ul>
   </section>
 
@@ -84,7 +120,7 @@
     <h2>Publications</h2>
     <ul>
       <li>
-        <span class="pub-title">Dronacharya: Fast R-CNN based Drone Detection (2024)</span><br/>
+        <strong>Dronacharya: Fast R-CNN based Drone Detection</strong>, 2024  
         <span class="links">
           <a href="#">[PDF]</a>
           <a href="https://github.com/V2LLAIN/Dronacharya">[GitHub]</a>
