@@ -30,35 +30,35 @@
           {% if site.resume_avatar == 'true' %}
           <img src="images/photo.jpg" alt="{{ site.resume_name }}" class="profile-img" itemprop="image">
           {% endif %}
-          <h1 class="sidebar-name" itemprop="name">{{ site.resume_name }}</h1>
-          <p class="sidebar-title" itemprop="jobTitle">Ph.D Student</p>
-          <p class="sidebar-affiliation">MICV Lab, Yonsei University</p>
+          <h1 class="sidebar-name" itemprop="name">Hyeongchan Im</h1>
+          <p class="sidebar-title" itemprop="jobTitle">M.S Student</p>
+          <p class="sidebar-affiliation">MINT Lab, Chung-Ang University</p>
         </div>
 
         <p class="sidebar-interests">
-          Researching <span class="typed-text" id="typed" data-phrases='["Video Understanding", "Human-AI Interaction", "Sign Language", "Nonverbal Communication"]'></span><span class="type-cursor" aria-hidden="true">|</span>
+          Researching <span class="typed-text" id="typed" data-phrases='["Multimodal Learning", "VLAS: Vision-Language-Action Model With Speech", "Speech Processing"]'></span><span class="type-cursor" aria-hidden="true">|</span>
         </p>
 
         <!-- social icons -->
         <div class="sidebar-social">
           {% if site.resume_social_links.resume_github_url %}
-          <a href="{{ site.resume_social_links.resume_github_url }}" target="_blank" rel="noopener" title="GitHub" itemprop="sameAs"><i class="fab fa-github"></i></a>
+          <a href="https://github.com/V2LLAIN/" target="_blank" rel="noopener" title="GitHub" itemprop="sameAs"><i class="fab fa-github"></i></a>
           {% endif %}
           {% if site.resume_social_links.resume_linkedin_url %}
-          <a href="{{ site.resume_social_links.resume_linkedin_url }}" target="_blank" rel="noopener" title="LinkedIn" itemprop="sameAs"><i class="fab fa-linkedin"></i></a>
+          <a href="https://www.linkedin.com/in/hc-im-948571281/" target="_blank" rel="noopener" title="LinkedIn" itemprop="sameAs"><i class="fab fa-linkedin"></i></a>
           {% endif %}
           {% if site.resume_contact_email %}
-          <a href="mailto:{{ site.resume_contact_email }}" title="Email" itemprop="email"><i class="fas fa-envelope"></i></a>
+          <a href="mailto:chan4im@gmail.com" title="Email" itemprop="email"><i class="fas fa-envelope"></i></a>
           {% endif %}
         </div>
 
         <!-- CV / Scholar buttons -->
         <div class="sidebar-buttons">
           {% if site.resume_cv_path %}
-          <a href="{{ site.resume_cv_path | relative_url }}" class="btn btn-primary" target="_blank"><i class="fas fa-file-alt"></i> Curriculum Vitae</a>
+          <a href="{{ site.resume_cv_path | relative_url }}" class="btn btn-primary" target="_blank"><i class="fas fa-file-alt"></i> Curriculum Vitæ</a>
           {% endif %}
           {% if site.resume_social_links.resume_google_scholar_url %}
-          <a href="{{ site.resume_social_links.resume_google_scholar_url }}" class="btn btn-outline" target="_blank" rel="noopener"><i class="fas fa-graduation-cap"></i> Google Scholar</a>
+          <a href="https://scholar.google.com/citations?user=-N-JkeQAAAAJ&hl=en" class="btn btn-outline" target="_blank" rel="noopener"><i class="fas fa-graduation-cap"></i> Google Scholar</a>
           {% endif %}
         </div>
 
@@ -97,19 +97,22 @@
         <section id="about" class="about-section">
           <h2 class="about-heading">About Me</h2>
           <p class="about-text" itemprop="description">
-            Hello! I'm Youngmin Kim. I'm currently a researcher at Yonsei University in the
-            <a href="https://micv.yonsei.ac.kr" target="_blank" rel="noopener">Medical Imaging &amp; Computer Vision Lab</a>,
-            advised by <a href="https://micv.yonsei.ac.kr/seongjae" target="_blank" rel="noopener">Prof. Seong Jae Hwang</a>.
-            Previously, during my Master's course, I was advised by <a href="#">Prof. Youngjae Yu</a>.
+
+            Hello World! I'm Hyeongchan Im. I'm currently a researcher at Chung-Ang University in the
+            <a href="https://mintlab.cau.ac.kr" target="_blank" rel="noopener">Multimodal INTelligence Lab</a>,
+            advised by <a href="https://scholar.google.co.kr/citations?user=F2KQSKUAAAAJ&hl=en" target="_blank" rel="noopener">Prof. Ji-Hoon Kim</a>.
+            
           </p>
           <p class="about-text">
-            My research centers on how AI can understand <strong>videos</strong> and connect that understanding to
-            <strong>human perception and communication</strong>, with a particular focus on
-            <strong>nonverbal expression</strong> and <strong>sign language</strong>.
+
+            My research centers on <strong>Multimodal Learning</strong> with a core focus on 
+            <strong>Vision-Language-Action Models with Speech</strong>, a particular focus on
+            <strong> VLAS </strong> to bridge the gap between AI perception and human communication.
+
           </p>
           <div class="about-contact">
             <span><i class="fas fa-map-marker-alt"></i> Seoul, South Korea</span>
-            <span><i class="fas fa-envelope"></i> <a href="mailto:{{ site.resume_contact_email }}">{{ site.resume_contact_email }}</a></span>
+            <span><i class="fas fa-envelope"></i> <a href="mailto:{{ site.resume_contact_email }}">chan4im@gmail.com</a></span>
           </div>
           <div class="status-badge">
             <span class="status-dot"></span>
@@ -139,11 +142,12 @@
         <section id="publications" class="section">
           <div class="section-header">
             <h2>Publications</h2>
+            <p>authors: <sup>†</sup> indicates equal contribution</p>
             <div class="line"></div>
           </div>
           <div class="pub-filters no-print">
             <button class="pub-filter active" data-filter="all">All</button>
-            <button class="pub-filter" data-filter="first">First Author</button>
+            <!-- <button class="pub-filter" data-filter="first">First Author</button> -->
           </div>
           <div class="pub-grid">
             {% for publication in site.data.publications %}
@@ -161,7 +165,7 @@
                 <p class="pub-authors" itemprop="author">
                   {% assign author_list = publication.authors | split: ", " %}
                   {% for author in author_list %}
-                    {% if author contains "Youngmin Kim" %}<span class="me">{{ author }}</span>{% else %}{{ author }}{% endif %}{% unless forloop.last %}, {% endunless %}
+                    {% if author contains "Hyeongchan Im" %}<span class="me">{{ author }}</span>{% else %}{{ author }}{% endif %}{% unless forloop.last %}, {% endunless %}
                   {% endfor %}
                 </p>
                 <div class="pub-links">
@@ -215,18 +219,18 @@
         {% endif %}
 
         <!-- Visitors -->
-        <section id="visitors" class="section">
+        <!-- <section id="visitors" class="section">
           <button type="button" class="section-header visitor-toggle" aria-expanded="false" aria-controls="visitor-map">
             <h2>Visitors</h2>
             <div class="line"></div>
           </button>
           <div class="visitor-stats">
-            <div class="visitor-details" id="visitor-map">
+            <div class="visitor-details" id="visitor-map"> -->
               <!-- Flag Counter (지도 스타일): 방문자 국가별 지도 + 총 방문자 수. 관리: https://info.flagcounter.com/8u3k -->
-              <a href="https://info.flagcounter.com/8u3k"><img loading="lazy" src="https://s01.flagcounter.com/map/8u3k/size_l/txt_000000/border_CCCCCC/pageviews_1/viewers_0/flags_0/" alt="Flag Counter" border="0"></a>
+              <!-- <a href="https://info.flagcounter.com/8u3k"><img loading="lazy" src="https://s01.flagcounter.com/map/8u3k/size_l/txt_000000/border_CCCCCC/pageviews_1/viewers_0/flags_0/" alt="Flag Counter" border="0"></a>
             </div>
           </div>
-        </section>
+        </section> -->
 
         <footer class="page-footer">
           <p>&copy; {{ site.resume_name }} &middot; <a href="mailto:{{ site.resume_contact_email }}">{{ site.resume_contact_email }}</a></p>

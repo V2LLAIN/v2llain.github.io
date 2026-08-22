@@ -1,11 +1,11 @@
 # Site settings
-title: "Youngmin Kim"
+title: "Hyeongchan Im"
 description: "A resume template for Jekyll and GitHub Pages sites."
 
 
 
 baseurl: ""
-url: "https://winston1214.github.io"
+url: "https://v2llain.github.io"
 # Build settings
 markdown: kramdown
 sass:
@@ -15,11 +15,11 @@ sass:
 # Resume settings
 resume_theme: default
 resume_avatar:                  "true"
-resume_name:                    "Youngmin Kim"
+resume_name:                    "Hyeongchan Im"
 resume_title:                   ""
 
 # used for the contact button in _layouts/resume.html
-resume_contact_email:           "winston1214@yonsei.ac.kr"
+resume_contact_email:           "chan4im@gmail.com"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       "555-7334"
@@ -49,9 +49,9 @@ resume_section_associations:    true
 # Resume social links
 # uncomment the options you wish to display, and add your own URL
 resume_social_links:
-  resume_github_url:            "https://github.com/winston1214"
-  resume_google_scholar_url:    "https://scholar.google.co.kr/citations?user=0_3A0Z4AAAAJ"
-  resume_linkedin_url:          "https://www.linkedin.com/in/youngmin-kim-b799291b8/"
+  resume_github_url:            "https://github.com/V2LLAIN/"
+  resume_google_scholar_url:    "https://scholar.google.com/citations?user=-N-JkeQAAAAJ&hl=en"
+  resume_linkedin_url:          "https://www.linkedin.com/in/hc-im-948571281/"
 resume_print_social_links:      true
 
 # CV file path for download icon

@@ -1,106 +1,13 @@
-- title: "QWERTY: Training-Free Motion Control via Query-Warped Video Diffusion Transformers"
-  authors: Kyobin Choo, Youngmin Kim, Hyunkyung Han, Geunrip Park, Chanyoung Kim, Sunyoung Jung, Seong Jae Hwang
-  url: https://arxiv.org/abs/2607.01869
-  journal: "ECCV 2026"
-  image: qwerty.png
-  summary: <strong>TLDR;</strong> We propose <strong>QWERTY</strong>, a training-free motion control framework for image-to-video DiTs that warps semantic queries and uses self-guided latent optimization to achieve precise user-defined motion without fine-tuning.
+# - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
+#   authors: Hyeongchan Im, Ji-Hoon Kim 
+#   url: https://openreview.net/pdf?id=BbBFlzGx8Q
+#   journal: "Under Review"
+#   image: IMFD.png
+#   summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image..
 
-- title: "Towards Continuous Sign Language Conversation from Isolated Signs"
-  authors: Youngmin Kim, Kyobin Choo, Jiwoo Park, Minseo Kim,  Chanyoung Kim, Junhyeok Kim, Seong Jae Hwang
-  url: https://arxiv.org/abs/2605.14705
+- title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
+  authors: Dasom Choi<sup>†</sup>, Sangjun Moon<sup>†</sup>, Hyeongchan Im<sup>†</sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura 
+  url: https://openreview.net/pdf?id=BbBFlzGx8Q
   journal: "Under Review"
-  image: signavox.png
-  summary: <strong>TLDR;</strong> We propose <strong>SignaVox</strong>, a sign-centered framework that scales 3D sign conversation data from isolated signs and enables direct sign-to-sign response generation.
-
-- title: "Attention Weight as a Hierarchical Tree in ViT"
-  authors: Junhyeok Kim, Minseo Kim, Seil Kang, Youngmin Kim, Seong Jae Hwang
-  url: https://arxiv.org/abs/xxxx.xxxx
-  journal: "Under Review"
-  coming_soon: true
-  image: attention_weight.png
-  summary: <strong>TLDR;</strong> We propose a <strong>QK-tree</strong> framework that decomposes ViT attention into semantically meaningful query-key pair clusters, enabling interpretable analysis and training-free object localization across diverse ViT backbones.
-
-- title: "Sparse Feature Analysis and Control for Robust Vision-Language-Action Models"
-  authors: Minseo Kim, Junhyeok Kim, Jinyeong Kim, Youngmin Kim, Seong Jae Hwang
-  url: https://arxiv.org/abs/xxxx.xxxx
-  journal: "Under Review"
-  image: sae_vla.png
-  summary: <strong>TLDR;</strong> We show that sparse autoencoder features can detect and mitigate visual-perturbation failures in VLA models through feature-level steering.
-  coming_soon: true
-
-- title: "ViKey: Enhancing Temporal Understanding in Videos via Visual Prompting"
-  authors: Yeonkyung Lee*, Dayun Ju*, Youngmin Kim, Seil Kang, Seong Jae Hwang
-  url: https://arxiv.org/abs/2603.23186
-  journal: "CVPR 2026"
-  image: vikey.png
-  summary: <strong>TLDR;</strong> We propose <strong>ViKey</strong>, a training-free framework that enhances temporal reasoning in VideoLLMs by combining visual prompting with a Keyword-Frame Mapping (KFM) module, achieving dense-frame performance with only 20% of the frames.
-
-- title: "SlumpGuard: An AI-Powered Real-Time System for Automated Concrete Slump Prediction via Video Analysis"
-  authors: Youngmin Kim, Giyeong Oh, Kwangsoo Youm*, Youngjae Yu*
-  url: https://arxiv.org/abs/2507.10171
-  journal: "Automation in Construction (IF: 11.5)"
-  image: slumpguard.jpg
-  project: https://winston1214.github.io/SlumpGuard/
-  summary: <strong>TLDR;</strong> We introduce <strong>SlumpGuard</strong>, an AI-powered, real-time video analysis system for fully automated concrete slump prediction at construction sites, supported by a large-scale dataset of over 6,000 real-world videos of concrete discharge.
-
-- title: "MAVL: A Multilingual Audio-Video Lyrics Dataset for Animated Song Translation"
-  authors: Woohyun Cho, Youngmin Kim, Sunghyun Lee, Youngjae Yu
-  url: https://arxiv.org/abs/2505.18614
-  journal: EMNLP2025 Main
-  image: MAVL.png
-  project: https://k1064190.github.io/papers/paper1.html
-  summary: <strong>TLDR;</strong> We present <strong>MAVL</strong>, a multimodal benchmark for singable lyrics translation, and <strong>SylAVL-CoT</strong>, a model using audio-video cues and syllable constraints for natural, accurate results.
-
-- title: "Speaking Beyond Language: A Large-Scale Multimodal Dataset for Learning Nonverbal Cues from Video-Grounded Dialogues"
-  authors: Youngmin Kim*, Jiwan Chung*, Jisoo Kim, Sunghyun Lee, Sangkyu Lee, Junhyeok Kim, Cheoljong Yang, Youngjae Yu
-  url: https://arxiv.org/abs/2506.00958
-  dataset: "https://huggingface.co/collections/winston1214/venus"
-  journal: ACL2025 Main
-  image: VENUS_PIPELINE.png
-  summary: <strong>TLDR;</strong> We introduce <strong>VENUS</strong>, a large-scale video dataset for generating and understanding nonverbal expressions, along with <strong>MARS</strong>, a model designed to leverage it.
-
-- title: "Scalp Diagnostic System With Label-Free Segmentation and Training-Free Image Translation"
-  authors: Youngmin Kim*, Saejin Kim*, Hoyeon Moon, Youngjae Yu, Junhyug Noh
-  url: https://arxiv.org/abs/2406.17254
-  journal: MICCAI 2025
-  image: ScalpVision.png
-  project: https://0110tpwls.github.io/scalpvision25/
-  summary: <strong>TLDR;</strong> We introduce <strong>ScalpVision</strong>, an AI system for comprehensive scalp disease and alopecia diagnosis that uses innovative hair segmentation and <strong>DiffuseIT-M</strong>, a generative model for dataset augmentation, to improve severity assessment and prediction accuracy.
-
-- title: "Preprocessing for Keypoint based Sign Language Translation without Glosses"
-  authors: Youngmin Kim, Hyeongboo Baek
-  url: https://arxiv.org/abs/2204.10511
-  journal: "Sensors (IF: 3.847)"
-  image: SLT.png
-  summary: <strong>TLDR;</strong> We introduce the effective preprocessing pipeline for <strong>sign language translation without glosses</strong>, combining skeleton-based motion features, keypoint normalization, and stochastic frame selection to enhance model performance.
-
-
-- title: "A 2-Stage Model for Vehicle Class and Orientation Detection with Photo-Realistic Image Generation"
-  authors: Youngmin Kim*, Donghwa Kang*, Hyeongboo Baek
-  url: https://arxiv.org/abs/2506.01338
-  journal: IEEE BigData 2022
-  image: bigdata.png
-  summary: <strong>TLDR;</strong> We introduce a two-stage vehicle class and orientation detection model using <strong>synthetic-to-real image</strong> translation and meta-table fusion to improve real-world prediction accuracy.
-
-
-- title: "A Study of Tram-Pedestrian Collision Prediction Method Using YOLOv5 and Motion Vector"
-  authors: Youngmin Kim, Hyeonuk Ahn, Heegyun Jeon, Jinpyung Kim, Gyujin Jang, Hyeonchyeol Hwang
-  url: https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002797297
-  journal: "Korea Information Processing Society (KIPS)"
-  image: KIPS.png
-  summary: <strong>TLDR;</strong> (Korean) We introduce a <strong>real-time tram collision prediction system</strong> that combines fast object detection with YOLOv5 and a modified <strong>local dense optical flow</strong> to estimate object speed and predict collision time and probability using a single camera image.
-
-- title: "Pedestrian Accident Prevention Model Using Deep Learning and Optical Flow"
-  authors: Youngmin Kim, Gyujin Jang, Hyunjai Bae, Youngnam Kim, Jinpyung Kim
-  url: https://www.dbpia.co.kr/pdf/pdfView.do?nodeId=NODE10583405&googleIPSandBox=false&mark=0&ipRange=false&accessgl=Y&language=ko_KR&hasTopBanner=true
-  journal: "Korea Computer Congress 2021 (🥇Best Paper Award)"
-  image: KCC.png
-  summary: <strong>TLDR;</strong> (Korean) We introduce a <strong>real-time pedestrian collision prediction system</strong> that uses YOLOv5 for fast object detection and a Local Dense Optical Flow method to quickly estimate pedestrian direction and speed, enabling accurate prediction of collision time and location.
-
-- title: "Optical Flow Estimation Techniques and Recent Research Trends Survey"
-  authors: Youngmin Kim, Hyeonuk Ahn, Jinpyung Kim
-  url: https://kiss.kstudy.com/Detail/Ar?key=3930754
-  journal: "Korea Information Processing Society (KIPS) Special Session"
-  image: Optical_Flow.png
-  summary: <strong>TLDR;</strong> (Korean) We survey recent advances in <strong>optical flow estimation</strong>, comparing traditional and deep learning-based methods, and highlight their applications in autonomous driving, medical imaging, and surveillance systems.
-
+  image: IMFD.png
+  summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image.
