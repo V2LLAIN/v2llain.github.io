@@ -1,16 +1,28 @@
 # Projects
 # uncomment the urls if you wish to display them, and add your own URL
 
-# jazznotes.io
-- project: jazznotes.io
-  role: Founder & Primary Developer
-  duration: 2012 &mdash; Present
-  # url: "#"
-  description: Jazz Notes is an open source node/ember app that helps you keep track of your music compositions and new ideas.
+- project: Medical AI
+  role: Research Intern at KIRC, KAIST
+  duration: Sep.2026 &mdash; Present
+  url: "https://kr.seegene.com/"
+  description: Generates accurate medical reports using rule-based LLMs &
+   Detecting fetal chromosomal abnormalities through NIPT data analysis.
 
-# Springfield Community Outreach Group
-- project: Springfield Community Outreach Group
-  role: Co-Founder & Organizer
-  duration: 2007 &mdash; Present
-  # url: "#"
-  description: SCOG is a local monthly meetup in Springfield where we share opportunities to volunteer in the community and organize support for families and neighborhoods in need of assistance that the community can provide.
+- project: Military RAG-based LLM
+  role: AI Developer at Republic Of Korea Army
+  duration: Feb.2025 &mdash; Aug.2026
+  url: ""
+  description: Developing a military-specific LLM-RAG on Army regulations to provide accurate, reliable, and efficient responses regarding operational and administrative guidelines.
+
+- project: Deepfake Detection
+  role: Undergraduate Intern at GILab, CNU
+  duration: May.2024 &mdash; Aug.2026
+  url: "https://sites.google.com/view/cnugilab/research-and-publication"
+  description: Multimodal deepfake detection using vision-language-model.
+
+
+- project: Domain Adpatation & Out Of Distribution Detection
+  role: Research Intern at CVML Lab, ETRI
+  duration: Jan.2024 &mdash; Feb.2024
+  url: "https://sites.google.com/view/cvml-ust/research/open-world-object-detection"
+  description: Predicting bounding boxes and class labels of known objects while autonomously proposing bounding boxes of unknown objects in open-world environments.

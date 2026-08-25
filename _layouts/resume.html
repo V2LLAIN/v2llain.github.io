@@ -31,12 +31,12 @@
           <img src="images/photo.jpg" alt="{{ site.resume_name }}" class="profile-img" itemprop="image">
           {% endif %}
           <h1 class="sidebar-name" itemprop="name">Hyeongchan Im</h1>
-          <p class="sidebar-title" itemprop="jobTitle">M.S Student</p>
-          <p class="sidebar-affiliation">MINT Lab, Chung-Ang University</p>
+          <p class="sidebar-title" itemprop="jobTitle">Research Intern</p>
+          <p class="sidebar-affiliation">Knowledge Innovation Research Center, KAIST</p>
         </div>
 
         <p class="sidebar-interests">
-          Researching <span class="typed-text" id="typed" data-phrases='["Multimodal Learning", "VLAS: Vision-Language-Action Model With Speech", "Speech Processing"]'></span><span class="type-cursor" aria-hidden="true">|</span>
+          Researching <span class="typed-text" id="typed" data-phrases='["Multimodal Learning", "Medical AI", "Computer Vision"]'></span><span class="type-cursor" aria-hidden="true">|</span>
         </p>
 
         <!-- social icons -->
@@ -68,6 +68,7 @@
           <a href="#news">Latest News</a>
           <a href="#publications">Publications</a>
           <a href="#experience">Research Experience</a>
+          <a href="#projects">Projects</a>
         </nav>
 
         <!-- education -->
@@ -98,16 +99,16 @@
           <h2 class="about-heading">About Me</h2>
           <p class="about-text" itemprop="description">
 
-            Hello World! I'm Hyeongchan Im. I'm currently a researcher at Chung-Ang University in the
-            <a href="https://mintlab.cau.ac.kr" target="_blank" rel="noopener">Multimodal INTelligence Lab</a>,
-            advised by <a href="https://scholar.google.co.kr/citations?user=F2KQSKUAAAAJ&hl=en" target="_blank" rel="noopener">Prof. Ji-Hoon Kim</a>.
+            Hello World! I'm Hyeongchan Im. I'm currently a research intern at KAIST in the
+            <a href="https://kirc.kaist.ac.kr/" target="_blank" rel="noopener">KIRC Lab</a>,
+            advised by <a href="https://kirc.kaist.ac.kr/people_director.html" target="_blank" rel="noopener">Prof. Mun-Yong Yi</a>.
             
           </p>
           <p class="about-text">
 
             My research centers on <strong>Multimodal Learning</strong> with a core focus on 
-            <strong>Vision-Language-Action Models with Speech</strong>, a particular focus on
-            <strong> VLAS </strong> to bridge the gap between AI perception and human communication.
+            <strong>Vision-Language-Action Models</strong>, a particular focus on
+            <strong> Medical AI </strong> to bridge the gap between AI and human communication.
 
           </p>
           <div class="about-contact">
@@ -218,6 +219,43 @@
         </section>
         {% endif %}
 
+        <!-- Projects -->
+        {% if site.data.projects and site.data.projects.size > 0 %}
+        <section id="projects" class="section">
+          <div class="section-header">
+            <h2>Projects</h2>
+            <div class="line"></div>
+          </div>
+
+          <div class="projects-list">
+            {% for project in site.data.projects %}
+            <div class="project-item">
+              <div class="project-header">
+                <h3>
+                  {% if project.url %}
+                  <a href="{{ project.url }}" target="_blank" rel="noopener">
+                    {{ project.project }}
+                  </a>
+                  {% else %}
+                  {{ project.project }}
+                  {% endif %}
+                </h3>
+
+                <span class="project-duration">{{ project.duration }}</span>
+              </div>
+
+              <p class="project-role">{{ project.role }}</p>
+
+              {% if project.description %}
+              <p class="project-description">
+                {{ project.description | markdownify | remove: '<p>' | remove: '</p>' }}
+              </p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
         <!-- Visitors -->
         <!-- <section id="visitors" class="section">
           <button type="button" class="section-header visitor-toggle" aria-expanded="false" aria-controls="visitor-map">
