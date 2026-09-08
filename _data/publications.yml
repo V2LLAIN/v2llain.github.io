@@ -8,6 +8,6 @@
 - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
   authors: Dasom Choi<sup>†</sup>, Sangjun Moon<sup>†</sup>, Hyeongchan Im<sup>†</sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura 
   url: https://openreview.net/pdf?id=BbBFlzGx8Q
-  journal: "Under Review"
+  journal: "AACL-IJCNLP 2026"
   image: IMFD.png
   summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image.
