@@ -3,11 +3,11 @@
 #   url: https://openreview.net/pdf?id=???
 #   journal: "CVPR 2027 Under Review"
 #   image: HCForensics.png
-#   summary: We propose <strong>HCForensics</strong>, ... and ... <strong>HFGM</strong> ..
+#   summary: We introducd <strong>HCForensics</strong>, ... and ... <strong>HFGM</strong>, improving structured forensic grounding ...
 
 - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
   authors: Dasom Choi<sup></sup>, Sangjun Moon<sup></sup>, Hyeongchan Im<sup></sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura 
   url: https://arxiv.org/abs/2609.19693
   journal: "AACL-IJCNLP 2026"
   image: IMFD.png
-  summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image.
+  summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image ...
