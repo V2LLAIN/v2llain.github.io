@@ -1,9 +1,9 @@
-# - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
-#   authors: Hyeongchan Im, Ji-Hoon Kim 
-#   url: https://openreview.net/pdf?id=BbBFlzGx8Q
-#   journal: "Under Review"
-#   image: IMFD.png
-#   summary: We propose <strong>IMFD</strong>, single-stage detection model that utilizes predicted face bounding boxes as visual instruction cues to simultaneously localize multiple faces and detect deepfake forgeries within an image..
+# - title: "HCForensics: "
+#   authors: Hyeongchan Im, SungRae Hong, Mun-Yong Yi. 
+#   url: https://openreview.net/pdf?id=???
+#   journal: "CVPR2027 Under Review"
+#   image: HCForensics.png
+#   summary: We propose <strong>HCForensics</strong>, ... and ... <strong>HFGM</strong> ..
 
 - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
   authors: Dasom Choi<sup></sup>, Sangjun Moon<sup></sup>, Hyeongchan Im<sup></sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura 
