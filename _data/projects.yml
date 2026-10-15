@@ -12,7 +12,7 @@
   role: AI Developer at Republic Of Korea Army
   duration: Feb.2025 &mdash; Aug.2026
   url: ""
-  description: Developing a military-specific LLM-RAG on Army regulations to provide accurate, reliable, and efficient responses regarding operational and administrative guidelines.
+  description: Developing a military-specific LLM-RAG on Army regulations to provide accurate, reliable, and efficient responses regarding operational and administrative guidelines by using Bllossom-8B.
 
 - project: Deepfake Detection
   role: Undergraduate Intern at GILab, CNU
