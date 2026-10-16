@@ -581,8 +581,6 @@ body.dark .lp-fader-slot::before {
   position: absolute; left: 49.19%; top: 51.25%; width: 5.38%; height: 5.62%;
   transform-origin: 50% 0; opacity: 0; pointer-events: none;
 }
-// electric sparks from the mouth on rock songs (drawn in js); bigger than the buddy so bolts can fly out
-.lp-buddy-fx { position: absolute; left: -40%; top: -20%; width: 180%; height: 140%; pointer-events: none; transform-origin: 50% 85.7%; }  // same pivot as the body
 .lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .lp-buddy-note {
   position: absolute; font-size: 15px; line-height: 1; color: #f97316; font-weight: 700;
@@ -593,6 +591,19 @@ body.dark .lp-fader-slot::before {
   0% { transform: translate(0, 0) rotate(-10deg) scale(.6); opacity: 0; }
   15% { opacity: 1; }
   100% { transform: translate(var(--dx, 18px), -46px) rotate(12deg) scale(1.05); opacity: 0; }
+}
+// ⚡ symbols shot from the mouth on rock songs
+.lp-buddy-bolt {
+  position: absolute; display: block; translate: -50% -50%;
+  filter: drop-shadow(0 0 3px rgba(255, 196, 0, .85));
+  animation: lp-bolt var(--dur, 1s) cubic-bezier(.15, .7, .3, 1) forwards;
+}
+.lp-buddy-bolt svg { display: block; width: 100%; height: 100%; }
+@keyframes lp-bolt {
+  0%   { transform: translate(0, 0) scale(.2) rotate(var(--r0, 0deg)); opacity: 0; }
+  14%  { transform: translate(calc(var(--dx) * .2), calc(var(--dy) * .2)) scale(1.2) rotate(var(--r0, 0deg)); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.85) rotate(var(--r1, 0deg)); opacity: 0; }
 }
 .lp-buddy-close {
   position: absolute; top: 0; right: 4px; width: 20px; height: 20px; padding: 0;
