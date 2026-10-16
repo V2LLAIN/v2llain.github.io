@@ -91,10 +91,10 @@
     markActive();
   }
 
-  // While playing, the title runs like a train: it pulls in from the right, slowing down,
-  // stops for a moment (centred, or left-aligned if it is longer than the box),
-  // then speeds off to the left and the next run comes in.
-  var TRAIN_SPEED = 40;     // px per second at cruising speed
+  // While playing, the title runs like a train: it rolls in from the right at a steady pace,
+  // stops dead for a moment (centred, or left-aligned if it is longer than the box),
+  // then rolls off to the left at the same pace and the next run comes in.
+  var TRAIN_SPEED = 28;     // px per second (same pace as the original ticker)
   var TRAIN_STOP = 1.8;     // seconds standing at the platform
   var ticker = null;
   var reduceMotionTitle = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -108,15 +108,15 @@
     var boxW = titleEl.parentNode.clientWidth, textW = titleEl.offsetWidth;
     if (!boxW || !textW) return;
     var stopX = textW <= boxW ? (boxW - textW) / 2 : 0;
-    var tIn = 1.5 * (boxW - stopX) / TRAIN_SPEED;          // eased, so a bit longer than linear
-    var tOut = 1.5 * (stopX + textW) / TRAIN_SPEED;
+    var tIn = (boxW - stopX) / TRAIN_SPEED;
+    var tOut = (stopX + textW) / TRAIN_SPEED;
     var total = tIn + TRAIN_STOP + tOut;
     ticker = titleEl.animate([
-      { transform: 'translateX(' + boxW + 'px)', offset: 0, easing: 'cubic-bezier(.15, .55, .3, 1)' },      // arriving: brake
+      { transform: 'translateX(' + boxW + 'px)', offset: 0 },                    // arriving
       { transform: 'translateX(' + stopX + 'px)', offset: tIn / total },
-      { transform: 'translateX(' + stopX + 'px)', offset: (tIn + TRAIN_STOP) / total, easing: 'cubic-bezier(.6, 0, .85, .45)' }, // departing: accelerate
+      { transform: 'translateX(' + stopX + 'px)', offset: (tIn + TRAIN_STOP) / total },  // stopped, then departing
       { transform: 'translateX(' + (-textW) + 'px)', offset: 1 }
-    ], { duration: total * 1000, iterations: Infinity });
+    ], { duration: total * 1000, iterations: Infinity, easing: 'linear' });
   }
 
   // ---------- track list panel ----------
