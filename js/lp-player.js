@@ -16,6 +16,10 @@
   var root = document.getElementById('lp-player');
   if (!root) return;
 
+  // iPhone / iPad (iPadOS reports itself as a Mac with touch)
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (IOS) root.classList.add('is-ios');
+
   var SECONDS_PER_TURN = 10;   // slow LP-like spin
   var SPIN_EASE = 0.7;         // seconds to spin up / slow down
 
@@ -337,6 +341,10 @@
   // Create the audio graph from a click (browsers only allow audio contexts after a user gesture).
   function ensureAudioGraph() {
     if (actx || !viz) return;
+    // iOS Safari pauses Web Audio when you leave the page, which would cut the music.
+    // There the <audio> element plays on its own (keeps going in the background);
+    // the bars and the singer animate from a built-in rhythm instead of the real spectrum.
+    if (IOS) return;
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     try {
@@ -410,7 +418,9 @@
     var dt = vizLast ? Math.min((ts - vizLast) / 1000, 0.1) : 0.016;
     vizLast = ts;
     var playing = !audio.paused && analyser;
+    var simulated = !audio.paused && !analyser;
     if (playing) analyser.getByteFrequencyData(freq);
+    var tNow = ts / 1000, beatPh = (tNow * 2) % 1;
     var active = false;
     for (var b = 0; b < BARS; b++) {
       var target = 0;
@@ -423,6 +433,10 @@
         // overall loudness sets the base height, the jump above the running level makes it bounce
         target = v < 0.08 ? 0 : Math.max(0, Math.min(1, 0.2 + 0.75 * (v - 0.3) / 0.55 + 3.2 * (v - mean[b])));
       }
+      if (simulated) {                                      // no audio data (iPhone): a lively stand-in
+        var env = Math.exp(-beatPh * 5) * (1 - b / BARS * 0.6);
+        target = Math.max(0, Math.min(1, 0.25 + 0.2 * Math.sin(tNow * (1.7 + b * 0.37) + b * 1.3) + 0.12 * Math.sin(tNow * (4.1 + b * 0.53)) + 0.5 * env));
+      }
       // fast attack, slower release -> the bars "jump" on beats
       levels[b] = target > levels[b] ? target : Math.max(target, levels[b] - dt * 2.2);
       if (levels[b] >= peaks[b]) { peaks[b] = levels[b]; peakHold[b] = 0.35; }
@@ -431,7 +445,7 @@
       if (levels[b] > 0.001 || peaks[b] > 0.001) active = true;
     }
     drawViz();
-    if (playing || active) vizRaf = requestAnimationFrame(vizFrame);
+    if (playing || simulated || active) vizRaf = requestAnimationFrame(vizFrame);
     else vizLast = 0;
   }
   function startViz() { if (vctx && !vizRaf) { vizLast = 0; vizRaf = requestAnimationFrame(vizFrame); } }
@@ -639,9 +653,9 @@
       var sway = playing ? Math.sin(buddyT * 2.4) * 3 : 0;
       var breathe = playing ? 0 : Math.sin(buddyT * 1.6) * 0.8;
       bob.style.transform = 'translateY(' + (-hop * 7 + breathe).toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(' + (1 + hop * 0.025).toFixed(3) + ',' + (1 - hop * 0.02 + kick * 0.0).toFixed(3) + ')';
-      // shut: the drawing's own pink triangle shows; open: a dark mouth that drops open over it
+      // shut: the face image has a closed mouth; open: the drawing's pink triangle mouth drops open over it
       mouthEl.style.opacity = mouth > 0.08 ? 1 : 0;
-      mouthEl.style.transform = 'scale(' + (1 + mouth * 0.25).toFixed(3) + ',' + (0.9 + mouth * 1.4).toFixed(3) + ')';
+      mouthEl.style.transform = 'scale(' + (0.85 + mouth * 0.3).toFixed(3) + ',' + (0.55 + mouth * 0.95).toFixed(3) + ')';
       if (playing && mouth > 0.3) { noteIn -= dt; if (noteIn <= 0) { spawnNote(); noteIn = 0.55 + Math.random() * 0.5; } }
       buddyRaf = requestAnimationFrame(buddyFrame);
     };
@@ -685,6 +699,43 @@
     window.addEventListener('resize', function () { if (buddy.style.top) { var r = buddy.getBoundingClientRect(); place(r.left, r.top); } });
 
     if (stored('lp-buddy')) setBuddy(true, false);
+  }
+
+  // ---------- lock screen / Control Center / media keys ----------
+  // Shows the song on the iPhone lock screen and macOS Now Playing, and lets the
+  // play/pause, next and previous buttons there (and keyboard media keys) drive this player.
+  if ('mediaSession' in navigator && N) {
+    var ms = navigator.mediaSession;
+    var artwork = [{ src: base + 'artwork-512.jpg', sizes: '512x512', type: 'image/jpeg' }];
+    var splitTitle = function (t) {
+      var m = t.match(/^(.*?)\s*-\s*([^-]+)$/);
+      if (!m) return { title: t, artist: '' };
+      var artist = m[2].trim();
+      return { title: m[1].trim(), artist: artist.charAt(0).toUpperCase() + artist.slice(1) };
+    };
+    var updateMeta = function () {
+      var p = splitTitle(prettyTitle(tracks[index]));
+      try { ms.metadata = new MediaMetadata({ title: p.title, artist: p.artist, album: 'v2llain.github.io', artwork: artwork }); } catch (e) {}
+    };
+    var updatePos = function () {
+      var d = audio.duration;
+      if (!(d > 0) || !isFinite(d) || !ms.setPositionState) return;
+      try { ms.setPositionState({ duration: d, playbackRate: audio.playbackRate || 1, position: Math.min(d, audio.currentTime || 0) }); } catch (e) {}
+    };
+    var act = function (name, fn) { try { ms.setActionHandler(name, fn); } catch (e) {} };
+    act('play', function () { audio.play().catch(function () {}); });
+    act('pause', function () { audio.pause(); });
+    act('previoustrack', function () { if (audio.currentTime > 3) audio.currentTime = 0; else step(-1); audio.play().catch(function () {}); });
+    act('nexttrack', function () { step(1); audio.play().catch(function () {}); });
+    act('seekto', function (d) { if (d && d.seekTime != null) { audio.currentTime = d.seekTime; updatePos(); } });
+    act('seekbackward', function (d) { audio.currentTime = Math.max(0, audio.currentTime - ((d && d.seekOffset) || 10)); updatePos(); });
+    act('seekforward', function (d) { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + ((d && d.seekOffset) || 10)); updatePos(); });
+    audio.addEventListener('loadstart', updateMeta);
+    audio.addEventListener('loadedmetadata', updatePos);
+    audio.addEventListener('seeked', updatePos);
+    audio.addEventListener('play', function () { ms.playbackState = 'playing'; updateMeta(); updatePos(); });
+    audio.addEventListener('pause', function () { ms.playbackState = 'paused'; updatePos(); });
+    updateMeta();
   }
 
   // ---------- keep playing across page reloads ----------

@@ -157,11 +157,8 @@
           <div class="lp-buddy" hidden>
             <div class="lp-buddy-bob">
               <img class="lp-buddy-img" src="{{ '/images/player/buddy-singer.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" width="372" height="320" draggable="false">
-              <!-- open mouth drawn over the pink triangle; hidden when the mouth is shut -->
-              <svg class="lp-buddy-mouth" viewBox="0 0 18 16" aria-hidden="true" focusable="false">
-                <path d="M1.2 1.5 Q9 .2 16.8 1.5 Q12 9 9.6 14.6 Q9 15.6 8.4 14.6 Q6 9 1.2 1.5 Z" fill="#5b1a1f" stroke="#3b0d10" stroke-width="1.2" stroke-linejoin="round"/>
-                <path d="M5.2 8.6 Q9 6.8 12.8 8.6 Q10.6 12.8 9.5 14.3 Q9 15 8.5 14.3 Q7.4 12.8 5.2 8.6 Z" fill="#e8798a"/>
-              </svg>
+              <!-- open mouth: the drawing's own pink triangle, shown only while singing (the face underneath has it shut) -->
+              <img class="lp-buddy-mouth" src="{{ '/images/player/buddy-mouth.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" draggable="false">
             </div>
             <div class="lp-buddy-notes" aria-hidden="true"></div>
             <button type="button" class="lp-buddy-close" aria-label="Hide singing buddy">&times;</button>
