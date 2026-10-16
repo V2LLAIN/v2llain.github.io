@@ -429,7 +429,20 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 }
 .lp-toggle .fa-play { margin-left: 2px; }
 .lp-toggle:hover:not(:disabled) { transform: scale(1.1); background: rgba(17, 17, 17, .85); }
-.lp-controls { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 220px; margin-top: 10px; }
+// playback progress: thin grey track, orange played part; click / drag / arrow keys to seek
+.lp-progress {
+  position: relative; width: 100%; max-width: 200px; height: 14px; margin-top: 12px;
+  cursor: pointer; touch-action: none;
+}
+.lp-progress::before, .lp-progress-fill {
+  content: ""; position: absolute; left: 0; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 3px;
+}
+.lp-progress::before { right: 0; background: var(--border-strong); }
+.lp-progress-fill { width: 100%; background: #f97316; transform-origin: left center; transform: scaleX(0); }
+.lp-progress:hover::before, .lp-progress:hover .lp-progress-fill { height: 5px; margin-top: -2.5px; }
+.lp-progress:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.lp-progress.is-disabled { cursor: default; opacity: .5; }
+.lp-controls { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 220px; margin-top: 4px; }
 .lp-prev, .lp-next {
   flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
   background: transparent; color: var(--text-secondary); font-size: 12px;

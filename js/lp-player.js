@@ -113,6 +113,49 @@
     if (tracks.length) titleEl.textContent = 'Cannot play: ' + prettyTitle(tracks[index]);
   });
 
+  // ---------- progress bar ----------
+  var bar = root.querySelector('.lp-progress');
+  var fill = root.querySelector('.lp-progress-fill');
+  var barRaf = 0, dragging = false;
+
+  function drawProgress() {
+    var d = audio.duration, f = d > 0 && isFinite(d) ? Math.min(1, audio.currentTime / d) : 0;
+    fill.style.transform = 'scaleX(' + f + ')';
+    bar.setAttribute('aria-valuenow', Math.round(f * 100));
+  }
+  function barLoop() {
+    drawProgress();
+    barRaf = audio.paused ? 0 : requestAnimationFrame(barLoop);
+  }
+  function seekTo(clientX) {
+    var d = audio.duration;
+    if (!(d > 0) || !isFinite(d)) return;
+    var r = bar.getBoundingClientRect();
+    audio.currentTime = Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * d;
+    drawProgress();
+  }
+  bar.addEventListener('pointerdown', function (e) {
+    if (!tracks.length) return;
+    dragging = true;
+    try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+    seekTo(e.clientX);
+  });
+  bar.addEventListener('pointermove', function (e) { if (dragging) seekTo(e.clientX); });
+  bar.addEventListener('pointerup', function () { dragging = false; });
+  bar.addEventListener('pointercancel', function () { dragging = false; });
+  bar.addEventListener('keydown', function (e) {
+    var d = audio.duration;
+    if (!(d > 0) || !isFinite(d)) return;
+    if (e.key === 'ArrowRight') audio.currentTime = Math.min(d, audio.currentTime + 5);
+    else if (e.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - 5);
+    else return;
+    e.preventDefault();
+    drawProgress();
+  });
+  ['loadedmetadata', 'timeupdate', 'seeked', 'emptied'].forEach(function (ev) { audio.addEventListener(ev, drawProgress); });
+  audio.addEventListener('play', function () { if (!barRaf) barRaf = requestAnimationFrame(barLoop); });
+  if (!tracks.length) bar.classList.add('is-disabled');
+
   // ---------- disc rendering ----------
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var discCanvas = document.createElement('canvas');
