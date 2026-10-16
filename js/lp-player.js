@@ -316,7 +316,7 @@
   var viz = root.querySelector('.lp-viz');
   var vctx = viz ? viz.getContext('2d') : null;
   var BARS = 14, SEGS = 9;
-  var actx = null, analyser = null, freq = null;
+  var actx = null, analyser = null, freq = null, bassNode = null, gainNode = null;
   var levels = new Float32Array(BARS), peaks = new Float32Array(BARS), peakHold = new Float32Array(BARS);
   var mean = new Float32Array(BARS);       // slow running level per band, so beats stand out above it
   var vizRaf = 0, vizLast = 0, bandLo = [], bandHi = [];
@@ -334,8 +334,17 @@
       analyser.smoothingTimeConstant = 0.6;
       analyser.minDecibels = -85;
       analyser.maxDecibels = -8;           // headroom: loud masters no longer pin every bar to the top
-      srcNode.connect(analyser);
-      analyser.connect(actx.destination);
+      // source -> bass shelf -> analyser (bars see the bass change) -> volume -> speakers
+      bassNode = actx.createBiquadFilter();
+      bassNode.type = 'lowshelf';
+      bassNode.frequency.value = 150;
+      gainNode = actx.createGain();
+      srcNode.connect(bassNode);
+      bassNode.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(actx.destination);
+      audio.volume = 1;                    // the gain node takes over the volume
+      applyMix();
       freq = new Uint8Array(analyser.frequencyBinCount);
       // log-spaced bands from 40 Hz to 14 kHz
       var nyq = actx.sampleRate / 2, n = analyser.frequencyBinCount;
@@ -419,6 +428,84 @@
     audio.addEventListener('play', function () { resumeAudio(); startViz(); });
     audio.addEventListener('pause', startViz);   // let the bars fall back down
   }
+
+  // ---------- volume / bass faders ----------
+  var vol = 80, bassDb = 0;
+  try {
+    var savedMix = JSON.parse(localStorage.getItem('lp-mix'));
+    if (savedMix) { vol = Math.max(0, Math.min(100, +savedMix.vol)); bassDb = Math.max(-12, Math.min(12, +savedMix.bass)); }
+    if (isNaN(vol)) vol = 80; if (isNaN(bassDb)) bassDb = 0;
+  } catch (e) {}
+
+  function applyMix() {
+    var g = Math.pow(vol / 100, 2);                         // feels even across the travel
+    if (bassDb > 0) g *= Math.pow(10, -bassDb * 0.5 / 20);  // a little headroom so boosted bass doesn't clip
+    if (gainNode && actx) {
+      gainNode.gain.setTargetAtTime(g, actx.currentTime, 0.02);
+      bassNode.gain.setTargetAtTime(bassDb, actx.currentTime, 0.02);
+    } else {
+      audio.volume = Math.max(0, Math.min(1, g));
+    }
+  }
+
+  function setupFader(el, min, max, step, def, get, set, show) {
+    var slot = el.querySelector('.lp-fader-slot'), valEl = el.querySelector('.lp-fader-val');
+    function render() {
+      var v = get();
+      slot.style.setProperty('--p', ((v - min) / (max - min)).toFixed(4));
+      slot.setAttribute('aria-valuenow', v);
+      slot.setAttribute('aria-valuetext', show(v));
+      valEl.textContent = show(v);
+    }
+    function commit(v) {
+      v = Math.round(Math.max(min, Math.min(max, v)) / step) * step;
+      if (v === get()) return;
+      set(v); render(); applyMix();
+      try { localStorage.setItem('lp-mix', JSON.stringify({ vol: vol, bass: bassDb })); } catch (e) {}
+    }
+    function fromY(y) {
+      var r = slot.getBoundingClientRect(), knob = 11;
+      var p = 1 - (y - r.top - knob / 2) / (r.height - knob);
+      commit(min + Math.max(0, Math.min(1, p)) * (max - min));
+    }
+    var dragging = false;
+    slot.addEventListener('pointerdown', function (e) {
+      ensureAudioGraph(); resumeAudio();
+      dragging = true; slot.classList.add('is-dragging');
+      try { slot.setPointerCapture(e.pointerId); } catch (err) {}
+      fromY(e.clientY); e.preventDefault();
+    });
+    slot.addEventListener('pointermove', function (e) { if (dragging) fromY(e.clientY); });
+    function end() { dragging = false; slot.classList.remove('is-dragging'); }
+    slot.addEventListener('pointerup', end);
+    slot.addEventListener('pointercancel', end);
+    slot.addEventListener('dblclick', function () { commit(def); });   // double-click: back to default
+    slot.addEventListener('keydown', function (e) {
+      var k = e.key, v = get();
+      if (k === 'ArrowUp' || k === 'ArrowRight') v += step;
+      else if (k === 'ArrowDown' || k === 'ArrowLeft') v -= step;
+      else if (k === 'PageUp') v += step * 5;
+      else if (k === 'PageDown') v -= step * 5;
+      else if (k === 'Home') v = min;
+      else if (k === 'End') v = max;
+      else return;
+      e.preventDefault(); ensureAudioGraph(); resumeAudio(); commit(v);
+    });
+    slot.addEventListener('wheel', function (e) {
+      e.preventDefault(); ensureAudioGraph(); resumeAudio();
+      commit(get() + (e.deltaY < 0 ? step : -step));
+    }, { passive: false });
+    render();
+  }
+
+  var volFader = root.querySelector('.lp-fader[data-kind="vol"]');
+  var bassFader = root.querySelector('.lp-fader[data-kind="bass"]');
+  if (volFader) setupFader(volFader, 0, 100, 1, 80,
+    function () { return vol; }, function (v) { vol = v; }, function (v) { return String(v); });
+  if (bassFader) setupFader(bassFader, -12, 12, 1, 0,
+    function () { return bassDb; }, function (v) { bassDb = v; },
+    function (v) { return v > 0 ? '+' + v : String(v); });
+  applyMix();
 
   // ---------- keep playing across page reloads ----------
   // Remembers the track, position and whether it was playing. After a reload it picks up at the

@@ -86,9 +86,28 @@
         <div class="lp-player no-print" id="lp-player"
              data-asset="{{ '/images/player/' | relative_url }}"
              data-w="359" data-h="408" data-dx="12" data-dy="60" data-ds="336">
-          <div class="lp-stage" style="background-image: url('{{ '/images/player/cover.webp' | relative_url }}');">
-            <canvas class="lp-canvas" width="359" height="408" aria-hidden="true"></canvas>
-            <button type="button" class="lp-btn lp-toggle" aria-label="Play"><i class="fas fa-play" aria-hidden="true"></i></button>
+          <div class="lp-deck">
+            <div class="lp-faders">
+              <div class="lp-fader" data-kind="vol">
+                <span class="lp-fader-val">80</span>
+                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Volume" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80">
+                  <div class="lp-fader-knob"></div>
+                </div>
+                <span class="lp-fader-label">VOL</span>
+              </div>
+              <div class="lp-fader" data-kind="bass">
+                <span class="lp-fader-val">0</span>
+                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Bass" aria-orientation="vertical" aria-valuemin="-12" aria-valuemax="12" aria-valuenow="0">
+                  <div class="lp-fader-knob"></div>
+                </div>
+                <span class="lp-fader-label">BASS</span>
+              </div>
+            </div>
+            <div class="lp-stage" style="background-image: url('{{ '/images/player/cover.webp' | relative_url }}');">
+              <canvas class="lp-canvas" width="359" height="408" aria-hidden="true"></canvas>
+              <button type="button" class="lp-btn lp-toggle" aria-label="Play"><i class="fas fa-play" aria-hidden="true"></i></button>
+            </div>
+            <div class="lp-deck-spacer" aria-hidden="true"></div>
           </div>
           <canvas class="lp-viz" aria-hidden="true"></canvas>
           <div class="lp-timeline">
