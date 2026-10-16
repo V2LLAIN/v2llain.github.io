@@ -554,6 +554,46 @@ body.dark .lp-fader-slot::before {
   position: absolute; top: 3px; right: 3px;
   font-size: 7px; font-weight: 800; line-height: 1;
 }
+.lp-buddy-btn img { display: block; width: 16px; height: 16px; filter: grayscale(.35) opacity(.85); transition: filter var(--transition), transform var(--transition); }
+.lp-buddy-btn:hover img, .lp-buddy-btn.is-on img { filter: none; transform: scale(1.12); }
+// floating singing buddy (bottom-left, draggable)
+.lp-buddy {
+  position: fixed; left: 18px; bottom: 14px; z-index: 60;
+  width: 120px; touch-action: none; cursor: grab; user-select: none;
+  animation: lp-buddy-in .45s cubic-bezier(.2, .9, .3, 1.3);
+}
+.lp-buddy[hidden] { display: none; }
+.lp-buddy.is-dragging { cursor: grabbing; }
+@keyframes lp-buddy-in { from { transform: translateY(30px) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.lp-buddy-bob {
+  position: relative; transform-origin: 50% 100%; will-change: transform;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .2));
+}
+.lp-buddy-img { display: block; width: 100%; height: auto; pointer-events: none; }
+// sits exactly on the pink-triangle mouth of the drawing (measured from the image)
+.lp-buddy-mouth {
+  position: absolute; left: 61.54%; top: 74.09%; width: 6.29%; height: 7.27%;
+  overflow: visible; transform-origin: 50% 8%; opacity: 0;
+}
+.lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.lp-buddy-note {
+  position: absolute; font-size: 15px; line-height: 1; color: #f97316; font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  animation: lp-note 1.7s ease-out forwards;
+}
+@keyframes lp-note {
+  0% { transform: translate(0, 0) rotate(-10deg) scale(.6); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(var(--dx, 18px), -46px) rotate(12deg) scale(1.05); opacity: 0; }
+}
+.lp-buddy-close {
+  position: absolute; top: 0; right: 4px; width: 20px; height: 20px; padding: 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(17, 17, 17, .7); color: #fff; font-size: 14px; line-height: 20px;
+  opacity: 0; transition: opacity var(--transition);
+}
+.lp-buddy:hover .lp-buddy-close, .lp-buddy-close:focus-visible { opacity: 1; }
+@media (hover: none) { .lp-buddy-close { opacity: .8; } }
 // track list panel
 .lp-list {
   list-style: none; margin: 8px 0 0; padding: 4px;

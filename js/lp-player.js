@@ -571,6 +571,109 @@
     drawArm();
   }
 
+  // ---------- singing buddy ----------
+  // Head icon in the mode row opens a little character that floats bottom-left of the page,
+  // mouths along to the vocals and bobs to the bass.
+  var buddyBtn = root.querySelector('.lp-buddy-btn');
+  var buddy = root.querySelector('.lp-buddy');
+  if (buddyBtn && buddy) {
+    document.body.appendChild(buddy);                 // out of the sidebar so it can float freely
+    var bob = buddy.querySelector('.lp-buddy-bob');
+    var mouthEl = buddy.querySelector('.lp-buddy-mouth');
+    var notesEl = buddy.querySelector('.lp-buddy-notes');
+    var buddyOpen = false, buddyRaf = 0, buddyLast = 0, buddyT = 0;
+    var kick = 0, mouth = 0, bMean = 0, vMean = 0, noteIn = 0, bf = null;
+
+    var bandAvg = function (arr, f0, f1) {
+      var nyq = actx.sampleRate / 2, n = arr.length;
+      var lo = Math.max(1, Math.floor(f0 / nyq * n)), hi = Math.max(lo + 1, Math.ceil(f1 / nyq * n)), sum = 0;
+      for (var k = lo; k < hi; k++) sum += arr[k];
+      return sum / (hi - lo) / 255;
+    };
+    var spawnNote = function () {
+      var n = document.createElement('span');
+      n.className = 'lp-buddy-note';
+      n.textContent = Math.random() < 0.5 ? '♪' : '♫';
+      n.style.left = (62 + Math.random() * 16) + '%';
+      n.style.top = (48 + Math.random() * 14) + '%';
+      n.style.setProperty('--dx', (10 + Math.random() * 26) + 'px');
+      n.addEventListener('animationend', function () { n.remove(); });
+      notesEl.appendChild(n);
+    };
+    var buddyFrame = function (ts) {
+      buddyRaf = 0;
+      if (!buddyOpen) return;
+      var dt = buddyLast ? Math.min((ts - buddyLast) / 1000, 0.1) : 0.016;
+      buddyLast = ts; buddyT += dt;
+      var playing = !audio.paused, targetMouth = 0;
+      if (playing && analyser) {
+        if (!bf) bf = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bf);
+        var bass = bandAvg(bf, 40, 160), vocal = bandAvg(bf, 300, 3000);
+        bMean += (bass - bMean) * Math.min(1, dt * 1.5);
+        vMean += (vocal - vMean) * Math.min(1, dt * 1.2);
+        if (bass - bMean > 0.045 && kick < 0.35) kick = 1;                 // a beat: hop
+        // open on each vocal swell above the running level, snap shut in between (뻐끔뻐끔)
+        targetMouth = vocal < 0.12 ? 0 : Math.max(0, Math.min(1, (vocal - vMean - 0.004) * 11));
+      } else if (playing) {                                               // no analyser yet: fake it
+        var beat = (buddyT * 2) % 1;
+        if (beat < dt * 2 && kick < 0.35) kick = 1;
+        targetMouth = Math.max(0, Math.sin(buddyT * 11)) * 0.9;
+      }
+      kick = Math.max(0, kick - dt * 3.6);
+      mouth += (targetMouth - mouth) * Math.min(1, dt * (targetMouth > mouth ? 30 : 22));
+      var hop = Math.sin(kick * Math.PI / 2);                             // ease the hop
+      var sway = playing ? Math.sin(buddyT * 2.4) * 3 : 0;
+      var breathe = playing ? 0 : Math.sin(buddyT * 1.6) * 0.8;
+      bob.style.transform = 'translateY(' + (-hop * 7 + breathe).toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(' + (1 + hop * 0.025).toFixed(3) + ',' + (1 - hop * 0.02 + kick * 0.0).toFixed(3) + ')';
+      // shut: the drawing's own pink triangle shows; open: a dark mouth that drops open over it
+      mouthEl.style.opacity = mouth > 0.08 ? 1 : 0;
+      mouthEl.style.transform = 'scale(' + (1 + mouth * 0.25).toFixed(3) + ',' + (0.9 + mouth * 1.4).toFixed(3) + ')';
+      if (playing && mouth > 0.3) { noteIn -= dt; if (noteIn <= 0) { spawnNote(); noteIn = 0.55 + Math.random() * 0.5; } }
+      buddyRaf = requestAnimationFrame(buddyFrame);
+    };
+    var setBuddy = function (open, remember) {
+      buddyOpen = open;
+      buddy.hidden = !open;
+      buddyBtn.classList.toggle('is-on', open);
+      buddyBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
+      if (remember) { try { localStorage.setItem('lp-buddy', open ? '1' : '0'); } catch (e) {} }
+      if (open && !buddyRaf) { buddyLast = 0; buddyRaf = requestAnimationFrame(buddyFrame); }
+    };
+    buddyBtn.addEventListener('click', function () { ensureAudioGraph(); resumeAudio(); setBuddy(!buddyOpen, true); });
+    buddy.querySelector('.lp-buddy-close').addEventListener('click', function (e) { e.stopPropagation(); setBuddy(false, true); });
+
+    // drag it anywhere; the spot is remembered
+    var place = function (x, y) {
+      var w = buddy.offsetWidth, h = buddy.offsetHeight;
+      x = Math.max(0, Math.min(window.innerWidth - w, x)); y = Math.max(0, Math.min(window.innerHeight - h, y));
+      buddy.style.left = x + 'px'; buddy.style.top = y + 'px'; buddy.style.bottom = 'auto';
+      return { x: x, y: y };
+    };
+    try { var bp = JSON.parse(localStorage.getItem('lp-buddy-pos')); if (bp) requestAnimationFrame(function () { place(bp.x, bp.y); }); } catch (e) {}
+    var drag = null;
+    buddy.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.lp-buddy-close')) return;
+      var r = buddy.getBoundingClientRect();
+      drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+      buddy.classList.add('is-dragging');
+      try { buddy.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    buddy.addEventListener('pointermove', function (e) { if (drag) place(e.clientX - drag.dx, e.clientY - drag.dy); });
+    var endDrag = function () {
+      if (!drag) return;
+      drag = null; buddy.classList.remove('is-dragging');
+      var r = buddy.getBoundingClientRect();
+      try { localStorage.setItem('lp-buddy-pos', JSON.stringify({ x: r.left, y: r.top })); } catch (e) {}
+    };
+    buddy.addEventListener('pointerup', endDrag);
+    buddy.addEventListener('pointercancel', endDrag);
+    window.addEventListener('resize', function () { if (buddy.style.top) { var r = buddy.getBoundingClientRect(); place(r.left, r.top); } });
+
+    if (stored('lp-buddy')) setBuddy(true, false);
+  }
+
   // ---------- keep playing across page reloads ----------
   // Remembers the track, position and whether it was playing. After a reload it picks up at the
   // same spot. Browsers usually refuse to start sound on their own after a page load, so if that
