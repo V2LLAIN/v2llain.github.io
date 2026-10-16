@@ -312,6 +312,114 @@
   audio.addEventListener('play', function () { if (!barRaf) barRaf = requestAnimationFrame(barLoop); });
   if (!N) bar.classList.add('is-disabled');
 
+  // ---------- spectrum visualizer (LED-style bars that jump with the music) ----------
+  var viz = root.querySelector('.lp-viz');
+  var vctx = viz ? viz.getContext('2d') : null;
+  var BARS = 14, SEGS = 9;
+  var actx = null, analyser = null, freq = null;
+  var levels = new Float32Array(BARS), peaks = new Float32Array(BARS), peakHold = new Float32Array(BARS);
+  var mean = new Float32Array(BARS);       // slow running level per band, so beats stand out above it
+  var vizRaf = 0, vizLast = 0, bandLo = [], bandHi = [];
+
+  // Create the audio graph from a click (browsers only allow audio contexts after a user gesture).
+  function ensureAudioGraph() {
+    if (actx || !viz) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      actx = new AC();
+      var srcNode = actx.createMediaElementSource(audio);
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.6;
+      analyser.minDecibels = -85;
+      analyser.maxDecibels = -8;           // headroom: loud masters no longer pin every bar to the top
+      srcNode.connect(analyser);
+      analyser.connect(actx.destination);
+      freq = new Uint8Array(analyser.frequencyBinCount);
+      // log-spaced bands from 40 Hz to 14 kHz
+      var nyq = actx.sampleRate / 2, n = analyser.frequencyBinCount;
+      for (var b = 0; b < BARS; b++) {
+        var f0 = 40 * Math.pow(14000 / 40, b / BARS), f1 = 40 * Math.pow(14000 / 40, (b + 1) / BARS);
+        bandLo[b] = Math.max(1, Math.floor(f0 / nyq * n));
+        bandHi[b] = Math.max(bandLo[b] + 1, Math.ceil(f1 / nyq * n));
+      }
+    } catch (e) { actx = null; analyser = null; }
+  }
+  function resumeAudio() { if (actx && actx.state === 'suspended') actx.resume().catch(function () {}); }
+
+  function sizeViz() {
+    if (!viz) return;
+    var dpr = window.devicePixelRatio || 1, r = viz.getBoundingClientRect();
+    var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (w && h && (viz.width !== w || viz.height !== h)) { viz.width = w; viz.height = h; }
+  }
+
+  // bottom -> top: deep red-orange to bright amber
+  var SEG_COLORS = ['#b8350f', '#c63f10', '#d44b12', '#e05814', '#ea6716', '#f27a1c', '#f78f2a', '#fba53f', '#ffbd5c'];
+
+  function drawViz() {
+    if (!vctx) return;
+    var W2 = viz.width, H2 = viz.height;
+    vctx.clearRect(0, 0, W2, H2);
+    var gapX = Math.max(2, Math.round(W2 * 0.012)), gapY = Math.max(1, Math.round(H2 * 0.035));
+    var bw = (W2 - gapX * (BARS - 1)) / BARS, sh = (H2 - gapY * (SEGS - 1)) / SEGS;
+    for (var b = 0; b < BARS; b++) {
+      var x = b * (bw + gapX);
+      var lit = Math.round(levels[b] * SEGS);
+      var pk = Math.min(SEGS - 1, Math.round(peaks[b] * SEGS) - 1);
+      for (var s = 0; s < SEGS; s++) {
+        var y = H2 - (s + 1) * sh - s * gapY;
+        vctx.fillStyle = SEG_COLORS[s];
+        vctx.globalAlpha = s < lit ? 0.95 : (s === pk && pk >= lit ? 1 : 0.13);
+        vctx.fillRect(x, y, bw, sh);
+      }
+    }
+    vctx.globalAlpha = 1;
+  }
+
+  function vizFrame(ts) {
+    vizRaf = 0;
+    var dt = vizLast ? Math.min((ts - vizLast) / 1000, 0.1) : 0.016;
+    vizLast = ts;
+    var playing = !audio.paused && analyser;
+    if (playing) analyser.getByteFrequencyData(freq);
+    var active = false;
+    for (var b = 0; b < BARS; b++) {
+      var target = 0;
+      if (playing) {
+        var sum = 0;
+        for (var k = bandLo[b]; k < bandHi[b]; k++) sum += freq[k];
+        var v = sum / (bandHi[b] - bandLo[b]) / 255;
+        v *= 0.92 + 0.5 * b / BARS;                         // lift the quieter high end a little
+        mean[b] += (v - mean[b]) * Math.min(1, dt * 1.2);
+        // overall loudness sets the base height, the jump above the running level makes it bounce
+        target = v < 0.08 ? 0 : Math.max(0, Math.min(1, 0.2 + 0.75 * (v - 0.3) / 0.55 + 3.2 * (v - mean[b])));
+      }
+      // fast attack, slower release -> the bars "jump" on beats
+      levels[b] = target > levels[b] ? target : Math.max(target, levels[b] - dt * 2.2);
+      if (levels[b] >= peaks[b]) { peaks[b] = levels[b]; peakHold[b] = 0.35; }
+      else if (peakHold[b] > 0) peakHold[b] -= dt;
+      else peaks[b] = Math.max(0, peaks[b] - dt * 0.9);
+      if (levels[b] > 0.001 || peaks[b] > 0.001) active = true;
+    }
+    drawViz();
+    if (playing || active) vizRaf = requestAnimationFrame(vizFrame);
+    else vizLast = 0;
+  }
+  function startViz() { if (vctx && !vizRaf) { vizLast = 0; vizRaf = requestAnimationFrame(vizFrame); } }
+
+  if (viz) {
+    sizeViz(); drawViz();
+    window.addEventListener('resize', function () { sizeViz(); drawViz(); });
+    // every control that can start playback is a click, so build the graph there
+    [toggleBtn, prevBtn, nextBtn, listEl].forEach(function (el) {
+      el.addEventListener('click', function () { ensureAudioGraph(); resumeAudio(); }, true);
+    });
+    audio.addEventListener('play', function () { resumeAudio(); startViz(); });
+    audio.addEventListener('pause', startViz);   // let the bars fall back down
+  }
+
   // ---------- disc rendering ----------
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var discCanvas = document.createElement('canvas');

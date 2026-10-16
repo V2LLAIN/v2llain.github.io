@@ -430,6 +430,8 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 .lp-toggle .fa-play { margin-left: 2px; }
 .lp-toggle:hover:not(:disabled) { transform: scale(1.1); background: rgba(17, 17, 17, .85); }
 // playback progress: thin grey track, orange played part; click / drag / arrow keys to seek
+// beat-reactive spectrum bars (drawn in js/lp-player.js)
+.lp-viz { display: block; width: 100%; max-width: 200px; height: 34px; margin-top: 12px; }
 .lp-timeline { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 220px; margin-top: 12px; }
 .lp-time {
   flex: 0 0 auto; min-width: 28px;
