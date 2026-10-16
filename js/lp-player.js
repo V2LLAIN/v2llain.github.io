@@ -91,16 +91,32 @@
     markActive();
   }
 
-  // While playing, the title rolls in from the right and out to the left like a passing train.
-  var TICKER_PX_PER_SEC = 28;
+  // While playing, the title runs like a train: it pulls in from the right, slowing down,
+  // stops for a moment (centred, or left-aligned if it is longer than the box),
+  // then speeds off to the left and the next run comes in.
+  var TRAIN_SPEED = 40;     // px per second at cruising speed
+  var TRAIN_STOP = 1.8;     // seconds standing at the platform
+  var ticker = null;
+  var reduceMotionTitle = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function stopMarquee() {
+    if (ticker) { ticker.cancel(); ticker = null; }
+  }
   function updateMarquee() {
-    var box = titleEl.parentNode;
-    var dist = titleEl.offsetWidth;          // box width (left padding) + text width
-    box.style.setProperty('--lp-dur', Math.max(6, dist / TICKER_PX_PER_SEC).toFixed(2) + 's');
-    // restart the run from the right edge
-    titleEl.style.animation = 'none';
-    void titleEl.offsetWidth;
-    titleEl.style.animation = '';
+    stopMarquee();
+    if (!root.classList.contains('is-playing') || reduceMotionTitle || !titleEl.animate) return;
+    var boxW = titleEl.parentNode.clientWidth, textW = titleEl.offsetWidth;
+    if (!boxW || !textW) return;
+    var stopX = textW <= boxW ? (boxW - textW) / 2 : 0;
+    var tIn = 1.5 * (boxW - stopX) / TRAIN_SPEED;          // eased, so a bit longer than linear
+    var tOut = 1.5 * (stopX + textW) / TRAIN_SPEED;
+    var total = tIn + TRAIN_STOP + tOut;
+    ticker = titleEl.animate([
+      { transform: 'translateX(' + boxW + 'px)', offset: 0, easing: 'cubic-bezier(.15, .55, .3, 1)' },      // arriving: brake
+      { transform: 'translateX(' + stopX + 'px)', offset: tIn / total },
+      { transform: 'translateX(' + stopX + 'px)', offset: (tIn + TRAIN_STOP) / total, easing: 'cubic-bezier(.6, 0, .85, .45)' }, // departing: accelerate
+      { transform: 'translateX(' + (-textW) + 'px)', offset: 1 }
+    ], { duration: total * 1000, iterations: Infinity });
   }
 
   // ---------- track list panel ----------
@@ -187,7 +203,7 @@
     i.className = playing ? 'fas fa-pause' : 'fas fa-play';
     toggleBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
     root.classList.toggle('is-playing', playing);
-    if (playing) updateMarquee();
+    updateMarquee();
   }
 
   toggleBtn.addEventListener('click', function () {
