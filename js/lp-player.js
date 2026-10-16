@@ -209,6 +209,7 @@
   toggleBtn.addEventListener('click', function () {
     if (!N) return;
     if (audio.paused) {
+      if (audio.error) step(1);                     // this file already failed to load: move on
       var p = audio.play();
       if (p && p.catch) p.catch(function () { setIcon(false); });
     } else {
@@ -249,8 +250,20 @@
     step(1);
     audio.play().catch(function () {});
   });
+  // A file that can't be played (missing, empty, broken) is greyed out in the list and skipped
+  // so the music keeps going; give up after every track has failed once in a row.
+  var wantPlay = false, failStreak = 0;
+  audio.addEventListener('play', function () { wantPlay = true; });
+  toggleBtn.addEventListener('click', function () { wantPlay = audio.paused; }, true);
+  audio.addEventListener('playing', function () { failStreak = 0; });
   audio.addEventListener('error', function () {
-    if (N) titleEl.textContent = 'Cannot play: ' + prettyTitle(tracks[index]);
+    if (!N) return;
+    var item = listEl.querySelector('.lp-list-item[data-i="' + index + '"]');
+    if (item) { item.classList.add('is-broken'); item.title = 'This file could not be played'; }
+    titleEl.textContent = 'Cannot play: ' + prettyTitle(tracks[index]);
+    if (wantPlay && ++failStreak < N) {
+      setTimeout(function () { step(1); audio.play().catch(function () {}); }, 1200);
+    }
   });
 
   // ---------- progress bar ----------

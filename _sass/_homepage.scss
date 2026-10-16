@@ -615,6 +615,7 @@ body.dark .lp-fader-slot::before {
 .lp-list-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .lp-list-num { flex: 0 0 18px; text-align: right; font-size: .68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .lp-list-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lp-list-item.is-broken .lp-list-name { text-decoration: line-through; opacity: .5; }
 .lp-list-item.is-current, .lp-list-item.is-current .lp-list-num { color: #f97316; font-weight: 600; }
 
 // ---- footer ---------------------------------------------------------------
