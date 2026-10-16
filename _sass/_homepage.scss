@@ -559,7 +559,8 @@ body.dark .lp-fader-slot::before {
 // floating singing buddy (bottom-left, draggable)
 .lp-buddy {
   position: fixed; left: 18px; bottom: 14px; z-index: 60;
-  width: 120px; touch-action: none; cursor: grab; user-select: none;
+  width: 150px; touch-action: none; cursor: grab; user-select: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .18));
   animation: lp-buddy-in .45s cubic-bezier(.2, .9, .3, 1.3);
 }
 .lp-buddy[hidden] { display: none; }
@@ -567,12 +568,14 @@ body.dark .lp-fader-slot::before {
 @keyframes lp-buddy-in { from { transform: translateY(30px) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
 .lp-buddy-bob {
   position: relative; transform-origin: 50% 100%; will-change: transform;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .2));
+  // the drawing is cut off at the waist, so fade the bottom edge out
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
 }
 .lp-buddy-img { display: block; width: 100%; height: auto; pointer-events: none; }
 // sits exactly on the pink-triangle mouth of the drawing (measured from the image)
 .lp-buddy-mouth {
-  position: absolute; left: 61.54%; top: 74.09%; width: 6.29%; height: 7.27%;
+  position: absolute; left: 49.46%; top: 51.56%; width: 4.84%; height: 5%;
   overflow: visible; transform-origin: 50% 8%; opacity: 0;
 }
 .lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }

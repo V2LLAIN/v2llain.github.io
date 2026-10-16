@@ -594,8 +594,8 @@
       var n = document.createElement('span');
       n.className = 'lp-buddy-note';
       n.textContent = Math.random() < 0.5 ? '♪' : '♫';
-      n.style.left = (62 + Math.random() * 16) + '%';
-      n.style.top = (48 + Math.random() * 14) + '%';
+      n.style.left = (50 + Math.random() * 14) + '%';
+      n.style.top = (34 + Math.random() * 12) + '%';
       n.style.setProperty('--dx', (10 + Math.random() * 26) + 'px');
       n.addEventListener('animationend', function () { n.remove(); });
       notesEl.appendChild(n);
