@@ -581,6 +581,8 @@ body.dark .lp-fader-slot::before {
   position: absolute; left: 49.19%; top: 51.25%; width: 5.38%; height: 5.62%;
   transform-origin: 50% 0; opacity: 0; pointer-events: none;
 }
+// electric sparks from the mouth on rock songs (drawn in js); bigger than the buddy so bolts can fly out
+.lp-buddy-fx { position: absolute; left: -40%; top: -20%; width: 180%; height: 140%; pointer-events: none; transform-origin: 50% 85.7%; }  // same pivot as the body
 .lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .lp-buddy-note {
   position: absolute; font-size: 15px; line-height: 1; color: #f97316; font-weight: 700;

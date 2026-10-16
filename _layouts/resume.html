@@ -160,12 +160,14 @@
               <!-- open mouth: the drawing's own pink triangle, shown only while singing (the face underneath has it shut) -->
               <img class="lp-buddy-mouth" src="{{ '/images/player/buddy-mouth.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" draggable="false">
             </div>
+            <canvas class="lp-buddy-fx" aria-hidden="true"></canvas>
             <div class="lp-buddy-notes" aria-hidden="true"></div>
             <button type="button" class="lp-buddy-close" aria-label="Hide singing buddy">&times;</button>
           </div>
           <ol class="lp-list" id="lp-list" hidden></ol>
           <audio preload="metadata"></audio>
           <script type="application/json" id="lp-tracks">[{% assign lp_first = true %}{% for f in site.static_files %}{% assign lp_dir = f.path | slice: 0, 7 %}{% assign lp_ext = f.extname | remove: "." | downcase %}{% if lp_dir == "/music/" and lp_exts contains lp_ext %}{% unless lp_first %},{% endunless %}{"src": {{ f.path | prepend: site.baseurl | jsonify }}, "title": {{ f.basename | jsonify }}}{% assign lp_first = false %}{% endif %}{% endfor %}]</script>
+          <script type="application/json" id="lp-rock">{{ site.data.lp_rock | jsonify }}</script>
         </div>
 
         <!-- nav -->

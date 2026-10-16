@@ -41,6 +41,12 @@
   try { tracks = JSON.parse(document.getElementById('lp-tracks').textContent) || []; } catch (e) { tracks = []; }
   tracks.sort(function (a, b) { return a.src.localeCompare(b.src, undefined, { numeric: true }); });
   var N = tracks.length;
+  var rockWords = [];
+  try { rockWords = JSON.parse(document.getElementById('lp-rock').textContent) || []; } catch (e) {}
+  tracks.forEach(function (t) {
+    var name = (t.title || '').toLowerCase();
+    t.rock = rockWords.some(function (w) { return w && name.indexOf(String(w).toLowerCase()) >= 0; });
+  });
   var index = 0;
 
   var shuffleBtn = root.querySelector('.lp-shuffle');
@@ -610,6 +616,76 @@
     var notesEl = buddy.querySelector('.lp-buddy-notes');
     var buddyOpen = false, buddyRaf = 0, buddyLast = 0, buddyT = 0;
     var kick = 0, mouth = 0, bMean = 0, vMean = 0, noteIn = 0, bf = null;
+    // --- electric mouth (rock songs) ---
+    var fx = buddy.querySelector('.lp-buddy-fx'), fctx = fx ? fx.getContext('2d') : null;
+    var bolts = [], boltAge = 1, fxOn = false;
+    var MOUTH_X = 0.5188, MOUTH_Y = 0.54;                 // mouth centre as a fraction of the drawing
+    var sizeFx = function () {
+      if (!fx) return;
+      var dpr = window.devicePixelRatio || 1, r = fx.getBoundingClientRect();
+      var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+      if (w && h && (fx.width !== w || fx.height !== h)) { fx.width = w; fx.height = h; }
+    };
+    var zigzag = function (x0, y0, ang, len, segs) {
+      var pts = [[x0, y0]], jit = len * 0.16;
+      for (var i = 1; i <= segs; i++) {
+        var t = i / segs, d = (Math.random() - 0.5) * 2 * jit * (i === segs ? 0.3 : 1);
+        pts.push([x0 + Math.cos(ang) * len * t - Math.sin(ang) * d, y0 + Math.sin(ang) * len * t + Math.cos(ang) * d]);
+      }
+      return pts;
+    };
+    var makeBolts = function (power, mx, my, unit) {
+      bolts = [];
+      var n = 2 + Math.round(power * 3);
+      for (var i = 0; i < n; i++) {
+        // fan out sideways and downward; never straight up into the glasses
+        var ang = (-20 + Math.random() * 220) * Math.PI / 180;
+        var len = unit * (0.16 + Math.random() * 0.22) * (0.7 + power * 0.7);
+        var main = zigzag(mx, my, ang, len, 6 + Math.round(Math.random() * 3));
+        bolts.push({ pts: main, w: 1, hue: Math.random() < 0.6 ? '#ffb000' : '#1fb6ff' });
+        if (Math.random() < 0.55) {                     // a branch off the middle
+          var k = 2 + Math.floor(Math.random() * 3), p = main[k];
+          bolts.push({ pts: zigzag(p[0], p[1], ang + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.6), len * 0.45, 4), w: 0.7, hue: '#ff8a00' });
+        }
+      }
+    };
+    var drawFx = function (dt, power) {
+      if (!fctx) return;
+      var W2 = fx.width, H2 = fx.height;
+      if (power <= 0.02) { if (fxOn) { fctx.clearRect(0, 0, W2, H2); fxOn = false; } return; }
+      fxOn = true;
+      var dpr = window.devicePixelRatio || 1;
+      // the drawing occupies the middle of the canvas (canvas = 180% x 140%, offset 40% / 20%)
+      var mx = W2 * (0.4 + MOUTH_X) / 1.8, my = H2 * (0.2 + MOUTH_Y * 1.0) / 1.4, unit = W2 / 1.8;
+      boltAge += dt;
+      if (boltAge > 0.05 + Math.random() * 0.04) { boltAge = 0; makeBolts(power, mx, my, unit); }
+      fctx.clearRect(0, 0, W2, H2);
+      fctx.save();
+      fctx.globalCompositeOperation = 'source-over';   // reads on both the white and the dark page
+      var flick = 0.65 + Math.random() * 0.35;
+      // flash around the mouth
+      var g = fctx.createRadialGradient(mx, my, 0, mx, my, unit * 0.13 * (0.6 + power));
+      g.addColorStop(0, 'rgba(255, 250, 210,' + (0.85 * power * flick) + ')');
+      g.addColorStop(0.4, 'rgba(255, 210, 60,' + (0.45 * power * flick) + ')');
+      g.addColorStop(1, 'rgba(255, 160, 0, 0)');
+      fctx.fillStyle = g; fctx.beginPath(); fctx.arc(mx, my, unit * 0.13 * (0.6 + power), 0, Math.PI * 2); fctx.fill();
+      fctx.lineJoin = 'round'; fctx.lineCap = 'round';
+      bolts.forEach(function (b) {
+        fctx.beginPath();
+        b.pts.forEach(function (p, i) { if (i) fctx.lineTo(p[0], p[1]); else fctx.moveTo(p[0], p[1]); });
+        fctx.globalAlpha = 0.35 * flick; fctx.strokeStyle = b.hue; fctx.lineWidth = 6.5 * b.w * dpr; fctx.stroke();   // soft glow
+        fctx.globalAlpha = 0.95 * flick; fctx.strokeStyle = b.hue; fctx.lineWidth = 2.8 * b.w * dpr; fctx.stroke();   // coloured bolt
+        fctx.globalAlpha = flick; fctx.strokeStyle = '#fffbe6'; fctx.lineWidth = 1.1 * b.w * dpr; fctx.stroke();      // hot core
+      });
+      // a few sparks
+      fctx.globalAlpha = flick; fctx.fillStyle = '#ffc400';
+      for (var i = 0; i < 4 + power * 6; i++) {
+        var a = (-20 + Math.random() * 220) * Math.PI / 180, d = unit * (0.05 + Math.random() * 0.3) * power;
+        fctx.fillRect(mx + Math.cos(a) * d, my + Math.sin(a) * d, 1.6 * dpr, 1.6 * dpr);
+      }
+      fctx.restore();
+    };
+    window.addEventListener('resize', sizeFx);
 
     var bandAvg = function (arr, f0, f1) {
       var nyq = actx.sampleRate / 2, n = arr.length;
@@ -657,6 +733,10 @@
       mouthEl.style.opacity = mouth > 0.08 ? 1 : 0;
       mouthEl.style.transform = 'scale(' + (0.85 + mouth * 0.3).toFixed(3) + ',' + (0.55 + mouth * 0.95).toFixed(3) + ')';
       if (playing && mouth > 0.3) { noteIn -= dt; if (noteIn <= 0) { spawnNote(); noteIn = 0.55 + Math.random() * 0.5; } }
+      // rock songs: sparks follow the mouth (and jump harder on the beat)
+      var rockNow = playing && N && tracks[index].rock;
+      if (fx) fx.style.transform = bob.style.transform;
+      drawFx(dt, rockNow ? Math.min(1, mouth * 1.15 + kick * 0.35 * (mouth > 0.1 ? 1 : 0)) : 0);
       buddyRaf = requestAnimationFrame(buddyFrame);
     };
     var setBuddy = function (open, remember) {
@@ -665,6 +745,7 @@
       buddyBtn.classList.toggle('is-on', open);
       buddyBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
       if (remember) { try { localStorage.setItem('lp-buddy', open ? '1' : '0'); } catch (e) {} }
+      if (open) requestAnimationFrame(sizeFx);
       if (open && !buddyRaf) { buddyLast = 0; buddyRaf = requestAnimationFrame(buddyFrame); }
     };
     buddyBtn.addEventListener('click', function () { ensureAudioGraph(); resumeAudio(); setBuddy(!buddyOpen, true); });
