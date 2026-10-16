@@ -398,7 +398,7 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 .lp-player { width: 100%; margin: -4px 0 22px; display: flex; flex-direction: column; align-items: center; }
 .lp-stage {
   position: relative;
-  width: 172px;
+  width: 150px;
   aspect-ratio: 359 / 408;
   background: center / contain no-repeat;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .16));
@@ -418,8 +418,8 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 .lp-toggle {
   position: absolute;
   left: 50.03%; top: 55.81%;
-  width: 34px; height: 34px;
-  margin: -17px 0 0 -17px;
+  width: 30px; height: 30px;
+  margin: -15px 0 0 -15px;
   border-radius: 50%;
   background: rgba(17, 17, 17, .72);
   color: #fff;
