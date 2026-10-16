@@ -705,19 +705,40 @@
       buddyBtn.classList.toggle('is-on', open);
       buddyBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
       if (remember) { try { localStorage.setItem('lp-buddy', open ? '1' : '0'); } catch (e) {} }
+      if (open) requestAnimationFrame(layoutBuddy);
       if (open && !buddyRaf) { buddyLast = 0; buddyRaf = requestAnimationFrame(buddyFrame); }
     };
     buddyBtn.addEventListener('click', function () { ensureAudioGraph(); resumeAudio(); setBuddy(!buddyOpen, true); });
     buddy.querySelector('.lp-buddy-close').addEventListener('click', function (e) { e.stopPropagation(); setBuddy(false, true); });
 
-    // drag it anywhere; the spot is remembered
-    var place = function (x, y) {
-      var w = buddy.offsetWidth, h = buddy.offsetHeight;
-      x = Math.max(0, Math.min(window.innerWidth - w, x)); y = Math.max(0, Math.min(window.innerHeight - h, y));
-      buddy.style.left = x + 'px'; buddy.style.top = y + 'px'; buddy.style.bottom = 'auto';
-      return { x: x, y: y };
+    // Keep it pinned to the part of the page you can actually see. On iPhone the Safari bars
+    // grow/shrink and pinch-zoom moves the visible area, so place it against visualViewport
+    // and re-place on every scroll/resize. Drag it anywhere; the spot is remembered.
+    var vv = window.visualViewport || null;
+    var pos = null;                                    // {x, y} inside the visible area; null = bottom-left
+    try { pos = JSON.parse(localStorage.getItem('lp-buddy-pos')) || null; } catch (e) {}
+    var view = function () {
+      return vv ? { x: vv.offsetLeft, y: vv.offsetTop, w: vv.width, h: vv.height }
+                : { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight };
     };
-    try { var bp = JSON.parse(localStorage.getItem('lp-buddy-pos')); if (bp) requestAnimationFrame(function () { place(bp.x, bp.y); }); } catch (e) {}
+    var layoutBuddy = function () {
+      if (buddy.hidden) return;
+      var v = view(), w = buddy.offsetWidth, h = buddy.offsetHeight;
+      var x = pos ? pos.x : 18, y = pos ? pos.y : v.h - h - 14;
+      x = Math.max(0, Math.min(v.w - w, x)); y = Math.max(0, Math.min(v.h - h, y));
+      buddy.style.left = (v.x + x) + 'px'; buddy.style.top = (v.y + y) + 'px'; buddy.style.bottom = 'auto';
+    };
+    var layoutQueued = false;
+    var queueLayout = function () {
+      if (layoutQueued) return;
+      layoutQueued = true;
+      requestAnimationFrame(function () { layoutQueued = false; layoutBuddy(); });
+    };
+    if (vv) { vv.addEventListener('scroll', queueLayout); vv.addEventListener('resize', queueLayout); }
+    window.addEventListener('scroll', queueLayout, { passive: true });
+    window.addEventListener('resize', queueLayout);
+    window.addEventListener('orientationchange', function () { setTimeout(layoutBuddy, 300); });
+
     var drag = null;
     buddy.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.lp-buddy-close')) return;
@@ -727,16 +748,19 @@
       try { buddy.setPointerCapture(e.pointerId); } catch (err) {}
       e.preventDefault();
     });
-    buddy.addEventListener('pointermove', function (e) { if (drag) place(e.clientX - drag.dx, e.clientY - drag.dy); });
+    buddy.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var v = view();
+      pos = { x: e.clientX - drag.dx - v.x, y: e.clientY - drag.dy - v.y };
+      layoutBuddy();
+    });
     var endDrag = function () {
       if (!drag) return;
       drag = null; buddy.classList.remove('is-dragging');
-      var r = buddy.getBoundingClientRect();
-      try { localStorage.setItem('lp-buddy-pos', JSON.stringify({ x: r.left, y: r.top })); } catch (e) {}
+      try { localStorage.setItem('lp-buddy-pos', JSON.stringify(pos)); } catch (e) {}
     };
     buddy.addEventListener('pointerup', endDrag);
     buddy.addEventListener('pointercancel', endDrag);
-    window.addEventListener('resize', function () { if (buddy.style.top) { var r = buddy.getBoundingClientRect(); place(r.left, r.top); } });
 
     if (stored('lp-buddy')) setBuddy(true, false);
   }
