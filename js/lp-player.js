@@ -525,6 +525,52 @@
     function (v) { return fmtDb(v); });
   applyMix();
 
+  // ---------- tonearm ----------
+  // The needle lands on the outer groove when play starts, creeps inward as the song plays,
+  // and swings back to its rest when paused. Geometry is in stage pixels (150 x 170.4).
+  var armEl = root.querySelector('.lp-arm-swing');
+  if (armEl) {
+    var PIVOT_X = 172, PIVOT_Y = 22;
+    var TIP_X = -11.6, TIP_Y = 110.6;                // needle tip in the arm's own coordinates
+    var DISC_X = 75.04, DISC_Y = 95.1;               // record centre
+    var R_START = 64, R_END = 30;                    // outer groove -> run-out groove
+    var armAngle = 0, armRaf = 0, armLast = 0;
+
+    var tipDist = function (deg) {
+      var a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+      var x = PIVOT_X + TIP_X * c - TIP_Y * sn, y = PIVOT_Y + TIP_X * sn + TIP_Y * c;
+      return Math.hypot(x - DISC_X, y - DISC_Y);
+    };
+    // the swing angle where the distance to the centre is smallest bounds the search
+    var minDeg = 0, minD = Infinity;
+    for (var dg = 0; dg <= 90; dg += 0.5) { var dd = tipDist(dg); if (dd < minD) { minD = dd; minDeg = dg; } }
+    var angleFor = function (r) {                    // bisection on the approaching side
+      var lo = 0, hi = minDeg;
+      for (var it = 0; it < 30; it++) { var mid = (lo + hi) / 2; if (tipDist(mid) > r) lo = mid; else hi = mid; }
+      return (lo + hi) / 2;
+    };
+    var armTarget = function () {
+      if (audio.paused) return 0;
+      var d = audio.duration, f = d > 0 && isFinite(d) ? Math.min(1, audio.currentTime / d) : 0;
+      return angleFor(R_START - (R_START - R_END) * f);
+    };
+    var drawArm = function () { armEl.setAttribute('transform', 'translate(' + PIVOT_X + ' ' + PIVOT_Y + ') rotate(' + armAngle.toFixed(3) + ')'); };
+    var armFrame = function (ts) {
+      armRaf = 0;
+      var dt = armLast ? Math.min((ts - armLast) / 1000, 0.1) : 0.016;
+      armLast = ts;
+      var t = armTarget();
+      armAngle += (t - armAngle) * Math.min(1, dt * 3.2);       // smooth swing, like a damped lift
+      if (Math.abs(t - armAngle) < 0.01) armAngle = t;
+      drawArm();
+      if (!audio.paused || armAngle !== t) armRaf = requestAnimationFrame(armFrame);
+      else armLast = 0;
+    };
+    var moveArm = function () { if (!armRaf) { armLast = 0; armRaf = requestAnimationFrame(armFrame); } };
+    ['play', 'pause', 'seeked', 'emptied', 'loadedmetadata'].forEach(function (ev) { audio.addEventListener(ev, moveArm); });
+    drawArm();
+  }
+
   // ---------- keep playing across page reloads ----------
   // Remembers the track, position and whether it was playing. After a reload it picks up at the
   // same spot. Browsers usually refuse to start sound on their own after a page load, so if that
