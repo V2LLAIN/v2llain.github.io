@@ -583,8 +583,13 @@ body.dark .lp-fader-slot::before {
 }
 .lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .lp-buddy-note {
-  position: absolute; font-size: 15px; line-height: 1; color: #f97316; font-weight: 700;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  position: absolute; font-size: 18px; line-height: 1; font-weight: 700;
+  color: #f97316;                                        // fallback
+  // warm rainbow: each note's two colours are picked in js
+  background: linear-gradient(135deg, var(--n1, #ff6a00), var(--n2, #ffc300));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .5)) drop-shadow(0 0 2px rgba(255, 140, 0, .45));
   animation: lp-note 1.7s ease-out forwards;
 }
 @keyframes lp-note {

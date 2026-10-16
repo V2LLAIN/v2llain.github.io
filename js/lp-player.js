@@ -649,6 +649,10 @@
       var n = document.createElement('span');
       n.className = 'lp-buddy-note';
       n.textContent = Math.random() < 0.5 ? '♪' : '♫';
+      // warm "orange rainbow": each note gets its own red→orange→yellow (now and then pink) gradient
+      var h = Math.random() < 0.15 ? 330 + Math.random() * 20 : Math.random() * 48;
+      n.style.setProperty('--n1', 'hsl(' + h.toFixed(0) + ', 100%, 56%)');
+      n.style.setProperty('--n2', 'hsl(' + ((h + 22 + Math.random() * 18) % 360).toFixed(0) + ', 100%, 55%)');
       n.style.left = (50 + Math.random() * 14) + '%';
       n.style.top = (34 + Math.random() * 12) + '%';
       n.style.setProperty('--dx', (10 + Math.random() * 26) + 'px');
