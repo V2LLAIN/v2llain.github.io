@@ -439,12 +439,22 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
   flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap;
   font-size: .78rem; color: var(--text-secondary); text-align: center;
 }
-.lp-title span { display: inline-block; }
-.lp-title.scroll { text-align: left; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.lp-title.scroll span { padding: 0 8px; animation: lp-marquee 9s ease-in-out infinite alternate; }
-.lp-player.is-playing .lp-title { color: var(--text-primary); }
-@keyframes lp-marquee { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(calc(var(--lp-shift, 0px) - 16px)); } }
-@media (prefers-reduced-motion: reduce) { .lp-title.scroll span { animation: none; } }
+.lp-title span { display: block; overflow: hidden; text-overflow: ellipsis; }
+// playing: the title runs right -> left like a train going by, then comes round again
+.lp-player.is-playing .lp-title {
+  color: var(--text-primary); text-align: left;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.lp-player.is-playing .lp-title span {
+  display: inline-block; overflow: visible; text-overflow: clip;
+  padding-left: 100%;
+  animation: lp-ticker var(--lp-dur, 10s) linear infinite;
+}
+@keyframes lp-ticker { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .lp-player.is-playing .lp-title span { animation: none; padding-left: 0; }
+}
 
 // ---- footer ---------------------------------------------------------------
 .page-footer { border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 20px; text-align: center; color: var(--text-muted); font-size: .82rem; }

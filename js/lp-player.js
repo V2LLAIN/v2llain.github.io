@@ -56,17 +56,16 @@
     updateMarquee();
   }
 
+  // While playing, the title rolls in from the right and out to the left like a passing train.
+  var TICKER_PX_PER_SEC = 28;
   function updateMarquee() {
     var box = titleEl.parentNode;
-    box.classList.remove('scroll');
-    box.style.removeProperty('--lp-shift');
-    requestAnimationFrame(function () {
-      var over = titleEl.scrollWidth - box.clientWidth;
-      if (over > 2) {
-        box.style.setProperty('--lp-shift', -over + 'px');
-        box.classList.add('scroll');
-      }
-    });
+    var dist = titleEl.offsetWidth;          // box width (left padding) + text width
+    box.style.setProperty('--lp-dur', Math.max(6, dist / TICKER_PX_PER_SEC).toFixed(2) + 's');
+    // restart the run from the right edge
+    titleEl.style.animation = 'none';
+    void titleEl.offsetWidth;
+    titleEl.style.animation = '';
   }
 
   if (!tracks.length) {
@@ -81,6 +80,7 @@
     i.className = playing ? 'fas fa-pause' : 'fas fa-play';
     toggleBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
     root.classList.toggle('is-playing', playing);
+    if (playing) updateMarquee();
   }
 
   toggleBtn.addEventListener('click', function () {
