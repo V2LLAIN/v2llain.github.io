@@ -90,6 +90,13 @@ body.theme-default a:hover { color: var(--accent-hover); }
 }
 .sidebar-title { font-size: .92rem; font-weight: 600; color: var(--text-primary); margin: 0 0 2px; }
 .sidebar-affiliation { font-size: .85rem; color: var(--text-secondary); margin: 0; }
+// keep the centre's full name on one line ("KAIST" goes underneath); shrinks a touch if the sidebar is narrower
+.sidebar { container-type: inline-size; }
+.sidebar-affiliation .aff-org {
+  display: block; white-space: nowrap;
+  font-size: .78rem;
+  font-size: min(.78rem, 5.1cqi);
+}
 .sidebar-interests {
   font-size: .82rem;
   color: var(--text-secondary);
