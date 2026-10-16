@@ -18,6 +18,18 @@
   <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
   <link rel="stylesheet" href="css/main.css?v={{ site.time | date: '%s' }}">
+  <!-- link previews (KakaoTalk, Slack, iMessage, X, ...): show the character, not the profile photo -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Hyeongchan Im">
+  <meta property="og:title" content="Hyeongchan Im">
+  <meta property="og:description" content="Research Intern at KIRC Lab, KAIST · Multimodal Learning, Medical AI, Deepfake Detection">
+  <meta property="og:url" content="{{ site.url }}{{ page.url | replace:'index.html','' }}">
+  <meta property="og:image" content="{{ site.url }}/images/og-image.png?v={{ site.time | date: '%s' }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Hyeongchan Im — singing character">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ site.url }}/images/og-image.png?v={{ site.time | date: '%s' }}">
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ '/images/favicon-32.png' | relative_url }}?v={{ site.time | date: '%s' }}">
   <link rel="icon" type="image/png" sizes="48x48" href="{{ '/images/favicon-48.png' | relative_url }}?v={{ site.time | date: '%s' }}">
