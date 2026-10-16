@@ -716,15 +716,18 @@
     // and re-place on every scroll/resize. Drag it anywhere; the spot is remembered.
     var vv = window.visualViewport || null;
     var pos = null;                                    // {x, y} inside the visible area; null = bottom-left
-    try { pos = JSON.parse(localStorage.getItem('lp-buddy-pos')) || null; } catch (e) {}
+    try { pos = JSON.parse(localStorage.getItem('lp-buddy-pos2')) || null; } catch (e) {}
     var view = function () {
       return vv ? { x: vv.offsetLeft, y: vv.offsetTop, w: vv.width, h: vv.height }
                 : { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight };
     };
     var layoutBuddy = function () {
       if (buddy.hidden) return;
-      var v = view(), w = buddy.offsetWidth, h = buddy.offsetHeight;
-      var x = pos ? pos.x : 18, y = pos ? pos.y : v.h - h - 14;
+      var v = view(), w = buddy.offsetWidth || 150;
+      // the picture may not have loaded yet: use its known shape (372 x 320) instead of a 0 height
+      var h = Math.max(buddy.offsetHeight, Math.round(w * 320 / 372));
+      // default spot: bottom-left, lifted on iPhone/iPad so Safari's bottom bar can't cover it
+      var x = pos ? pos.x : 18, y = pos ? pos.y : v.h - h - (IOS ? 110 : 14);
       x = Math.max(0, Math.min(v.w - w, x)); y = Math.max(0, Math.min(v.h - h, y));
       buddy.style.left = (v.x + x) + 'px'; buddy.style.top = (v.y + y) + 'px'; buddy.style.bottom = 'auto';
     };
@@ -739,6 +742,8 @@
     window.addEventListener('resize', queueLayout);
     window.addEventListener('orientationchange', function () { setTimeout(layoutBuddy, 300); });
 
+    var buddyImg = buddy.querySelector('.lp-buddy-img');
+    if (buddyImg && !buddyImg.complete) buddyImg.addEventListener('load', layoutBuddy);
     var drag = null;
     buddy.addEventListener('pointerdown', function (e) {
       if (e.target.closest('.lp-buddy-close')) return;
@@ -757,7 +762,7 @@
     var endDrag = function () {
       if (!drag) return;
       drag = null; buddy.classList.remove('is-dragging');
-      try { localStorage.setItem('lp-buddy-pos', JSON.stringify(pos)); } catch (e) {}
+      try { localStorage.setItem('lp-buddy-pos2', JSON.stringify(pos)); } catch (e) {}
     };
     buddy.addEventListener('pointerup', endDrag);
     buddy.addEventListener('pointercancel', endDrag);
