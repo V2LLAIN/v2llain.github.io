@@ -430,8 +430,16 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 .lp-toggle .fa-play { margin-left: 2px; }
 .lp-toggle:hover:not(:disabled) { transform: scale(1.1); background: rgba(17, 17, 17, .85); }
 // playback progress: thin grey track, orange played part; click / drag / arrow keys to seek
+.lp-timeline { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 220px; margin-top: 12px; }
+.lp-time {
+  flex: 0 0 auto; min-width: 28px;
+  font-size: .68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; line-height: 1;
+}
+.lp-time-cur { text-align: right; }
+.lp-time-dur { text-align: left; }
+.lp-player.is-playing .lp-time { color: var(--text-secondary); }
 .lp-progress {
-  position: relative; width: 100%; max-width: 200px; height: 14px; margin-top: 12px;
+  position: relative; flex: 1 1 auto; min-width: 0; height: 14px;
   cursor: pointer; touch-action: none;
 }
 .lp-progress::before, .lp-progress-fill {

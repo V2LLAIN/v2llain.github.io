@@ -118,10 +118,26 @@
   var fill = root.querySelector('.lp-progress-fill');
   var barRaf = 0, dragging = false;
 
+  var curEl = root.querySelector('.lp-time-cur');
+  var durEl = root.querySelector('.lp-time-dur');
+
+  // 75 -> "1:15", 3725 -> "1:02:05"
+  function fmt(sec) {
+    if (!(sec >= 0) || !isFinite(sec)) return '0:00';
+    sec = Math.floor(sec);
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    var ss = (s < 10 ? '0' : '') + s;
+    return h ? h + ':' + (m < 10 ? '0' : '') + m + ':' + ss : m + ':' + ss;
+  }
+  function setText(el, t) { if (el.textContent !== t) el.textContent = t; }
+
   function drawProgress() {
     var d = audio.duration, f = d > 0 && isFinite(d) ? Math.min(1, audio.currentTime / d) : 0;
     fill.style.transform = 'scaleX(' + f + ')';
     bar.setAttribute('aria-valuenow', Math.round(f * 100));
+    bar.setAttribute('aria-valuetext', fmt(audio.currentTime) + ' / ' + fmt(d));
+    setText(curEl, fmt(audio.currentTime));
+    setText(durEl, fmt(d));
   }
   function barLoop() {
     drawProgress();
@@ -152,7 +168,7 @@
     e.preventDefault();
     drawProgress();
   });
-  ['loadedmetadata', 'timeupdate', 'seeked', 'emptied'].forEach(function (ev) { audio.addEventListener(ev, drawProgress); });
+  ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'emptied'].forEach(function (ev) { audio.addEventListener(ev, drawProgress); });
   audio.addEventListener('play', function () { if (!barRaf) barRaf = requestAnimationFrame(barLoop); });
   if (!tracks.length) bar.classList.add('is-disabled');
 
