@@ -151,12 +151,12 @@
             <button type="button" class="lp-btn lp-mode lp-shuffle" aria-pressed="false" aria-label="Shuffle" title="Shuffle"><i class="fas fa-shuffle" aria-hidden="true"></i></button>
             <button type="button" class="lp-btn lp-mode lp-repeat" aria-pressed="false" aria-label="Repeat one song" title="Repeat one song"><i class="fas fa-repeat" aria-hidden="true"></i><span class="lp-repeat-1" aria-hidden="true">1</span></button>
             <button type="button" class="lp-btn lp-mode lp-list-btn" aria-expanded="false" aria-controls="lp-list" aria-label="Track list" title="Track list"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
-            <button type="button" class="lp-btn lp-mode lp-buddy-btn" aria-pressed="false" aria-label="Singing buddy" title="Singing buddy"><img src="{{ '/images/player/buddy-head.webp' | relative_url }}" alt="" width="16" height="16"></button>
+            <button type="button" class="lp-btn lp-mode lp-buddy-btn" aria-pressed="false" aria-label="Singing buddy" title="Singing buddy"><img src="{{ '/images/player/buddy-head.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" width="16" height="16"></button>
           </div>
           <!-- singing buddy: moved to <body> by the script so it floats over the bottom-left of the page -->
           <div class="lp-buddy" hidden>
             <div class="lp-buddy-bob">
-              <img class="lp-buddy-img" src="{{ '/images/player/buddy.webp' | relative_url }}" alt="" width="372" height="320" draggable="false">
+              <img class="lp-buddy-img" src="{{ '/images/player/buddy-singer.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" width="372" height="320" draggable="false">
               <!-- open mouth drawn over the pink triangle; hidden when the mouth is shut -->
               <svg class="lp-buddy-mouth" viewBox="0 0 18 16" aria-hidden="true" focusable="false">
                 <path d="M1.2 1.5 Q9 .2 16.8 1.5 Q12 9 9.6 14.6 Q9 15.6 8.4 14.6 Q6 9 1.2 1.5 Z" fill="#5b1a1f" stroke="#3b0d10" stroke-width="1.2" stroke-linejoin="round"/>
