@@ -316,7 +316,7 @@
   var viz = root.querySelector('.lp-viz');
   var vctx = viz ? viz.getContext('2d') : null;
   var BARS = 14, SEGS = 9;
-  var actx = null, analyser = null, freq = null, bassNode = null, gainNode = null;
+  var actx = null, analyser = null, freq = null, bassNode = null, gainNode = null, limiter = null;
   var levels = new Float32Array(BARS), peaks = new Float32Array(BARS), peakHold = new Float32Array(BARS);
   var mean = new Float32Array(BARS);       // slow running level per band, so beats stand out above it
   var vizRaf = 0, vizLast = 0, bandLo = [], bandHi = [];
@@ -342,7 +342,12 @@
       srcNode.connect(bassNode);
       bassNode.connect(analyser);
       analyser.connect(gainNode);
-      gainNode.connect(actx.destination);
+      // limiter: lets VOL go above the original level without harsh clipping
+      limiter = actx.createDynamicsCompressor();
+      limiter.threshold.value = -0.5; limiter.knee.value = 0; limiter.ratio.value = 20;
+      limiter.attack.value = 0.002; limiter.release.value = 0.08;
+      gainNode.connect(limiter);
+      limiter.connect(actx.destination);
       audio.volume = 1;                    // the gain node takes over the volume
       applyMix();
       freq = new Uint8Array(analyser.frequencyBinCount);
@@ -430,21 +435,34 @@
   }
 
   // ---------- volume / bass faders ----------
-  var vol = 80, bassDb = 0;
+  // VOL: the middle of the fader (50) is the song's own level (0 dB).
+  // Up to the top boosts it to +12 dB; down to the bottom fades it out to silence.
+  var VOL_DEFAULT = 50, VOL_MAX_DB = 12, VOL_MIN_DB = -48, MIX_KEY = 'lp-mix-v2';
+  var vol = VOL_DEFAULT, bassDb = 0;
   try {
-    var savedMix = JSON.parse(localStorage.getItem('lp-mix'));
+    var savedMix = JSON.parse(localStorage.getItem(MIX_KEY));
     if (savedMix) { vol = Math.max(0, Math.min(100, +savedMix.vol)); bassDb = Math.max(-12, Math.min(12, +savedMix.bass)); }
-    if (isNaN(vol)) vol = 80; if (isNaN(bassDb)) bassDb = 0;
+    if (isNaN(vol)) vol = VOL_DEFAULT;
+    if (isNaN(bassDb)) bassDb = 0;
   } catch (e) {}
 
+  function volDb(v) {
+    if (v <= 0) return -Infinity;
+    return v >= 50 ? (v - 50) / 50 * VOL_MAX_DB : (50 - v) / 50 * VOL_MIN_DB;
+  }
+  function fmtDb(d) {
+    if (d === -Infinity) return '-\u221e';
+    var r = Math.round(d * 10) / 10;
+    return (r > 0 ? '+' : '') + r.toFixed(1);
+  }
+
   function applyMix() {
-    var g = Math.pow(vol / 100, 2);                         // feels even across the travel
-    if (bassDb > 0) g *= Math.pow(10, -bassDb * 0.5 / 20);  // a little headroom so boosted bass doesn't clip
+    var d = volDb(vol), g = d === -Infinity ? 0 : Math.pow(10, d / 20);
     if (gainNode && actx) {
       gainNode.gain.setTargetAtTime(g, actx.currentTime, 0.02);
       bassNode.gain.setTargetAtTime(bassDb, actx.currentTime, 0.02);
     } else {
-      audio.volume = Math.max(0, Math.min(1, g));
+      audio.volume = Math.max(0, Math.min(1, g));          // boost above 1 needs the audio graph (made on first click)
     }
   }
 
@@ -461,7 +479,7 @@
       v = Math.round(Math.max(min, Math.min(max, v)) / step) * step;
       if (v === get()) return;
       set(v); render(); applyMix();
-      try { localStorage.setItem('lp-mix', JSON.stringify({ vol: vol, bass: bassDb })); } catch (e) {}
+      try { localStorage.setItem(MIX_KEY, JSON.stringify({ vol: vol, bass: bassDb })); } catch (e) {}
     }
     function fromY(y) {
       var r = slot.getBoundingClientRect(), knob = 11;
@@ -500,11 +518,11 @@
 
   var volFader = root.querySelector('.lp-fader[data-kind="vol"]');
   var bassFader = root.querySelector('.lp-fader[data-kind="bass"]');
-  if (volFader) setupFader(volFader, 0, 100, 1, 80,
-    function () { return vol; }, function (v) { vol = v; }, function (v) { return String(v); });
+  if (volFader) setupFader(volFader, 0, 100, 1, VOL_DEFAULT,
+    function () { return vol; }, function (v) { vol = v; }, function (v) { return fmtDb(volDb(v)); });
   if (bassFader) setupFader(bassFader, -12, 12, 1, 0,
     function () { return bassDb; }, function (v) { bassDb = v; },
-    function (v) { return v > 0 ? '+' + v : String(v); });
+    function (v) { return fmtDb(v); });
   applyMix();
 
   // ---------- keep playing across page reloads ----------
