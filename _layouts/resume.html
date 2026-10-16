@@ -62,6 +62,24 @@
           {% endif %}
         </div>
 
+        <!-- LP music player: tracks are every audio file in /music/ -->
+        {% assign lp_exts = "mp3,m4a,aac,ogg,oga,opus,wav,flac" | split: "," %}
+        <div class="lp-player no-print" id="lp-player"
+             data-asset="{{ '/images/player/' | relative_url }}"
+             data-w="359" data-h="408" data-dx="12" data-dy="60" data-ds="336">
+          <div class="lp-stage" style="background-image: url('{{ '/images/player/cover.webp' | relative_url }}');">
+            <canvas class="lp-canvas" width="359" height="408" aria-hidden="true"></canvas>
+            <button type="button" class="lp-btn lp-toggle" aria-label="Play"><i class="fas fa-play" aria-hidden="true"></i></button>
+          </div>
+          <div class="lp-controls">
+            <button type="button" class="lp-btn lp-prev" aria-label="Previous track"><i class="fas fa-backward" aria-hidden="true"></i></button>
+            <div class="lp-title" aria-live="polite"><span>&nbsp;</span></div>
+            <button type="button" class="lp-btn lp-next" aria-label="Next track"><i class="fas fa-forward" aria-hidden="true"></i></button>
+          </div>
+          <audio preload="none"></audio>
+          <script type="application/json" id="lp-tracks">[{% assign lp_first = true %}{% for f in site.static_files %}{% assign lp_dir = f.path | slice: 0, 7 %}{% assign lp_ext = f.extname | remove: "." | downcase %}{% if lp_dir == "/music/" and lp_exts contains lp_ext %}{% unless lp_first %},{% endunless %}{"src": {{ f.path | prepend: site.baseurl | jsonify }}, "title": {{ f.basename | jsonify }}}{% assign lp_first = false %}{% endif %}{% endfor %}]</script>
+        </div>
+
         <!-- nav -->
         <nav class="sidebar-nav no-print">
           <a href="#about">About</a>
@@ -369,6 +387,7 @@
         onScroll();
       });
     </script>
+    <script src="{{ '/js/lp-player.js' | relative_url }}" defer></script>
 
   </body>
 

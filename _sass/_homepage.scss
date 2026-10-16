@@ -58,6 +58,7 @@ body.theme-default a:hover { color: var(--accent-hover); }
   position: sticky;
   top: 0;
   min-height: 100vh;
+  max-height: 100vh;               // scroll inside the sidebar when it is taller than the window
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   padding: 48px 28px 32px;
@@ -393,6 +394,58 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 .timeline-role { font-size: .85rem; color: var(--text-secondary); line-height: 1.5; margin: 0; }
 .timeline-detail { font-size: .82rem; color: var(--text-muted); margin: 4px 0 0; line-height: 1.5; }
 
+// ---- sidebar LP player ----------------------------------------------------
+.lp-player { width: 100%; margin: -4px 0 22px; display: flex; flex-direction: column; align-items: center; }
+.lp-stage {
+  position: relative;
+  width: 172px;
+  aspect-ratio: 359 / 408;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .16));
+}
+.lp-player.is-ready .lp-stage { background-image: none !important; }
+.lp-canvas { display: block; width: 100%; height: 100%; opacity: 0; }
+.lp-player.is-ready .lp-canvas { opacity: 1; }
+.lp-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; padding: 0; cursor: pointer;
+  font: inherit; line-height: 1;
+  transition: transform var(--transition), background var(--transition), color var(--transition), opacity var(--transition);
+}
+.lp-btn:disabled { cursor: default; opacity: .4; }
+.lp-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+// play / pause sits on the centre hole (disc centre = 179.6/359, 227.7/408 of the image)
+.lp-toggle {
+  position: absolute;
+  left: 50.03%; top: 55.81%;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: rgba(17, 17, 17, .72);
+  color: #fff;
+  font-size: 12px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .55);
+  backdrop-filter: blur(2px);
+}
+.lp-toggle .fa-play { margin-left: 2px; }
+.lp-toggle:hover:not(:disabled) { transform: scale(1.1); background: rgba(17, 17, 17, .85); }
+.lp-controls { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 220px; margin-top: 10px; }
+.lp-prev, .lp-next {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+  background: transparent; color: var(--text-secondary); font-size: 12px;
+}
+.lp-prev:hover:not(:disabled), .lp-next:hover:not(:disabled) { color: var(--accent); background: var(--bg-hover); }
+.lp-title {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap;
+  font-size: .78rem; color: var(--text-secondary); text-align: center;
+}
+.lp-title span { display: inline-block; }
+.lp-title.scroll { text-align: left; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.lp-title.scroll span { padding: 0 8px; animation: lp-marquee 9s ease-in-out infinite alternate; }
+.lp-player.is-playing .lp-title { color: var(--text-primary); }
+@keyframes lp-marquee { 0%, 15% { transform: translateX(0); } 85%, 100% { transform: translateX(calc(var(--lp-shift, 0px) - 16px)); } }
+@media (prefers-reduced-motion: reduce) { .lp-title.scroll span { animation: none; } }
+
 // ---- footer ---------------------------------------------------------------
 .page-footer { border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 20px; text-align: center; color: var(--text-muted); font-size: .82rem; }
 
@@ -406,6 +459,7 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
   .sidebar {
     width: 100%;
     min-height: auto;
+    max-height: none;
     position: relative;
     padding: 32px 24px 24px;
     border-right: none;
