@@ -62,6 +62,25 @@
           {% endif %}
         </div>
 
+        <!-- education -->
+        {% if site.data.education and site.data.education.size > 0 %}
+        <div class="sidebar-section">
+          <h3 class="sidebar-section-title">Education</h3>
+          <ul class="sidebar-edu-list">
+            {% for edu in site.data.education %}
+            <li class="sidebar-edu-item">
+              <i class="fas fa-graduation-cap"></i>
+              <div class="sidebar-edu-info">
+                <strong>{{ edu.degree }}</strong>
+                <span>{{ edu.uni }}</span>
+                <div class="edu-years">{{ edu.year }}</div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
         <!-- LP music player: tracks are every audio file in /music/ -->
         {% assign lp_exts = "mp3,m4a,aac,ogg,oga,opus,wav,flac" | split: "," %}
         <div class="lp-player no-print" id="lp-player"
@@ -103,24 +122,6 @@
           <a href="#projects">Projects</a>
         </nav>
 
-        <!-- education -->
-        {% if site.data.education and site.data.education.size > 0 %}
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Education</h3>
-          <ul class="sidebar-edu-list">
-            {% for edu in site.data.education %}
-            <li class="sidebar-edu-item">
-              <i class="fas fa-graduation-cap"></i>
-              <div class="sidebar-edu-info">
-                <strong>{{ edu.degree }}</strong>
-                <span>{{ edu.uni }}</span>
-                <div class="edu-years">{{ edu.year }}</div>
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
       </aside>
 
       <!-- ═══ Main Content ═══ -->

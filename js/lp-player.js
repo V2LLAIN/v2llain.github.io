@@ -420,6 +420,75 @@
     audio.addEventListener('pause', startViz);   // let the bars fall back down
   }
 
+  // ---------- keep playing across page reloads ----------
+  // Remembers the track, position and whether it was playing. After a reload it picks up at the
+  // same spot. Browsers usually refuse to start sound on their own after a page load, so if that
+  // happens the song resumes on the visitor's first click or key press anywhere on the page.
+  var STATE_KEY = 'lp-state', RESUME_WINDOW_MS = 30 * 60 * 1000;
+  var lastSave = 0, restoring = false;
+
+  function saveState(force) {
+    if (!N || restoring) return;
+    var now = Date.now();
+    if (!force && now - lastSave < 1000) return;
+    lastSave = now;
+    try {
+      localStorage.setItem(STATE_KEY, JSON.stringify({
+        src: tracks[index].src, t: audio.currentTime || 0, playing: !audio.paused, at: now
+      }));
+    } catch (e) {}
+  }
+  audio.addEventListener('timeupdate', function () { saveState(false); });
+  ['play', 'pause', 'seeked', 'loadstart'].forEach(function (ev) { audio.addEventListener(ev, function () { saveState(true); }); });
+  window.addEventListener('pagehide', function () { saveState(true); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) saveState(true); });
+
+  function restoreState() {
+    var st = null;
+    try { st = JSON.parse(localStorage.getItem(STATE_KEY)); } catch (e) {}
+    if (!st || !st.src) return;
+    var i = -1;
+    for (var k = 0; k < N; k++) if (tracks[k].src === st.src) { i = k; break; }
+    if (i < 0) return;                                   // that song was removed from /music/
+    restoring = true;
+    if (i !== index) loadTrack(i);
+    rebuildOrder();
+    var seekDone = false;
+    function seek() {
+      if (seekDone) return;
+      seekDone = true;
+      if (st.t > 0 && isFinite(audio.duration) && st.t < audio.duration - 1) audio.currentTime = st.t;
+      restoring = false;
+    }
+    if (audio.readyState >= 1) seek(); else audio.addEventListener('loadedmetadata', seek, { once: true });
+    audio.load();
+    if (!(st.playing && Date.now() - (st.at || 0) < RESUME_WINDOW_MS)) return;
+
+    function waitForGesture() {
+      root.classList.add('is-resume-pending');
+      function go(e) {
+        document.removeEventListener('pointerdown', go, true);
+        document.removeEventListener('keydown', go, true);
+        root.classList.remove('is-resume-pending');
+        if (e && e.target && e.target.closest && e.target.closest('.lp-btn, .lp-list, .lp-progress')) return; // a player control handles itself
+        ensureAudioGraph(); resumeAudio();
+        audio.play().catch(function () {});
+      }
+      document.addEventListener('pointerdown', go, true);
+      document.addEventListener('keydown', go, true);
+    }
+    var p = audio.play();
+    if (p && p.catch) p.catch(waitForGesture);
+  }
+
+  if (N) restoreState();
+  // If the browser did allow the song to resume by itself, hook up the bars on the first click.
+  function wakeViz() {
+    document.removeEventListener('pointerdown', wakeViz, true);
+    if (!audio.paused) { ensureAudioGraph(); resumeAudio(); startViz(); }
+  }
+  document.addEventListener('pointerdown', wakeViz, true);
+
   // ---------- disc rendering ----------
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var discCanvas = document.createElement('canvas');

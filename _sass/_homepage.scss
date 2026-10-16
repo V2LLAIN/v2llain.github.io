@@ -162,7 +162,7 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
 }
 
 // sidebar Education block
-.sidebar-section { width: 100%; }
+.sidebar-section { width: 100%; margin-bottom: 24px; }
 .sidebar-section-title {
   font-size: .72rem;
   font-weight: 700;
@@ -428,6 +428,9 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
   backdrop-filter: blur(2px);
 }
 .lp-toggle .fa-play { margin-left: 2px; }
+// after a reload the song is waiting for the first click: gently pulse the play button
+.lp-player.is-resume-pending .lp-toggle { animation: lp-pulse 1.6s ease-in-out infinite; }
+@keyframes lp-pulse { 0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); } 50% { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55), 0 0 0 8px rgba(249, 115, 22, .35); } }
 .lp-toggle:hover:not(:disabled) { transform: scale(1.1); background: rgba(17, 17, 17, .85); }
 // playback progress: thin grey track, orange played part; click / drag / arrow keys to seek
 // beat-reactive spectrum bars (drawn in js/lp-player.js)
