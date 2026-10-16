@@ -36,9 +36,42 @@
   var tracks = [];
   try { tracks = JSON.parse(document.getElementById('lp-tracks').textContent) || []; } catch (e) { tracks = []; }
   tracks.sort(function (a, b) { return a.src.localeCompare(b.src, undefined, { numeric: true }); });
+  var N = tracks.length;
   var index = 0;
 
-  // Encode each path segment so spaces, Korean, '#', '?' etc. in file names work.
+  var shuffleBtn = root.querySelector('.lp-shuffle');
+  var repeatBtn = root.querySelector('.lp-repeat');
+  var listBtn = root.querySelector('.lp-list-btn');
+  var listEl = root.querySelector('.lp-list');
+
+  // play order: folder order, or a shuffled permutation when shuffle is on
+  var shuffle = false, repeatOne = false;
+  var order = [], pos = 0;
+
+  function store(key, val) { try { localStorage.setItem(key, val ? '1' : '0'); } catch (e) {} }
+  function stored(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+
+  function shuffled(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1)), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  // Rebuild the play order so that the current track sits at `pos`.
+  function rebuildOrder() {
+    var all = [];
+    for (var i = 0; i < N; i++) all.push(i);
+    if (shuffle) {
+      var rest = shuffled(all.filter(function (k) { return k !== index; }));
+      order = [index].concat(rest);
+      pos = 0;
+    } else {
+      order = all;
+      pos = index;
+    }
+  }
+
+  // Encode each path segment so spaces, Korean, emoji, '#', '?' etc. in file names work.
   function trackUrl(src) {
     return src.split('/').map(function (seg) {
       try { seg = decodeURIComponent(seg); } catch (e) {}
@@ -49,11 +82,13 @@
   function prettyTitle(t) { return t.title.replace(/[_]+/g, ' ').trim(); }
 
   function loadTrack(i) {
-    index = (i + tracks.length) % tracks.length;
+    index = (i + N) % N;
     audio.src = trackUrl(tracks[index].src);
+    audio.loop = repeatOne;
     titleEl.textContent = prettyTitle(tracks[index]);
     titleEl.parentNode.title = titleEl.textContent;
     updateMarquee();
+    markActive();
   }
 
   // While playing, the title rolls in from the right and out to the left like a passing train.
@@ -68,11 +103,83 @@
     titleEl.style.animation = '';
   }
 
-  if (!tracks.length) {
+  // ---------- track list panel ----------
+  function buildList() {
+    var frag = document.createDocumentFragment();
+    tracks.forEach(function (t, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lp-list-item';
+      b.setAttribute('data-i', i);
+      var num = document.createElement('span');
+      num.className = 'lp-list-num';
+      num.textContent = i + 1;
+      var name = document.createElement('span');
+      name.className = 'lp-list-name';
+      name.textContent = prettyTitle(t);
+      b.appendChild(num); b.appendChild(name);
+      li.appendChild(b);
+      frag.appendChild(li);
+    });
+    listEl.appendChild(frag);
+  }
+  function markActive() {
+    var items = listEl.querySelectorAll('.lp-list-item');
+    for (var i = 0; i < items.length; i++) {
+      var on = i === index;
+      items[i].classList.toggle('is-current', on);
+      if (on) items[i].setAttribute('aria-current', 'true'); else items[i].removeAttribute('aria-current');
+    }
+  }
+  function scrollActiveIntoView() {
+    var cur = listEl.querySelector('.is-current');
+    if (cur) listEl.scrollTop = cur.parentNode.offsetTop - listEl.clientHeight / 2 + cur.offsetHeight / 2;
+  }
+  listBtn.addEventListener('click', function () {
+    var open = listEl.hidden;
+    listEl.hidden = !open;
+    listBtn.classList.toggle('is-on', open);
+    listBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) scrollActiveIntoView();
+  });
+  listEl.addEventListener('click', function (e) {
+    var b = e.target.closest('.lp-list-item');
+    if (!b) return;
+    var i = +b.getAttribute('data-i');
+    if (i === index && !audio.paused) return;          // already playing this one
+    if (i !== index) { loadTrack(i); rebuildOrder(); }
+    audio.play().catch(function () {});
+  });
+
+  // ---------- shuffle / repeat-one ----------
+  function syncModeButtons() {
+    shuffleBtn.classList.toggle('is-on', shuffle);
+    shuffleBtn.setAttribute('aria-pressed', shuffle ? 'true' : 'false');
+    repeatBtn.classList.toggle('is-on', repeatOne);
+    repeatBtn.setAttribute('aria-pressed', repeatOne ? 'true' : 'false');
+  }
+  shuffleBtn.addEventListener('click', function () {
+    shuffle = !shuffle; store('lp-shuffle', shuffle);
+    rebuildOrder(); syncModeButtons();
+  });
+  repeatBtn.addEventListener('click', function () {
+    repeatOne = !repeatOne; store('lp-repeat-one', repeatOne);
+    audio.loop = repeatOne;                              // loop the current track in place
+    syncModeButtons();
+  });
+
+  if (!N) {
     titleEl.textContent = 'No tracks yet';
-    [toggleBtn, prevBtn, nextBtn].forEach(function (b) { b.disabled = true; });
+    [toggleBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn, listBtn].forEach(function (b) { b.disabled = true; });
   } else {
+    shuffle = stored('lp-shuffle');
+    repeatOne = stored('lp-repeat-one');
+    buildList();
     loadTrack(0);
+    if (shuffle) { index = Math.floor(Math.random() * N); loadTrack(index); }
+    rebuildOrder();
+    syncModeButtons();
   }
 
   function setIcon(playing) {
@@ -84,7 +191,7 @@
   }
 
   toggleBtn.addEventListener('click', function () {
-    if (!tracks.length) return;
+    if (!N) return;
     if (audio.paused) {
       var p = audio.play();
       if (p && p.catch) p.catch(function () { setIcon(false); });
@@ -93,11 +200,27 @@
     }
   });
 
-  function skip(step) {
-    if (!tracks.length) return;
+  // Move through the play order; past the end it wraps (a fresh shuffle when shuffle is on).
+  function step(dir) {
+    pos += dir;
+    if (pos >= N) {
+      if (shuffle) {
+        var last = index;
+        order = shuffled(order.slice());
+        if (N > 1 && order[0] === last) { order.push(order.shift()); }   // never the same song twice in a row
+      }
+      pos = 0;
+    } else if (pos < 0) {
+      pos = N - 1;
+    }
+    loadTrack(order[pos]);
+  }
+
+  function skip(dir) {
+    if (!N) return;
     var wasPlaying = !audio.paused;
-    if (step < 0 && audio.currentTime > 3) { audio.currentTime = 0; return; }
-    loadTrack(index + step);
+    if (dir < 0 && audio.currentTime > 3) { audio.currentTime = 0; return; }
+    step(dir);
     if (wasPlaying) audio.play().catch(function () {});
   }
   prevBtn.addEventListener('click', function () { skip(-1); });
@@ -106,11 +229,12 @@
   audio.addEventListener('play', function () { setIcon(true); startSpin(); });
   audio.addEventListener('pause', function () { setIcon(false); startSpin(); });
   audio.addEventListener('ended', function () {
-    loadTrack(index + 1);               // continue through the playlist, wrapping around
+    // (with repeat-one on, audio.loop restarts the song and 'ended' never fires)
+    step(1);
     audio.play().catch(function () {});
   });
   audio.addEventListener('error', function () {
-    if (tracks.length) titleEl.textContent = 'Cannot play: ' + prettyTitle(tracks[index]);
+    if (N) titleEl.textContent = 'Cannot play: ' + prettyTitle(tracks[index]);
   });
 
   // ---------- progress bar ----------
@@ -151,7 +275,7 @@
     drawProgress();
   }
   bar.addEventListener('pointerdown', function (e) {
-    if (!tracks.length) return;
+    if (!N) return;
     dragging = true;
     try { bar.setPointerCapture(e.pointerId); } catch (err) {}
     seekTo(e.clientX);
@@ -170,7 +294,7 @@
   });
   ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'emptied'].forEach(function (ev) { audio.addEventListener(ev, drawProgress); });
   audio.addEventListener('play', function () { if (!barRaf) barRaf = requestAnimationFrame(barLoop); });
-  if (!tracks.length) bar.classList.add('is-disabled');
+  if (!N) bar.classList.add('is-disabled');
 
   // ---------- disc rendering ----------
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

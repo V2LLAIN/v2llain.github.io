@@ -83,6 +83,12 @@
             <div class="lp-title" aria-live="polite"><span>&nbsp;</span></div>
             <button type="button" class="lp-btn lp-next" aria-label="Next track"><i class="fas fa-forward" aria-hidden="true"></i></button>
           </div>
+          <div class="lp-modes">
+            <button type="button" class="lp-btn lp-mode lp-shuffle" aria-pressed="false" aria-label="Shuffle" title="Shuffle"><i class="fas fa-shuffle" aria-hidden="true"></i></button>
+            <button type="button" class="lp-btn lp-mode lp-repeat" aria-pressed="false" aria-label="Repeat one song" title="Repeat one song"><i class="fas fa-repeat" aria-hidden="true"></i><span class="lp-repeat-1" aria-hidden="true">1</span></button>
+            <button type="button" class="lp-btn lp-mode lp-list-btn" aria-expanded="false" aria-controls="lp-list" aria-label="Track list" title="Track list"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
+          </div>
+          <ol class="lp-list" id="lp-list" hidden></ol>
           <audio preload="metadata"></audio>
           <script type="application/json" id="lp-tracks">[{% assign lp_first = true %}{% for f in site.static_files %}{% assign lp_dir = f.path | slice: 0, 7 %}{% assign lp_ext = f.extname | remove: "." | downcase %}{% if lp_dir == "/music/" and lp_exts contains lp_ext %}{% unless lp_first %},{% endunless %}{"src": {{ f.path | prepend: site.baseurl | jsonify }}, "title": {{ f.basename | jsonify }}}{% assign lp_first = false %}{% endif %}{% endfor %}]</script>
         </div>
