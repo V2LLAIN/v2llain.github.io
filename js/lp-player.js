@@ -60,11 +60,11 @@
             // its own singer (faces left, so the notes drift left); mouth box in % of the picture
             buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [380, 318],
                      mouthBox: [39.47, 53.75, 6.88, 9.2], notes: [-4, 16, 44, 14], noteDir: -1, boltAt: [42.7, 58.7] } },
-    // the same idea for natori; the photo sees the record a little from the side, so the label is an ellipse (sx)
-    march: { kind: 'cd', dir: 'natori/', w: 334, h: 250, stageW: 156, shift: -24, under: 'vinyl.webp',
-             discs: [{ img: 'label.webp', cx: 243.68, cy: 124.59, size: 99.07, sx: 0.8687 }],
-             toggle: [35.64, 49.97], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'redteal',
-             arm: { ref: 167, vb: [222, 125], pivot: [206, 2], scale: 1, disc: [121.84, 62.3], sx: 0.8687, r: [54, 28] },
+    // the same idea for natori (the photo's record, seen a little from the side, straightened into a true circle)
+    march: { kind: 'cd', dir: 'natori/', w: 334, h: 231, stageW: 156, shift: -22, under: 'vinyl.webp',
+             discs: [{ img: 'label.webp', cx: 225.13, cy: 114.65, size: 91.53 }],
+             toggle: [32.92, 49.97], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'redteal',
+             arm: { ref: 167, vb: [218, 115.5], pivot: [203, 0], scale: 1, disc: [112.57, 57.32], r: [52, 27] },
              buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [360, 399],
                       mouthBox: [38.15, 56.52, 4.82, 3.99], notes: [52, 22, 26, 14], noteDir: 1, boltAt: [40.6, 57.8], fadeLow: true } }
   };
