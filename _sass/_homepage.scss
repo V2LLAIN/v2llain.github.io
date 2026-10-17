@@ -596,6 +596,15 @@ body.dark .lp-fader-slot::before {
   position: absolute; left: 49.19%; top: 51.25%; width: 5.38%; height: 5.62%;
   transform-origin: 50% 0; opacity: 0; pointer-events: none;
 }
+// a band instead of the single singer (per album)
+.lp-buddy-band { position: relative; display: none; width: 100%; aspect-ratio: 1112 / 880; }
+.lp-buddy.is-band .lp-buddy-band { display: block; }
+.lp-buddy.is-band .lp-buddy-bob { display: none; }
+.lp-buddy-band img {
+  position: absolute; height: auto; pointer-events: none; user-select: none;
+  transform-origin: 50% 100%; will-change: transform;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .18));
+}
 .lp-buddy-notes { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .lp-buddy-note {
   position: absolute; font-size: 18px; line-height: 1; font-weight: 700;

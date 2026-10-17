@@ -47,7 +47,11 @@
                toggle: [37.8, 50], still: 'still.webp', art: 'artwork-512.jpg', turn: 6,     // play button in the middle of the cover
                bars: 'bluegreen',
                // the same arm as Vaundy's; the needle rides the strip of front CD that sticks out of the cover
-               arm: { ref: 167.1, vb: [212.1, 115.6], pivot: [198, 0], scale: 1, disc: [99.25, 57.96], r: [51, 42] } }
+               arm: { ref: 167.1, vb: [212.1, 115.6], pivot: [198, 0], scale: 1, disc: [99.25, 57.96], r: [51, 42] },
+               // the singing buddy becomes the four members (positions in % of the group picture)
+               buddy: { icon: 'band-icon.webp', band: [
+                 { img: 'band-1.webp', x: 0, y: 0, w: 46.85 }, { img: 'band-2.webp', x: 48.02, y: 0.34, w: 51.17 },
+                 { img: 'band-3.webp', x: 0.9, y: 48.86, w: 51.17 }, { img: 'band-4.webp', x: 53.87, y: 49.2, w: 46.13 }] } }
   };
 
   // ---------- playlist ----------
@@ -713,6 +717,7 @@
     };
   }
 
+  var setBuddyLook = function () {};
   // ---------- singing buddy ----------
   // Head icon in the mode row opens a little character that floats bottom-left of the page,
   // mouths along to the vocals and bobs to the bass.
@@ -725,6 +730,24 @@
     var notesEl = buddy.querySelector('.lp-buddy-notes');
     var buddyOpen = false, buddyRaf = 0, buddyLast = 0, buddyT = 0;
     var kick = 0, mouth = 0, bMean = 0, vMean = 0, noteIn = 0, bf = null;
+    // --- band mode (an album can swap the singer for its own members) ---
+    var bandEl = buddy.querySelector('.lp-buddy-band');
+    var buddyIcon = buddyBtn.querySelector('img'), defaultIcon = buddyIcon.getAttribute('src');
+    var band = null, bandImgs = [], bandKick = [], bandQueue = [], lastKickB = 0;
+    setBuddyLook = function (L) {
+      var cfg = L && L.buddy;
+      bandEl.innerHTML = ''; bandImgs = []; bandKick = []; bandQueue = [];
+      band = cfg && cfg.band ? cfg.band : null;
+      buddy.classList.toggle('is-band', !!band);
+      buddyIcon.src = cfg && cfg.icon ? base + L.dir + cfg.icon : defaultIcon;
+      if (!band) return;
+      band.forEach(function (h) {
+        var im = document.createElement('img');
+        im.src = base + L.dir + h.img; im.alt = ''; im.draggable = false;
+        im.style.left = h.x + '%'; im.style.top = h.y + '%'; im.style.width = h.w + '%';
+        bandEl.appendChild(im); bandImgs.push(im); bandKick.push(0);
+      });
+    };
     // --- rock songs: little lightning-bolt symbols shoot out of the mouth along with the notes ---
     var BOLT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 1.5 3.5 13.8h6.6l-1.9 8.7L20.5 9.6h-6.7l2-8.1z" fill="#ffd21f" stroke="#e85d00" stroke-width="1.6" stroke-linejoin="round"/></svg>';
     var spawnBolt = function () {
@@ -762,8 +785,14 @@
       var h = Math.random() < 0.15 ? 330 + Math.random() * 20 : Math.random() * 48;
       n.style.setProperty('--n1', 'hsl(' + h.toFixed(0) + ', 100%, 56%)');
       n.style.setProperty('--n2', 'hsl(' + ((h + 22 + Math.random() * 18) % 360).toFixed(0) + ', 100%, 55%)');
-      n.style.left = (50 + Math.random() * 14) + '%';
-      n.style.top = (34 + Math.random() * 12) + '%';
+      if (band) {
+        var hb = band[Math.floor(Math.random() * band.length)];
+        n.style.left = (hb.x + hb.w * (0.3 + Math.random() * 0.45)) + '%';
+        n.style.top = (hb.y + 4 + Math.random() * 8) + '%';
+      } else {
+        n.style.left = (50 + Math.random() * 14) + '%';
+        n.style.top = (34 + Math.random() * 12) + '%';
+      }
       n.style.setProperty('--dx', (10 + Math.random() * 26) + 'px');
       n.addEventListener('animationend', function () { n.remove(); });
       notesEl.appendChild(n);
@@ -795,6 +824,20 @@
       var breathe = playing ? 0 : Math.sin(buddyT * 1.6) * 0.8;
       bob.style.transform = 'translateY(' + (-hop * 7 + breathe).toFixed(2) + 'px) rotate(' + sway.toFixed(2) + 'deg) scale(' + (1 + hop * 0.025).toFixed(3) + ',' + (1 - hop * 0.02 + kick * 0.0).toFixed(3) + ')';
       // shut: the face image has a closed mouth; open: the drawing's pink triangle mouth drops open over it
+      if (band) {
+        // each beat ripples across the four members, one after another
+        if (kick > 0.95 && lastKickB <= 0.95) for (var q = 0; q < bandImgs.length; q++) bandQueue.push({ t: buddyT + q * 0.07, i: q });
+        lastKickB = kick;
+        bandQueue = bandQueue.filter(function (e) { if (buddyT >= e.t) { bandKick[e.i] = 1; return false; } return true; });
+        for (var bi = 0; bi < bandImgs.length; bi++) {
+          bandKick[bi] = Math.max(0, bandKick[bi] - dt * 3.6);
+          var hp = Math.sin(bandKick[bi] * Math.PI / 2);
+          var sw = playing ? Math.sin(buddyT * 2.4 + bi * 1.4) * 4 : 0;
+          var sing = playing ? mouth * (0.5 + 0.5 * Math.sin(buddyT * 16 + bi * 2.1)) : 0;
+          var br = playing ? 0 : Math.sin(buddyT * 1.6 + bi) * 0.8;
+          bandImgs[bi].style.transform = 'translateY(' + (-hp * 6 - sing * 2 + br).toFixed(2) + 'px) rotate(' + sw.toFixed(2) + 'deg) scale(' + (1 + hp * 0.03).toFixed(3) + ',' + (1 - hp * 0.02 + sing * 0.035).toFixed(3) + ')';
+        }
+      }
       mouthEl.style.opacity = mouth > 0.08 ? 1 : 0;
       mouthEl.style.transform = 'scale(' + (0.85 + mouth * 0.3).toFixed(3) + ',' + (0.55 + mouth * 0.95).toFixed(3) + ')';
       if (playing && mouth > 0.3) { noteIn -= dt; if (noteIn <= 0) { spawnNote(); noteIn = (N && tracks[index].rock ? 0.3 : 0.55) + Math.random() * 0.4; } }
@@ -1060,6 +1103,7 @@
     toggleBtn.style.top = L.toggle[1] + '%';
     canvas.width = L.w; canvas.height = L.h;
     setArmLook(L.arm || null);
+    setBuddyLook(L);
     SEG_COLORS = BAR_COLORS[L.bars] || BAR_COLORS.orange;     // spectrum colours follow the album
     if (typeof drawViz === 'function' && vctx) drawViz();
     if (!renderers[name]) renderers[name] = (L.kind === 'cd' ? makeCd(L) : makeLp(L));
