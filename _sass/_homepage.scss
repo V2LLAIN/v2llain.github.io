@@ -426,8 +426,6 @@ body.theme-default .btn-outline:hover { border-color: var(--accent); color: var(
   font-size: .72rem; line-height: 1.2; letter-spacing: .02em; color: var(--text-muted); text-align: center;
 }
 .lp-album-name b { color: var(--text-secondary); font-weight: 600; }
-// CD albums have no tonearm
-.lp-player.is-cd .lp-arm { display: none; }
 // lower block: bars, time, title, mode icons on the left; VOL / BASS faders on the right, same height
 .lp-lower { display: flex; align-items: stretch; gap: 10px; width: 100%; margin-top: 10px; }
 .lp-lower-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; }

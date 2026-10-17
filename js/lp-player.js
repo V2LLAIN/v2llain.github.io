@@ -38,12 +38,16 @@
   //  cd: discs turning behind a still cover
   var LOOKS = {
     replica: { kind: 'lp', dir: '', w: 359, h: 408, dx: 12, dy: 60, ds: 336, stageW: 140,
-               toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10, bars: 'orange' },
-    rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 176,
+               toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10, bars: 'orange',
+               // tonearm in stage units (stage = 150 wide here); needle runs outer -> inner groove
+               arm: { ref: 150, vb: [200, 170.4], pivot: [172, 22], scale: 1, disc: [75.04, 95.1], r: [64, 30] } },
+    rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 140,
                discs: [{ img: 'disc-back.webp', cx: 221.7, cy: 115.8, size: 226 },
                        { img: 'disc-front.webp', cx: 198.3, cy: 115.8, size: 219 }],
-               toggle: [37.8, 84.5], still: 'still.webp', art: 'artwork-512.jpg', turn: 6,   // play button on the match striker
-               bars: 'bluegreen' }
+               toggle: [37.8, 50], still: 'still.webp', art: 'artwork-512.jpg', turn: 6,     // play button in the middle of the cover
+               bars: 'bluegreen',
+               // smaller arm beside the cover; the needle rides the strip of front CD that sticks out
+               arm: { ref: 140, vb: [190, 96.83], pivot: [158, 8], scale: 0.45, disc: [83.12, 48.54], r: [42, 36] } }
   };
 
   // ---------- playlist ----------
@@ -629,32 +633,33 @@
   // The needle lands on the outer groove when play starts, creeps inward as the song plays,
   // and swings back to its rest when paused. Geometry is in stage pixels (150 x 170.4).
   var armEl = root.querySelector('.lp-arm-swing');
+  var armSvg = root.querySelector('.lp-arm');
+  var armBase = root.querySelector('.lp-arm-base');
+  var setArmLook = function () {};
   if (armEl) {
-    var PIVOT_X = 172, PIVOT_Y = 22;
-    var TIP_X = -11.6, TIP_Y = 110.6;                // needle tip in the arm's own coordinates
-    var DISC_X = 75.04, DISC_Y = 95.1;               // record centre
-    var R_START = 64, R_END = 30;                    // outer groove -> run-out groove
-    var armAngle = 0, armRaf = 0, armLast = 0;
+    var TIP_X = -11.6, TIP_Y = 110.6;                // needle tip in the arm's own (unscaled) coordinates
+    var A = null, minDeg = 0, armAngle = 0, armRaf = 0, armLast = 0;
 
     var tipDist = function (deg) {
       var a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
-      var x = PIVOT_X + TIP_X * c - TIP_Y * sn, y = PIVOT_Y + TIP_X * sn + TIP_Y * c;
-      return Math.hypot(x - DISC_X, y - DISC_Y);
+      var tx = TIP_X * A.scale, ty = TIP_Y * A.scale;
+      var x = A.pivot[0] + tx * c - ty * sn, y = A.pivot[1] + tx * sn + ty * c;
+      return Math.hypot(x - A.disc[0], y - A.disc[1]);
     };
-    // the swing angle where the distance to the centre is smallest bounds the search
-    var minDeg = 0, minD = Infinity;
-    for (var dg = 0; dg <= 90; dg += 0.5) { var dd = tipDist(dg); if (dd < minD) { minD = dd; minDeg = dg; } }
     var angleFor = function (r) {                    // bisection on the approaching side
       var lo = 0, hi = minDeg;
       for (var it = 0; it < 30; it++) { var mid = (lo + hi) / 2; if (tipDist(mid) > r) lo = mid; else hi = mid; }
       return (lo + hi) / 2;
     };
     var armTarget = function () {
-      if (audio.paused) return 0;
+      if (audio.paused || !A) return 0;
       var d = audio.duration, f = d > 0 && isFinite(d) ? Math.min(1, audio.currentTime / d) : 0;
-      return angleFor(R_START - (R_START - R_END) * f);
+      return angleFor(A.r[0] - (A.r[0] - A.r[1]) * f);
     };
-    var drawArm = function () { armEl.setAttribute('transform', 'translate(' + PIVOT_X + ' ' + PIVOT_Y + ') rotate(' + armAngle.toFixed(3) + ')'); };
+    var drawArm = function () {
+      if (!A) return;
+      armEl.setAttribute('transform', 'translate(' + A.pivot[0] + ' ' + A.pivot[1] + ') scale(' + A.scale + ') rotate(' + armAngle.toFixed(3) + ')');
+    };
     var armFrame = function (ts) {
       armRaf = 0;
       var dt = armLast ? Math.min((ts - armLast) / 1000, 0.1) : 0.016;
@@ -668,7 +673,20 @@
     };
     var moveArm = function () { if (!armRaf) { armLast = 0; armRaf = requestAnimationFrame(armFrame); } };
     ['play', 'pause', 'seeked', 'emptied', 'loadedmetadata'].forEach(function (ev) { audio.addEventListener(ev, moveArm); });
-    drawArm();
+    // each album look has its own arm size/position (called from applyLook)
+    setArmLook = function (cfg) {
+      A = cfg;
+      if (!A) { armSvg.style.display = 'none'; return; }
+      armSvg.style.display = '';
+      armSvg.setAttribute('viewBox', '0 0 ' + A.vb[0] + ' ' + A.vb[1]);
+      armSvg.style.width = (A.vb[0] / A.ref * 100).toFixed(3) + '%';
+      armBase.setAttribute('transform', 'translate(' + A.pivot[0] + ' ' + A.pivot[1] + ') scale(' + A.scale + ')');
+      minDeg = 0; var minD = Infinity;
+      for (var dg = 0; dg <= 90; dg += 0.5) { var dd = tipDist(dg); if (dd < minD) { minD = dd; minDeg = dg; } }
+      armAngle = armTarget();                           // jump straight to the right spot for this record
+      drawArm();
+      moveArm();
+    };
   }
 
   // ---------- singing buddy ----------
@@ -1016,6 +1034,7 @@
     toggleBtn.style.left = L.toggle[0] + '%';
     toggleBtn.style.top = L.toggle[1] + '%';
     canvas.width = L.w; canvas.height = L.h;
+    setArmLook(L.arm || null);
     SEG_COLORS = BAR_COLORS[L.bars] || BAR_COLORS.orange;     // spectrum colours follow the album
     if (typeof drawViz === 'function' && vctx) drawViz();
     if (!renderers[name]) renderers[name] = (L.kind === 'cd' ? makeCd(L) : makeLp(L));
