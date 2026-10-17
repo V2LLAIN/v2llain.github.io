@@ -280,8 +280,10 @@
     if (switching) return;
     var wasPlaying = !audio.paused;
     var st = root.querySelector('.lp-stage');
-    if (reduceMotionAlbum || !st.animate) { setAlbum(albumIdx + dir, { play: wasPlaying }); return; }
+    // no animation when it can't be seen (background tab: animations are paused) or motion is reduced
+    if (reduceMotionAlbum || !st.animate || document.hidden) { setAlbum(albumIdx + dir, { play: wasPlaying }); return; }
     switching = true;
+    setTimeout(function () { switching = false; }, 1500);   // never leave the arrows stuck
     var LIFT = 'translateY(-16px) scale(1.04)', SHADOW_UP = 'drop-shadow(0 18px 18px rgba(0, 0, 0, .26))', SHADOW = 'drop-shadow(0 6px 14px rgba(0, 0, 0, .16))';
     var out = st.animate([
       { transform: 'none', filter: SHADOW, opacity: 1 },
