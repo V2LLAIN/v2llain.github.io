@@ -41,13 +41,13 @@
                toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10, bars: 'orange',
                // tonearm in stage units (stage = 150 wide here); needle runs outer -> inner groove
                arm: { ref: 150, vb: [200, 170.4], pivot: [172, 22], scale: 1, disc: [75.04, 95.1], r: [64, 30] } },
-    rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 140,
+    rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 156, shift: -20,   // nudged left to leave room for the arm
                discs: [{ img: 'disc-back.webp', cx: 221.7, cy: 115.8, size: 226 },
                        { img: 'disc-front.webp', cx: 198.3, cy: 115.8, size: 219 }],
                toggle: [37.8, 50], still: 'still.webp', art: 'artwork-512.jpg', turn: 6,     // play button in the middle of the cover
                bars: 'bluegreen',
-               // smaller arm beside the cover; the needle rides the strip of front CD that sticks out
-               arm: { ref: 140, vb: [190, 96.83], pivot: [158, 8], scale: 0.45, disc: [83.12, 48.54], r: [42, 36] } }
+               // the same arm as Vaundy's; the needle rides the strip of front CD that sticks out of the cover
+               arm: { ref: 167.1, vb: [212.1, 115.6], pivot: [198, 0], scale: 1, disc: [99.25, 57.96], r: [51, 42] } }
   };
 
   // ---------- playlist ----------
@@ -270,7 +270,31 @@
     setAlbum(start, { first: true });
   })();
   albumPrev.hidden = albumNext.hidden = albums.length < 2;
-  function switchAlbum(dir) { setAlbum(albumIdx + dir, { play: !audio.paused }); }
+  var switching = false;
+  var reduceMotionAlbum = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function switchAlbum(dir) {
+    if (switching) return;
+    var wasPlaying = !audio.paused;
+    var st = root.querySelector('.lp-stage');
+    if (reduceMotionAlbum || !st.animate) { setAlbum(albumIdx + dir, { play: wasPlaying }); return; }
+    switching = true;
+    var LIFT = 'translateY(-16px) scale(1.04)', SHADOW_UP = 'drop-shadow(0 18px 18px rgba(0, 0, 0, .26))', SHADOW = 'drop-shadow(0 6px 14px rgba(0, 0, 0, .16))';
+    var out = st.animate([
+      { transform: 'none', filter: SHADOW, opacity: 1 },
+      { transform: LIFT, filter: SHADOW_UP, opacity: 1, offset: 0.45, easing: 'ease-in' },      // pulled up out of the case
+      { transform: 'translateX(' + (dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 }  // then carried away
+    ], { duration: 520, easing: 'cubic-bezier(.3, .7, .4, 1)', fill: 'forwards' });
+    out.onfinish = function () {
+      setAlbum(albumIdx + dir, { play: wasPlaying });
+      var inn = st.animate([
+        { transform: 'translateX(' + (-dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 },
+        { transform: LIFT, filter: SHADOW_UP, opacity: 1, offset: 0.55, easing: 'ease-in-out' },   // carried in, still raised
+        { transform: 'none', filter: SHADOW, opacity: 1 }                                          // and set down
+      ], { duration: 560, easing: 'cubic-bezier(.2, .7, .3, 1)' });
+      out.cancel();
+      inn.onfinish = inn.oncancel = function () { switching = false; };
+    };
+  }
   albumPrev.addEventListener('click', function () { switchAlbum(-1); });
   albumNext.addEventListener('click', function () { switchAlbum(1); });
 
@@ -1029,6 +1053,7 @@
     root.classList.toggle('is-cd', L.kind === 'cd');
     root.classList.toggle('is-lp', L.kind !== 'cd');
     stage.style.width = L.stageW + 'px';
+    stage.style.translate = (L.shift || 0) + 'px 0';
     stage.style.aspectRatio = L.w + ' / ' + L.h;
     stage.style.backgroundImage = 'url("' + base + L.dir + L.still + '")';
     toggleBtn.style.left = L.toggle[0] + '%';
