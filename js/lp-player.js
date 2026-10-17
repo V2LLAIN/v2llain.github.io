@@ -1163,4 +1163,183 @@
 
   var renderInit = true;
   applyLook(albums[albumIdx].look);
+
+  // ---------- "🎧 J-POP 추천 받기" ----------
+  // Picks a song, puts it on the record, and the album characters pop out of the button
+  // and hop over to the LP, where they wait by it until it is played.
+  var recBtn = document.querySelector('.jrec-btn');
+  if (recBtn) {
+    var recLayer = null, recBusy = false, recTimers = [], recChars = [], recBubble = null, recOnPlay = null;
+    var recReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var later = function (fn, ms) { recTimers.push(setTimeout(fn, ms)); };
+    var charSpec = function (look) {                    // what each album's character looks like
+      var L = LOOKS[look] || LOOKS.replica, b = L.buddy;
+      if (b && b.band) return { w: 66, band: b.band, dir: L.dir };
+      if (b && b.singer) return { w: 72, img: base + L.dir + b.singer, ratio: b.size[1] / b.size[0] };
+      return { w: 70, img: base + 'buddy-singer.webp', ratio: 320 / 372 };
+    };
+    var makeChar = function (look) {
+      var sp = charSpec(look), el = document.createElement('div'), body = document.createElement('div');
+      el.className = 'jrec-char'; body.className = 'jrec-body';
+      el.style.width = sp.w + 'px';
+      if (sp.band) {
+        var g = document.createElement('div'); g.className = 'jrec-band';
+        sp.band.forEach(function (h) {
+          var im = document.createElement('img'); im.src = base + sp.dir + h.img; im.alt = ''; im.draggable = false;
+          im.style.left = h.x + '%'; im.style.top = h.y + '%'; im.style.width = h.w + '%'; g.appendChild(im);
+        });
+        body.appendChild(g); sp.h = sp.w * 880 / 1112;
+      } else {
+        var im = document.createElement('img'); im.src = sp.img; im.alt = ''; im.draggable = false;
+        body.appendChild(im); sp.h = sp.w * sp.ratio;
+      }
+      el.style.height = sp.h + 'px';
+      el.appendChild(body);
+      return { el: el, body: body, w: sp.w, h: sp.h, x: 0, y: 0 };
+    };
+    // (x, y) is where the character's feet are
+    var put = function (c, x, y) { c.x = x; c.y = y; c.el.style.transform = 'translate(' + (x - c.w / 2).toFixed(1) + 'px,' + (y - c.h).toFixed(1) + 'px)'; };
+    var hop = function (c, x1, y1, hops, height, ms, delay) {
+      var x0 = c.x, y0 = c.y, frames = [], n = Math.max(8, hops * 10);
+      for (var i = 0; i <= n; i++) {
+        var t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t - Math.abs(Math.sin(t * hops * Math.PI)) * height;
+        frames.push({ transform: 'translate(' + (x - c.w / 2).toFixed(1) + 'px,' + (y - c.h).toFixed(1) + 'px)' });
+      }
+      put(c, x1, y1);
+      if (recReduce || !c.el.animate) return;
+      c.el.animate(frames, { duration: ms, delay: delay || 0, easing: 'linear', fill: 'backwards' });
+    };
+    var sparkle = function (x, y, n) {
+      for (var i = 0; i < n; i++) {
+        var sp = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 22 + Math.random() * 26;
+        sp.className = 'jrec-spark'; sp.textContent = Math.random() < 0.5 ? '✦' : '✧';
+        sp.style.left = x + 'px'; sp.style.top = y + 'px';
+        sp.style.setProperty('--dx', (Math.cos(a) * d).toFixed(1) + 'px'); sp.style.setProperty('--dy', (Math.sin(a) * d).toFixed(1) + 'px');
+        sp.addEventListener('animationend', function () { this.remove(); });
+        recLayer.appendChild(sp);
+      }
+    };
+    var recClear = function () {
+      recTimers.forEach(clearTimeout); recTimers = [];
+      if (recOnPlay) { audio.removeEventListener('play', recOnPlay); recOnPlay = null; }
+      root.classList.remove('is-hinting');
+      if (recLayer) recLayer.remove();
+      recLayer = null; recChars = []; recBubble = null; recBusy = false;
+    };
+    var recLeave = function () {                        // everyone pops away (뿅)
+      if (!recLayer) return;
+      root.classList.remove('is-hinting');
+      if (recBubble) recBubble.classList.add('is-leaving');
+      recChars.forEach(function (c, k) {
+        c.el.classList.remove('is-perched');
+        if (c.body.animate && !recReduce) c.body.animate([
+          { transform: 'none', opacity: 1 }, { transform: 'translateY(-14px) scale(1.12)', opacity: 1, offset: 0.4 }, { transform: 'translateY(-6px) scale(0)', opacity: 0 }
+        ], { duration: 420, delay: k * 90, easing: 'ease-in', fill: 'forwards' });
+        later(function () { sparkle(c.x, c.y - c.h / 2, 5); }, k * 90 + 300);
+      });
+      later(recClear, 1100);
+    };
+    var pickSong = function () {
+      var pool = [];
+      albums.forEach(function (al, a) { al.tracks.forEach(function (t, k) { if (!(a === albumIdx && k === index)) pool.push([a, k]); }); });
+      return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+    };
+    var inView = function (r) { return r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth; };
+
+    recBtn.addEventListener('click', function () {
+      if (recBusy) return;
+      recClear(); recBusy = true;
+      var pick = pickSong(); if (!pick) { recBusy = false; return; }
+      var wasPlaying = !audio.paused;
+      if (pick[0] !== albumIdx) setAlbum(pick[0]);
+      loadTrack(pick[1]); rebuildOrder();
+      if (wasPlaying) { ensureAudioGraph(); resumeAudio(); audio.play().catch(function () {}); }
+      var song = tracks[index], al = albums[albumIdx];
+
+      recLayer = document.createElement('div'); recLayer.className = 'jrec-layer'; recLayer.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(recLayer);
+      // the picked album's character leads, the others follow
+      var order = [albumIdx].concat(albums.map(function (_, i) { return i; }).filter(function (i) { return i !== albumIdx; }));
+      var looks = []; order.forEach(function (i) { if (looks.indexOf(albums[i].look) < 0) looks.push(albums[i].look); });
+      looks = looks.slice(0, 3);
+      var br = recBtn.getBoundingClientRect(), bx = br.left + br.width / 2, by = br.top + 4;
+      sparkle(bx, br.top + br.height / 2, 9);
+      looks.forEach(function (look, k) {
+        var c = makeChar(look); recLayer.appendChild(c.el); recChars.push(c);
+        if (!k) c.el.style.zIndex = 2;                  // the leader stands in front
+        c.el.addEventListener('click', recLeave);
+        put(c, bx, by);
+        var fanX = bx + (k - (looks.length - 1) / 2) * 64;
+        hop(c, Math.max(c.w / 2 + 4, Math.min(window.innerWidth - c.w / 2 - 4, fanX)), br.top - 2, 1, 46, 520, k * 110);
+        if (c.body.animate && !recReduce) c.body.animate([
+          { transform: 'scale(.15)', opacity: 0 }, { transform: 'scale(1.18, .9)', opacity: 1, offset: 0.55 }, { transform: 'scale(.95, 1.06)', offset: 0.8 }, { transform: 'none' }
+        ], { duration: 560, delay: k * 110, easing: 'ease-out', fill: 'backwards' });
+      });
+
+      // bring the record into view (phones: it is up in the header), then hop over to it
+      later(function () {
+        var st = stage.getBoundingClientRect();
+        var go = function () {
+          var r = stage.getBoundingClientRect(), vw = window.innerWidth;
+          // the leader sits in the middle of the sleeve's top edge, the others on its corners
+          var spots = [0, -1, 1];
+          recChars.forEach(function (c, k) {
+            var x = r.left + r.width / 2 + spots[k] * Math.min(62, r.width * 0.4), y = r.top + (k ? 22 : 12);
+            x = Math.max(c.w / 2 + 2, Math.min(vw - c.w / 2 - 2, x));
+            var dist = Math.hypot(x - c.x, y - c.y), hops = Math.max(2, Math.min(5, Math.round(dist / 120)));
+            hop(c, x, y, hops, 34 + Math.min(40, dist / 14), 380 + hops * 190, k * 140);
+            later(function () { c.el.classList.add('is-perched'); c.el.style.setProperty('--d', (k * 0.18) + 's'); }, 380 + hops * 190 + k * 140);
+          });
+          later(function () {
+            if (!recLayer) return;
+            var b = document.createElement('div'); b.className = 'jrec-bubble'; recBubble = b;
+            b.innerHTML = '<b>오늘의 J-POP 추천 🎧</b><span class="jrec-song"></span><span class="jrec-artist"></span><span class="jrec-cta"></span>';
+            var nice = prettyTitle(song), cut = nice.replace(/\s*-\s*[^-]+$/, '');   // drop the "- artist" tail of the file name
+            b.querySelector('.jrec-song').textContent = cut || nice;
+            b.querySelector('.jrec-artist').textContent = al.artist + (al.album ? ' · ' + al.album : '');
+            b.querySelector('.jrec-cta').textContent = audio.paused ? '▶ 눌러서 들어봐!' : '♪ 지금 재생 중';
+            b.addEventListener('click', recLeave);
+            recLayer.appendChild(b);
+            var r2 = stage.getBoundingClientRect(), bw = b.offsetWidth, bh = b.offsetHeight;
+            var deckR = (root.querySelector('.lp-deck') || stage).getBoundingClientRect().right;   // clear of the tonearm and ▶
+            recLayer._top = r2.top;
+            if (vw - deckR > bw + 20) {                   // room to the right of the record (desktop)
+              b.classList.add('at-right');
+              var top = Math.max(8, Math.min(window.innerHeight - bh - 8, r2.top + r2.height / 2 - 30));
+              b.style.left = (deckR + 10) + 'px'; b.style.top = top + 'px';
+              b.style.setProperty('--tail', Math.max(10, Math.min(bh - 20, r2.top + r2.height / 2 - top - 5)) + 'px');
+            } else {                                        // phones: under the record
+              b.classList.add('at-below');
+              var left = Math.max(8, Math.min(vw - bw - 8, r2.left + r2.width / 2 - bw / 2));
+              b.style.left = left + 'px'; b.style.top = (r2.bottom + 12) + 'px';
+              b.style.setProperty('--tail', (r2.left + r2.width / 2 - left - 5) + 'px');
+            }
+            sparkle(recChars[0].x, recChars[0].y - recChars[0].h, 6);
+            if (recChars[0].body.animate && !recReduce) recChars[0].body.animate([   // the leader's happy jump
+              { transform: 'none' }, { transform: 'translateY(-14px) rotate(-6deg)', offset: 0.4 }, { transform: 'none' }
+            ], { duration: 460, easing: 'ease-out' });
+            if (audio.paused) {
+              root.classList.add('is-hinting');
+              recOnPlay = function () { root.classList.remove('is-hinting'); b.querySelector('.jrec-cta').textContent = '♪ 좋은 감상 되세요!'; later(recLeave, 2200); };
+              audio.addEventListener('play', recOnPlay, { once: true });
+              later(recLeave, 14000);
+            } else later(recLeave, 7000);
+            recBusy = false;                                // a second click asks for another song
+          }, 380 + 5 * 190 + 300);
+        };
+        if (inView(st)) go();
+        else {
+          stage.scrollIntoView({ behavior: recReduce ? 'auto' : 'smooth', block: 'center' });
+          later(go, recReduce ? 50 : 650);
+        }
+      }, recReduce ? 50 : 760);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && recLayer) recLeave(); });
+    // if the page is scrolled away from the record, they leave too
+    window.addEventListener('scroll', function () {
+      if (!recLayer || !recBubble || recBubble.classList.contains('is-leaving')) return;
+      var y = stage.getBoundingClientRect().top;
+      if (recLayer._top == null) recLayer._top = y; else if (Math.abs(y - recLayer._top) > 60) recLeave();
+    }, { passive: true });
+  }
 })();
