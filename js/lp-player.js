@@ -1188,8 +1188,9 @@
       if (b && b.singer) return { w: 72, img: base + L.dir + b.singer, ratio: b.size[1] / b.size[0] };
       return { w: 70, img: base + 'buddy-singer.webp', ratio: 320 / 372 };
     };
-    var makeChar = function (look) {
+    var makeChar = function (look, f) {
       var sp = charSpec(look), el = document.createElement('div'), body = document.createElement('div');
+      sp.w = Math.round(sp.w * (f || 1));               // smaller when there are many of them
       el.className = 'jrec-char'; body.className = 'jrec-body';
       el.style.width = sp.w + 'px';
       if (sp.band) {
@@ -1271,15 +1272,17 @@
       // the picked album's character leads, the others follow
       var order = [albumIdx].concat(shuffled(albums.map(function (_, i) { return i; }).filter(function (i) { return i !== albumIdx; })));
       var looks = []; order.forEach(function (i) { if (looks.indexOf(albums[i].look) < 0) looks.push(albums[i].look); });
-      looks = looks.slice(0, 3);
+      // every album's character comes out (new albums join automatically)
+      var nC = looks.length, fC = nC <= 4 ? 1 : Math.max(0.6, 4 / nC);
+      var spotOf = function (k) { return k ? (k % 2 ? -1 : 1) * Math.ceil(k / 2) : 0; };   // 0, -1, +1, -2, +2, ...
       var br = recBtn.getBoundingClientRect(), bx = br.left + br.width / 2, by = br.top + 4;
       sparkle(bx, br.top + br.height / 2, 9);
       looks.forEach(function (look, k) {
-        var c = makeChar(look); recLayer.appendChild(c.el); recChars.push(c);
-        if (!k) c.el.style.zIndex = 2;                  // the leader stands in front
+        var c = makeChar(look, fC); recLayer.appendChild(c.el); recChars.push(c);
+        c.el.style.zIndex = nC + 1 - Math.abs(spotOf(k));   // the leader stands in front, the outer ones behind
         c.el.addEventListener('click', recLeave);
         put(c, bx, by);
-        var fanX = bx + (k - (looks.length - 1) / 2) * 64;
+        var fanX = bx + spotOf(k) * Math.min(64 * fC, (window.innerWidth - 24) / nC);
         hop(c, Math.max(c.w / 2 + 4, Math.min(window.innerWidth - c.w / 2 - 4, fanX)), br.top - 2, 1, 46, 520, k * 110);
         if (c.body.animate && !recReduce) c.body.animate([
           { transform: 'scale(.15)', opacity: 0 }, { transform: 'scale(1.18, .9)', opacity: 1, offset: 0.55 }, { transform: 'scale(.95, 1.06)', offset: 0.8 }, { transform: 'none' }
@@ -1291,10 +1294,11 @@
         var st = stage.getBoundingClientRect();
         var go = function () {
           var r = stage.getBoundingClientRect(), vw = window.innerWidth;
-          // the leader sits in the middle of the sleeve's top edge, the others on its corners
-          var spots = [0, -1, 1];
+          // the leader sits in the middle of the sleeve's top edge, the others fan out to both sides
+          var step = Math.min(56 * fC, Math.min(vw - 16, r.width + 150) / Math.max(1, nC - 1));
           recChars.forEach(function (c, k) {
-            var x = r.left + r.width / 2 + spots[k] * Math.min(62, r.width * 0.4), y = r.top + (k ? 22 : 12);
+            var sp = spotOf(k);
+            var x = r.left + r.width / 2 + sp * step, y = r.top + 12 + Math.abs(sp) * 8;
             x = Math.max(c.w / 2 + 2, Math.min(vw - c.w / 2 - 2, x));
             var dist = Math.hypot(x - c.x, y - c.y), hops = Math.max(2, Math.min(5, Math.round(dist / 120)));
             hop(c, x, y, hops, 34 + Math.min(40, dist / 14), 380 + hops * 190, k * 140);
@@ -1335,7 +1339,7 @@
               later(recLeave, 14000);
             } else later(recLeave, 7000);
             recBusy = false;                                // a second click asks for another song
-          }, 380 + 5 * 190 + 300);
+          }, 380 + 5 * 190 + 300 + Math.max(0, nC - 3) * 140);
         };
         if (inView(st)) go();
         else {
