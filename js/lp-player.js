@@ -38,11 +38,12 @@
   //  cd: discs turning behind a still cover
   var LOOKS = {
     replica: { kind: 'lp', dir: '', w: 359, h: 408, dx: 12, dy: 60, ds: 336, stageW: 140,
-               toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10 },
+               toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10, bars: 'orange' },
     rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 176,
                discs: [{ img: 'disc-back.webp', cx: 221.7, cy: 115.8, size: 226 },
                        { img: 'disc-front.webp', cx: 198.3, cy: 115.8, size: 219 }],
-               toggle: [37.8, 84.5], still: 'still.webp', art: 'artwork-512.jpg', turn: 6 }   // play button on the match striker
+               toggle: [37.8, 84.5], still: 'still.webp', art: 'artwork-512.jpg', turn: 6,   // play button on the match striker
+               bars: 'bluegreen' }
   };
 
   // ---------- playlist ----------
@@ -458,7 +459,12 @@
   }
 
   // bottom -> top: deep red-orange to bright amber
-  var SEG_COLORS = ['#b8350f', '#c63f10', '#d44b12', '#e05814', '#ea6716', '#f27a1c', '#f78f2a', '#fba53f', '#ffbd5c'];
+  var BAR_COLORS = {
+    orange: ['#b8350f', '#c63f10', '#d44b12', '#e05814', '#ea6716', '#f27a1c', '#f78f2a', '#fba53f', '#ffbd5c'],
+    // deep blue at the bottom -> teal -> fresh green at the top
+    bluegreen: ['#0d3b8c', '#1150b0', '#1668c9', '#1a84d4', '#18a0cc', '#17b7b0', '#1fc68c', '#47d26e', '#86df5e']
+  };
+  var SEG_COLORS = BAR_COLORS.orange;
 
   function drawViz() {
     if (!vctx) return;
@@ -1010,6 +1016,8 @@
     toggleBtn.style.left = L.toggle[0] + '%';
     toggleBtn.style.top = L.toggle[1] + '%';
     canvas.width = L.w; canvas.height = L.h;
+    SEG_COLORS = BAR_COLORS[L.bars] || BAR_COLORS.orange;     // spectrum colours follow the album
+    if (typeof drawViz === 'function' && vctx) drawViz();
     if (!renderers[name]) renderers[name] = (L.kind === 'cd' ? makeCd(L) : makeLp(L));
     renderers[name].then(function (r) {
       if (lookName !== name) return;                     // switched again while loading
