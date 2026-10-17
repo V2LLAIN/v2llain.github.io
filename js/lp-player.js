@@ -67,11 +67,11 @@
              arm: { ref: 167, vb: [218, 115.5], pivot: [203, 0], scale: 1, disc: [112.57, 57.32], r: [52, 27] },
              buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [360, 399],
                       mouthBox: [38.15, 56.52, 4.82, 3.99], notes: [52, 22, 26, 14], noteDir: 1, boltAt: [40.6, 57.8], fadeLow: true } },
-    // Penthouse: no photo of a record, so the sleeve (the user's drawing of the band) and the record are drawn from scratch
-    suits: { kind: 'cd', dir: 'penthouse/', w: 334, h: 226, stageW: 156, shift: -22, under: 'vinyl.webp',
-             discs: [{ img: 'label.webp', cx: 225.98, cy: 112.99, size: 71.41 }],
-             toggle: [33.83, 50], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'suits',
-             arm: { ref: 167, vb: [218, 113], pivot: [203, 0], scale: 1, disc: [112.99, 56.5], r: [51, 22] },
+    // Penthouse: the 一難 record (photo seen a touch from the side, straightened into a true circle)
+    suits: { kind: 'cd', dir: 'penthouse/', w: 334, h: 206, stageW: 156, shift: -22, under: 'vinyl.webp',
+             discs: [{ img: 'label.webp', cx: 234.24, cy: 105.13, size: 76.38 }],
+             toggle: [32.85, 49.93], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'suits',
+             arm: { ref: 167, vb: [222, 103], pivot: [208, 0], scale: 1, disc: [117.12, 52.56], r: [48, 23] },
              // the whole band sings: one picture, a mouth on each face that can be seen (in % of the picture)
              buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [480, 308], width: 230, popW: 112, noFade: true,
                       mouths: [[32.27, 22.77, 1.84, 2.42], [50.42, 43.12, 1.84, 2.42], [73.31, 27.39, 1.84, 2.42], [78.46, 48.84, 1.84, 2.42], [44.99, 72.39, 1.84, 2.42]],
