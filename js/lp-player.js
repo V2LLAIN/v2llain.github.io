@@ -312,12 +312,12 @@
     var out = st.animate([
       { transform: 'none', filter: SHADOW, opacity: 1 },
       { transform: LIFT, filter: SHADOW_UP, opacity: 1, offset: 0.45, easing: 'ease-in' },      // pulled up out of the case
-      { transform: 'translateX(' + (dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 }  // then carried away
+      { transform: 'translateX(' + (-dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 }  // then carried off to the far side
     ], { duration: 520, easing: 'cubic-bezier(.3, .7, .4, 1)', fill: 'forwards' });
     out.onfinish = function () {
       setAlbum(albumIdx + dir, { play: wasPlaying });
       var inn = st.animate([
-        { transform: 'translateX(' + (-dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 },
+        { transform: 'translateX(' + (dir * 70) + 'px) ' + LIFT, filter: SHADOW_UP, opacity: 0 },   // ▶ brings the next one in from the right
         { transform: LIFT, filter: SHADOW_UP, opacity: 1, offset: 0.55, easing: 'ease-in-out' },   // carried in, still raised
         { transform: 'none', filter: SHADOW, opacity: 1 }                                          // and set down
       ], { duration: 560, easing: 'cubic-bezier(.2, .7, .3, 1)' });
