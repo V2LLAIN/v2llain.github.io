@@ -1,6 +1,6 @@
 # Albums for the sidebar player, in the order the ◀ ▶ buttons go through them.
 # folder: the folder inside /music/ that holds the album's songs
-# look:   which artwork/animation to use (replica = Vaundy LP, rejoice = Official髭男dism CDs, iris = 米津玄師 LP, march = なとり LP)
+# look:   which artwork/animation to use (replica = Vaundy LP, rejoice = Official髭男dism CDs, iris = 米津玄師 LP, march = なとり LP, suits = Penthouse LP)
 - folder: vaundy
   artist: Vaundy
   album: replica
@@ -17,3 +17,6 @@
   artist: なとり
   album: 行進
   look: march
+- folder: penthouse
+  artist: Penthouse
+  look: suits

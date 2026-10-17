@@ -654,6 +654,7 @@ body.dark .lp-fader-slot::before {
   -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
           mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
 }
+.lp-buddy.no-fade .lp-buddy-bob { -webkit-mask-image: none; mask-image: none; }
 .lp-buddy.fade-low .lp-buddy-bob {
   -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent 100%);
           mask-image: linear-gradient(180deg, #000 88%, transparent 100%);

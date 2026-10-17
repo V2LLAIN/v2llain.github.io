@@ -66,7 +66,16 @@
              toggle: [32.92, 49.97], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'redteal',
              arm: { ref: 167, vb: [218, 115.5], pivot: [203, 0], scale: 1, disc: [112.57, 57.32], r: [52, 27] },
              buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [360, 399],
-                      mouthBox: [38.15, 56.52, 4.82, 3.99], notes: [52, 22, 26, 14], noteDir: 1, boltAt: [40.6, 57.8], fadeLow: true } }
+                      mouthBox: [38.15, 56.52, 4.82, 3.99], notes: [52, 22, 26, 14], noteDir: 1, boltAt: [40.6, 57.8], fadeLow: true } },
+    // Penthouse: no photo of a record, so the sleeve (the user's drawing of the band) and the record are drawn from scratch
+    suits: { kind: 'cd', dir: 'penthouse/', w: 334, h: 226, stageW: 156, shift: -22, under: 'vinyl.webp',
+             discs: [{ img: 'label.webp', cx: 225.98, cy: 112.99, size: 71.41 }],
+             toggle: [33.83, 50], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'suits',
+             arm: { ref: 167, vb: [218, 113], pivot: [203, 0], scale: 1, disc: [112.99, 56.5], r: [51, 22] },
+             // the whole band sings: one picture, a mouth on each face that can be seen (in % of the picture)
+             buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [480, 308], width: 230, popW: 112, noFade: true,
+                      mouths: [[32.27, 22.77, 1.84, 2.42], [50.42, 43.12, 1.84, 2.42], [73.31, 27.39, 1.84, 2.42], [78.46, 48.84, 1.84, 2.42], [44.99, 72.39, 1.84, 2.42]],
+                      notes: [8, 80, 0, 22], noteDir: 1, boltAt: [50.4, 45] } }
   };
 
   // ---------- playlist ----------
@@ -515,7 +524,9 @@
     // crimson at the bottom -> magenta -> violet at the top
     redpurple: ['#8c0a1c', '#ad1027', '#c9183a', '#d8234f', '#cf2a6c', '#b6338c', '#9640ad', '#7d55cc', '#a183ec'],
     // near-black at the bottom -> red -> teal at the top
-    redteal: ['#26262b', '#3f2226', '#7a1a22', '#b81f2a', '#e0362f', '#9c5b5b', '#2f8f88', '#1fb5a5', '#4fe0c8']
+    redteal: ['#26262b', '#3f2226', '#7a1a22', '#b81f2a', '#e0362f', '#9c5b5b', '#2f8f88', '#1fb5a5', '#4fe0c8'],
+    // Penthouse's suits: green, burgundy, plum, pink, cream and yellow
+    suits: ['#2f6b44', '#3f8a57', '#8a2226', '#b0373b', '#7b1f68', '#a8408f', '#e9a3b6', '#e6d9b8', '#f2df7c']
   };
   var SEG_COLORS = BAR_COLORS.orange;
 
@@ -758,6 +769,7 @@
     var singerEl = buddy.querySelector('.lp-buddy-img');
     var defaultSinger = { src: singerEl.getAttribute('src'), w: singerEl.getAttribute('width'), h: singerEl.getAttribute('height'), mouth: mouthEl.getAttribute('src') };
     var singer = null;                                 // an album's own singer (null = the default one)
+    var extraMouths = [];
     setBuddyLook = function (L) {
       var cfg = L && L.buddy;
       bandEl.innerHTML = ''; bandImgs = []; bandKick = []; bandQueue = [];
@@ -770,6 +782,16 @@
       singerEl.setAttribute('height', singer ? singer.size[1] : defaultSinger.h);
       mouthEl.src = singer ? base + L.dir + singer.mouth : defaultSinger.mouth;
       buddy.classList.toggle('fade-low', !!(singer && singer.fadeLow));   // keep the guitar: fade only the very bottom
+      buddy.classList.toggle('no-fade', !!(singer && singer.noFade));     // a full-length drawing: no fade at all
+      buddy.style.width = singer && singer.width ? singer.width + 'px' : '';
+      // several singers in one picture: one mouth per face
+      extraMouths.forEach(function (m) { m.remove(); }); extraMouths = [];
+      mouthEl.style.display = singer && singer.mouths ? 'none' : '';
+      if (singer && singer.mouths) singer.mouths.forEach(function (mb) {
+        var m = mouthEl.cloneNode(false); m.style.display = '';
+        m.style.left = mb[0] + '%'; m.style.top = mb[1] + '%'; m.style.width = mb[2] + '%'; m.style.height = mb[3] + '%';
+        mouthEl.parentNode.appendChild(m); extraMouths.push(m);
+      });
       var mb = singer && singer.mouthBox;
       mouthEl.style.left = mb ? mb[0] + '%' : ''; mouthEl.style.top = mb ? mb[1] + '%' : '';
       mouthEl.style.width = mb ? mb[2] + '%' : ''; mouthEl.style.height = mb ? mb[3] + '%' : '';
@@ -875,6 +897,11 @@
       }
       mouthEl.style.opacity = mouth > 0.08 ? 1 : 0;
       mouthEl.style.transform = 'scale(' + (0.85 + mouth * 0.3).toFixed(3) + ',' + (0.55 + mouth * 0.95).toFixed(3) + ')';
+      for (var mi = 0; mi < extraMouths.length; mi++) {       // each member a little out of step
+        var mm = playing ? mouth * (0.45 + 0.55 * Math.abs(Math.sin(buddyT * 7 + mi * 1.9))) : 0;
+        extraMouths[mi].style.opacity = mm > 0.08 ? 1 : 0;
+        extraMouths[mi].style.transform = 'scale(' + (0.85 + mm * 0.3).toFixed(3) + ',' + (0.55 + mm * 0.95).toFixed(3) + ')';
+      }
       if (playing && mouth > 0.3) { noteIn -= dt; if (noteIn <= 0) { spawnNote(); noteIn = (N && tracks[index].rock ? 0.3 : 0.55) + Math.random() * 0.4; } }
       // rock songs: fire ⚡ out of the mouth while singing, a burst on each beat
       var rockNow = playing && N && tracks[index].rock;
@@ -1185,7 +1212,7 @@
     var charSpec = function (look) {                    // what each album's character looks like
       var L = LOOKS[look] || LOOKS.replica, b = L.buddy;
       if (b && b.band) return { w: 66, band: b.band, dir: L.dir };
-      if (b && b.singer) return { w: 72, img: base + L.dir + b.singer, ratio: b.size[1] / b.size[0] };
+      if (b && b.singer) return { w: b.popW || 72, img: base + L.dir + b.singer, ratio: b.size[1] / b.size[0] };
       return { w: 70, img: base + 'buddy-singer.webp', ratio: 320 / 372 };
     };
     var makeChar = function (look, f) {
