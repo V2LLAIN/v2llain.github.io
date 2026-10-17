@@ -59,7 +59,14 @@
             arm: { ref: 167, vb: [218, 114.5], pivot: [203, 0], scale: 1, disc: [112.48, 57.83], r: [53, 22] },
             // its own singer (faces left, so the notes drift left); mouth box in % of the picture
             buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [380, 318],
-                     mouthBox: [39.47, 53.75, 6.88, 9.2], notes: [-4, 16, 44, 14], noteDir: -1, boltAt: [42.7, 58.7] } }
+                     mouthBox: [39.47, 53.75, 6.88, 9.2], notes: [-4, 16, 44, 14], noteDir: -1, boltAt: [42.7, 58.7] } },
+    // the same idea for natori; the photo sees the record a little from the side, so the label is an ellipse (sx)
+    march: { kind: 'cd', dir: 'natori/', w: 334, h: 250, stageW: 156, shift: -24, under: 'vinyl.webp',
+             discs: [{ img: 'label.webp', cx: 243.68, cy: 124.59, size: 99.07, sx: 0.8687 }],
+             toggle: [35.64, 49.97], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'redteal',
+             arm: { ref: 167, vb: [222, 125], pivot: [206, 2], scale: 1, disc: [121.84, 62.3], sx: 0.8687, r: [54, 28] },
+             buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [360, 399],
+                      mouthBox: [38.15, 56.52, 4.82, 3.99], notes: [52, 22, 26, 14], noteDir: 1, boltAt: [40.6, 57.8], fadeLow: true } }
   };
 
   // ---------- playlist ----------
@@ -506,7 +513,9 @@
     // deep blue at the bottom -> teal -> fresh green at the top
     bluegreen: ['#0d3b8c', '#1150b0', '#1668c9', '#1a84d4', '#18a0cc', '#17b7b0', '#1fc68c', '#47d26e', '#86df5e'],
     // crimson at the bottom -> magenta -> violet at the top
-    redpurple: ['#8c0a1c', '#ad1027', '#c9183a', '#d8234f', '#cf2a6c', '#b6338c', '#9640ad', '#7d55cc', '#a183ec']
+    redpurple: ['#8c0a1c', '#ad1027', '#c9183a', '#d8234f', '#cf2a6c', '#b6338c', '#9640ad', '#7d55cc', '#a183ec'],
+    // near-black at the bottom -> red -> teal at the top
+    redteal: ['#26262b', '#3f2226', '#7a1a22', '#b81f2a', '#e0362f', '#9c5b5b', '#2f8f88', '#1fb5a5', '#4fe0c8']
   };
   var SEG_COLORS = BAR_COLORS.orange;
 
@@ -684,7 +693,7 @@
       var a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
       var tx = TIP_X * A.scale, ty = TIP_Y * A.scale;
       var x = A.pivot[0] + tx * c - ty * sn, y = A.pivot[1] + tx * sn + ty * c;
-      return Math.hypot(x - A.disc[0], y - A.disc[1]);
+      return Math.hypot((x - A.disc[0]) / (A.sx || 1), y - A.disc[1]);   // sx: record seen a little from the side
     };
     var angleFor = function (r) {                    // bisection on the approaching side
       var lo = 0, hi = minDeg;
@@ -760,6 +769,7 @@
       singerEl.setAttribute('width', singer ? singer.size[0] : defaultSinger.w);
       singerEl.setAttribute('height', singer ? singer.size[1] : defaultSinger.h);
       mouthEl.src = singer ? base + L.dir + singer.mouth : defaultSinger.mouth;
+      buddy.classList.toggle('fade-low', !!(singer && singer.fadeLow));   // keep the guitar: fade only the very bottom
       var mb = singer && singer.mouthBox;
       mouthEl.style.left = mb ? mb[0] + '%' : ''; mouthEl.style.top = mb ? mb[1] + '%' : '';
       mouthEl.style.width = mb ? mb[2] + '%' : ''; mouthEl.style.height = mb ? mb[3] + '%' : '';
@@ -1103,7 +1113,7 @@
             ctx.clearRect(0, 0, L.w, L.h);
             if (under) ctx.drawImage(under, 0, 0, L.w, L.h);     // still layer (e.g. the record's sheen)
             L.discs.forEach(function (d, i) {
-              ctx.setTransform(1, 0, 0, 1, d.cx, d.cy);
+              ctx.setTransform(d.sx || 1, 0, 0, 1, d.cx, d.cy);   // sx < 1: a record seen at an angle
               ctx.rotate(ang * (1 + i * 0.07));                 // a hair out of step, like two real discs
               ctx.drawImage(discs[i], -d.size / 2, -d.size / 2, d.size, d.size);
             });
@@ -1259,7 +1269,7 @@
       recLayer = document.createElement('div'); recLayer.className = 'jrec-layer'; recLayer.setAttribute('aria-hidden', 'true');
       document.body.appendChild(recLayer);
       // the picked album's character leads, the others follow
-      var order = [albumIdx].concat(albums.map(function (_, i) { return i; }).filter(function (i) { return i !== albumIdx; }));
+      var order = [albumIdx].concat(shuffled(albums.map(function (_, i) { return i; }).filter(function (i) { return i !== albumIdx; })));
       var looks = []; order.forEach(function (i) { if (looks.indexOf(albums[i].look) < 0) looks.push(albums[i].look); });
       looks = looks.slice(0, 3);
       var br = recBtn.getBoundingClientRect(), bx = br.left + br.width / 2, by = br.top + 4;
