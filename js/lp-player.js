@@ -51,7 +51,15 @@
                // the singing buddy becomes the four members (positions in % of the group picture)
                buddy: { icon: 'band-icon.webp', band: [
                  { img: 'band-1.webp', x: 0, y: 0, w: 46.85 }, { img: 'band-2.webp', x: 48.02, y: 0.34, w: 51.17 },
-                 { img: 'band-3.webp', x: 0.9, y: 48.86, w: 51.17 }, { img: 'band-4.webp', x: 53.87, y: 49.2, w: 46.13 }] } }
+                 { img: 'band-3.webp', x: 0.9, y: 48.86, w: 51.17 }, { img: 'band-4.webp', x: 53.87, y: 49.2, w: 46.13 }] } },
+    // a record half out of its sleeve: the vinyl's sheen stays put (as on a real turntable) and the label turns
+    iris: { kind: 'cd', dir: 'yonezu/', w: 334, h: 229, stageW: 156, shift: -22, under: 'vinyl.webp',
+            discs: [{ img: 'label.webp', cx: 224.97, cy: 115.66, size: 73.42 }],
+            toggle: [34.07, 49.6], still: 'still.webp', art: 'artwork-512.jpg', turn: 5, bars: 'redpurple',
+            arm: { ref: 167, vb: [218, 114.5], pivot: [203, 0], scale: 1, disc: [112.48, 57.83], r: [53, 22] },
+            // its own singer (faces left, so the notes drift left); mouth box in % of the picture
+            buddy: { icon: 'icon.webp', singer: 'singer.webp', mouth: 'mouth.webp', size: [380, 318],
+                     mouthBox: [39.47, 53.75, 6.88, 9.2], notes: [-4, 16, 44, 14], noteDir: -1, boltAt: [42.7, 58.7] } }
   };
 
   // ---------- playlist ----------
@@ -496,7 +504,9 @@
   var BAR_COLORS = {
     orange: ['#b8350f', '#c63f10', '#d44b12', '#e05814', '#ea6716', '#f27a1c', '#f78f2a', '#fba53f', '#ffbd5c'],
     // deep blue at the bottom -> teal -> fresh green at the top
-    bluegreen: ['#0d3b8c', '#1150b0', '#1668c9', '#1a84d4', '#18a0cc', '#17b7b0', '#1fc68c', '#47d26e', '#86df5e']
+    bluegreen: ['#0d3b8c', '#1150b0', '#1668c9', '#1a84d4', '#18a0cc', '#17b7b0', '#1fc68c', '#47d26e', '#86df5e'],
+    // crimson at the bottom -> magenta -> violet at the top
+    redpurple: ['#8c0a1c', '#ad1027', '#c9183a', '#d8234f', '#cf2a6c', '#b6338c', '#9640ad', '#7d55cc', '#a183ec']
   };
   var SEG_COLORS = BAR_COLORS.orange;
 
@@ -736,12 +746,23 @@
     var bandEl = buddy.querySelector('.lp-buddy-band');
     var buddyIcon = buddyBtn.querySelector('img'), defaultIcon = buddyIcon.getAttribute('src');
     var band = null, bandImgs = [], bandKick = [], bandQueue = [], lastKickB = 0;
+    var singerEl = buddy.querySelector('.lp-buddy-img');
+    var defaultSinger = { src: singerEl.getAttribute('src'), w: singerEl.getAttribute('width'), h: singerEl.getAttribute('height'), mouth: mouthEl.getAttribute('src') };
+    var singer = null;                                 // an album's own singer (null = the default one)
     setBuddyLook = function (L) {
       var cfg = L && L.buddy;
       bandEl.innerHTML = ''; bandImgs = []; bandKick = []; bandQueue = [];
       band = cfg && cfg.band ? cfg.band : null;
       buddy.classList.toggle('is-band', !!band);
       buddyIcon.src = cfg && cfg.icon ? base + L.dir + cfg.icon : defaultIcon;
+      singer = cfg && cfg.singer ? cfg : null;
+      singerEl.src = singer ? base + L.dir + singer.singer : defaultSinger.src;
+      singerEl.setAttribute('width', singer ? singer.size[0] : defaultSinger.w);
+      singerEl.setAttribute('height', singer ? singer.size[1] : defaultSinger.h);
+      mouthEl.src = singer ? base + L.dir + singer.mouth : defaultSinger.mouth;
+      var mb = singer && singer.mouthBox;
+      mouthEl.style.left = mb ? mb[0] + '%' : ''; mouthEl.style.top = mb ? mb[1] + '%' : '';
+      mouthEl.style.width = mb ? mb[2] + '%' : ''; mouthEl.style.height = mb ? mb[3] + '%' : '';
       if (!band) return;
       band.forEach(function (h) {
         var im = document.createElement('img');
@@ -761,7 +782,8 @@
       var ang = (side + (-35 + Math.random() * 60)) * Math.PI / 180;
       var dist = 58 + Math.random() * 34;
       var size = 13 + Math.random() * 8;
-      z.style.left = '51.9%'; z.style.top = '54%';
+      var at = singer && singer.boltAt ? singer.boltAt : [51.9, 54];
+      z.style.left = at[0] + '%'; z.style.top = at[1] + '%';
       z.style.width = z.style.height = size + 'px';
       z.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
       z.style.setProperty('--dy', (Math.sin(ang) * dist * 0.8).toFixed(1) + 'px');
@@ -792,10 +814,11 @@
         n.style.left = (hb.x + hb.w * (0.3 + Math.random() * 0.45)) + '%';
         n.style.top = (hb.y + 4 + Math.random() * 8) + '%';
       } else {
-        n.style.left = (50 + Math.random() * 14) + '%';
-        n.style.top = (34 + Math.random() * 12) + '%';
+        var na = singer && singer.notes ? singer.notes : [50, 14, 34, 12];   // x, x-range, y, y-range (%)
+        n.style.left = (na[0] + Math.random() * na[1]) + '%';
+        n.style.top = (na[2] + Math.random() * na[3]) + '%';
       }
-      n.style.setProperty('--dx', (10 + Math.random() * 26) + 'px');
+      n.style.setProperty('--dx', ((singer && singer.noteDir) || 1) * (10 + Math.random() * 26) + 'px');
       n.addEventListener('animationend', function () { n.remove(); });
       notesEl.appendChild(n);
     };
@@ -1070,13 +1093,15 @@
 
   // Discs turning behind a still cover (drawn back to front, cover last).
   function makeCd(L) {
-    return Promise.all([loadImg(L.dir + 'cover.webp')].concat(L.discs.map(function (d) { return loadImg(L.dir + d.img); })))
+    var names = ['cover.webp', L.under || 'cover.webp'].concat(L.discs.map(function (d) { return d.img; }));
+    return Promise.all(names.map(function (n) { return loadImg(L.dir + n); }))
       .then(function (ims) {
-        var cover = ims[0], discs = ims.slice(1);
+        var cover = ims[0], under = L.under ? ims[1] : null, discs = ims.slice(2);
         return {
           draw: function (ang) {
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, L.w, L.h);
+            if (under) ctx.drawImage(under, 0, 0, L.w, L.h);     // still layer (e.g. the record's sheen)
             L.discs.forEach(function (d, i) {
               ctx.setTransform(1, 0, 0, 1, d.cx, d.cy);
               ctx.rotate(ang * (1 + i * 0.07));                 // a hair out of step, like two real discs
