@@ -84,25 +84,9 @@
         <!-- LP music player: tracks are every audio file in /music/ -->
         {% assign lp_exts = "mp3,m4a,aac,ogg,oga,opus,wav,flac" | split: "," %}
         <div class="lp-player no-print" id="lp-player"
-             data-asset="{{ '/images/player/' | relative_url }}"
-             data-w="359" data-h="408" data-dx="12" data-dy="60" data-ds="336">
+             data-asset="{{ '/images/player/' | relative_url }}">
           <div class="lp-deck">
-            <div class="lp-faders">
-              <div class="lp-fader" data-kind="vol">
-                <span class="lp-fader-val">0.0</span>
-                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Volume (middle = original level)" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-                  <div class="lp-fader-knob"></div>
-                </div>
-                <span class="lp-fader-label">VOL</span>
-              </div>
-              <div class="lp-fader" data-kind="bass">
-                <span class="lp-fader-val">0.0</span>
-                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Bass" aria-orientation="vertical" aria-valuemin="-12" aria-valuemax="12" aria-valuenow="0">
-                  <div class="lp-fader-knob"></div>
-                </div>
-                <span class="lp-fader-label">BASS</span>
-              </div>
-            </div>
+            <button type="button" class="lp-btn lp-album-btn lp-album-prev" aria-label="Previous album" title="Previous album"><i class="fas fa-caret-left" aria-hidden="true"></i></button>
             <div class="lp-stage" style="background-image: url('{{ '/images/player/cover.webp' | relative_url }}');">
               <canvas class="lp-canvas" width="359" height="408" aria-hidden="true"></canvas>
               <!-- tonearm: pivots on the right, swings onto the record while playing -->
@@ -132,26 +116,47 @@
               </svg>
               <button type="button" class="lp-btn lp-toggle" aria-label="Play"><i class="fas fa-play" aria-hidden="true"></i></button>
             </div>
-            <div class="lp-deck-spacer" aria-hidden="true"></div>
+            <button type="button" class="lp-btn lp-album-btn lp-album-next" aria-label="Next album" title="Next album"><i class="fas fa-caret-right" aria-hidden="true"></i></button>
           </div>
-          <canvas class="lp-viz" aria-hidden="true"></canvas>
-          <div class="lp-timeline">
-            <span class="lp-time lp-time-cur">0:00</span>
-            <div class="lp-progress" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-              <div class="lp-progress-fill"></div>
+          <div class="lp-album-name" aria-live="polite"></div>
+          <div class="lp-lower">
+            <div class="lp-lower-main">
+            <canvas class="lp-viz" aria-hidden="true"></canvas>
+            <div class="lp-timeline">
+              <span class="lp-time lp-time-cur">0:00</span>
+              <div class="lp-progress" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="lp-progress-fill"></div>
+              </div>
+              <span class="lp-time lp-time-dur">0:00</span>
             </div>
-            <span class="lp-time lp-time-dur">0:00</span>
-          </div>
-          <div class="lp-controls">
-            <button type="button" class="lp-btn lp-prev" aria-label="Previous track"><i class="fas fa-backward" aria-hidden="true"></i></button>
-            <div class="lp-title" aria-live="polite"><span>&nbsp;</span></div>
-            <button type="button" class="lp-btn lp-next" aria-label="Next track"><i class="fas fa-forward" aria-hidden="true"></i></button>
-          </div>
-          <div class="lp-modes">
-            <button type="button" class="lp-btn lp-mode lp-shuffle" aria-pressed="false" aria-label="Shuffle" title="Shuffle"><i class="fas fa-shuffle" aria-hidden="true"></i></button>
-            <button type="button" class="lp-btn lp-mode lp-repeat" aria-pressed="false" aria-label="Repeat one song" title="Repeat one song"><i class="fas fa-repeat" aria-hidden="true"></i><span class="lp-repeat-1" aria-hidden="true">1</span></button>
-            <button type="button" class="lp-btn lp-mode lp-list-btn" aria-expanded="false" aria-controls="lp-list" aria-label="Track list" title="Track list"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
-            <button type="button" class="lp-btn lp-mode lp-buddy-btn" aria-pressed="false" aria-label="Singing buddy" title="Singing buddy"><img src="{{ '/images/player/buddy-head.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" width="16" height="16"></button>
+            <div class="lp-controls">
+              <button type="button" class="lp-btn lp-prev" aria-label="Previous track"><i class="fas fa-backward" aria-hidden="true"></i></button>
+              <div class="lp-title" aria-live="polite"><span>&nbsp;</span></div>
+              <button type="button" class="lp-btn lp-next" aria-label="Next track"><i class="fas fa-forward" aria-hidden="true"></i></button>
+            </div>
+            <div class="lp-modes">
+              <button type="button" class="lp-btn lp-mode lp-shuffle" aria-pressed="false" aria-label="Shuffle" title="Shuffle"><i class="fas fa-shuffle" aria-hidden="true"></i></button>
+              <button type="button" class="lp-btn lp-mode lp-repeat" aria-pressed="false" aria-label="Repeat one song" title="Repeat one song"><i class="fas fa-repeat" aria-hidden="true"></i><span class="lp-repeat-1" aria-hidden="true">1</span></button>
+              <button type="button" class="lp-btn lp-mode lp-list-btn" aria-expanded="false" aria-controls="lp-list" aria-label="Track list" title="Track list"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
+              <button type="button" class="lp-btn lp-mode lp-buddy-btn" aria-pressed="false" aria-label="Singing buddy" title="Singing buddy"><img src="{{ '/images/player/buddy-head.webp' | relative_url }}?v={{ site.time | date: '%s' }}" alt="" width="16" height="16"></button>
+            </div>
+            </div>
+            <div class="lp-faders">
+              <div class="lp-fader" data-kind="vol">
+                <span class="lp-fader-val">0.0</span>
+                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Volume (middle = original level)" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+                  <div class="lp-fader-knob"></div>
+                </div>
+                <span class="lp-fader-label">VOL</span>
+              </div>
+              <div class="lp-fader" data-kind="bass">
+                <span class="lp-fader-val">0.0</span>
+                <div class="lp-fader-slot" role="slider" tabindex="0" aria-label="Bass" aria-orientation="vertical" aria-valuemin="-12" aria-valuemax="12" aria-valuenow="0">
+                  <div class="lp-fader-knob"></div>
+                </div>
+                <span class="lp-fader-label">BASS</span>
+              </div>
+            </div>
           </div>
           <!-- singing buddy: moved to <body> by the script so it floats over the bottom-left of the page -->
           <div class="lp-buddy" hidden>
@@ -166,6 +171,7 @@
           <ol class="lp-list" id="lp-list" hidden></ol>
           <audio preload="metadata"></audio>
           <script type="application/json" id="lp-tracks">[{% assign lp_first = true %}{% for f in site.static_files %}{% assign lp_dir = f.path | slice: 0, 7 %}{% assign lp_ext = f.extname | remove: "." | downcase %}{% if lp_dir == "/music/" and lp_exts contains lp_ext %}{% unless lp_first %},{% endunless %}{"src": {{ f.path | prepend: site.baseurl | jsonify }}, "title": {{ f.basename | jsonify }}}{% assign lp_first = false %}{% endif %}{% endfor %}]</script>
+          <script type="application/json" id="lp-albums">{{ site.data.lp_albums | jsonify }}</script>
           <script type="application/json" id="lp-rock">{{ site.data.lp_rock | jsonify }}</script>
         </div>
 

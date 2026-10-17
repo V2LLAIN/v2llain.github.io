@@ -31,22 +31,48 @@
   var titleEl = root.querySelector('.lp-title span');
   var audio = root.querySelector('audio');
 
-  var W = +root.getAttribute('data-w'), H = +root.getAttribute('data-h');
-  var DX = +root.getAttribute('data-dx'), DY = +root.getAttribute('data-dy');
-  var DS = +root.getAttribute('data-ds');
   var base = root.getAttribute('data-asset');
 
+  // How each album looks and spins. Sizes are in the artwork's own pixels.
+  //  lp: one record turning under a still case, with the case's light/glare kept still on top
+  //  cd: discs turning behind a still cover
+  var LOOKS = {
+    replica: { kind: 'lp', dir: '', w: 359, h: 408, dx: 12, dy: 60, ds: 336, stageW: 140,
+               toggle: [50.03, 55.81], still: 'cover.webp', art: 'artwork-512.jpg', turn: 10 },
+    rejoice: { kind: 'cd', dir: 'rejoice/', w: 334, h: 231, stageW: 176,
+               discs: [{ img: 'disc-back.webp', cx: 221.7, cy: 115.8, size: 226 },
+                       { img: 'disc-front.webp', cx: 198.3, cy: 115.8, size: 219 }],
+               toggle: [37.8, 84.5], still: 'still.webp', art: 'artwork-512.jpg', turn: 6 }   // play button on the match striker
+  };
+
   // ---------- playlist ----------
-  var tracks = [];
-  try { tracks = JSON.parse(document.getElementById('lp-tracks').textContent) || []; } catch (e) { tracks = []; }
-  tracks.sort(function (a, b) { return a.src.localeCompare(b.src, undefined, { numeric: true }); });
-  var N = tracks.length;
+  // Every audio file under /music/; each sub-folder is one album (music/vaundy/..., music/official-hige-dandism/...).
+  var allTracks = [];
+  try { allTracks = JSON.parse(document.getElementById('lp-tracks').textContent) || []; } catch (e) { allTracks = []; }
+  allTracks.sort(function (a, b) { return a.src.localeCompare(b.src, undefined, { numeric: true }); });
   var rockWords = [];
   try { rockWords = JSON.parse(document.getElementById('lp-rock').textContent) || []; } catch (e) {}
-  tracks.forEach(function (t) {
+  allTracks.forEach(function (t) {
     var name = (t.title || '').toLowerCase();
     t.rock = rockWords.some(function (w) { return w && name.indexOf(String(w).toLowerCase()) >= 0; });
+    var parts = t.src.split('/');                      // ['', 'music', '<folder>', '<file>']
+    try { t.folder = parts.length > 3 ? decodeURIComponent(parts[parts.length - 2]) : ''; } catch (e) { t.folder = parts[parts.length - 2] || ''; }
   });
+  var albumCfg = [];
+  try { albumCfg = JSON.parse(document.getElementById('lp-albums').textContent) || []; } catch (e) {}
+  var albums = albumCfg.map(function (a) {
+    return { folder: String(a.folder || ''), artist: a.artist || a.folder || '', album: a.album || '', look: LOOKS[a.look] ? a.look : 'replica', tracks: [] };
+  });
+  allTracks.forEach(function (t) {
+    var al = null;
+    for (var i = 0; i < albums.length; i++) if (albums[i].folder === t.folder) { al = albums[i]; break; }
+    if (!al) { al = { folder: t.folder, artist: t.folder || 'Music', album: '', look: 'replica', tracks: [] }; albums.push(al); }
+    al.tracks.push(t);
+  });
+  if (!albums.length) albums.push({ folder: '', artist: '', album: '', look: 'replica', tracks: [] });
+  var albumIdx = 0;
+  var tracks = albums[0].tracks;
+  var N = tracks.length;
   var index = 0;
 
   var shuffleBtn = root.querySelector('.lp-shuffle');
@@ -195,18 +221,53 @@
     syncModeButtons();
   });
 
-  if (!N) {
-    titleEl.textContent = 'No tracks yet';
-    [toggleBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn, listBtn].forEach(function (b) { b.disabled = true; });
-  } else {
-    shuffle = stored('lp-shuffle');
-    repeatOne = stored('lp-repeat-one');
-    buildList();
-    loadTrack(0);
-    if (shuffle) { index = Math.floor(Math.random() * N); loadTrack(index); }
-    rebuildOrder();
-    syncModeButtons();
+  // ---------- albums (◀ ▶ beside the record) ----------
+  var albumPrev = root.querySelector('.lp-album-prev');
+  var albumNext = root.querySelector('.lp-album-next');
+  var albumName = root.querySelector('.lp-album-name');
+
+  function setAlbum(i, opts) {
+    opts = opts || {};
+    albumIdx = (i + albums.length) % albums.length;
+    var al = albums[albumIdx];
+    tracks = al.tracks; N = tracks.length; index = 0;
+    listEl.innerHTML = '';
+    var controls = [toggleBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn, listBtn];
+    controls.forEach(function (b) { b.disabled = !N; });
+    if (bar) bar.classList.toggle('is-disabled', !N);
+    if (N) {
+      buildList();
+      loadTrack(shuffle ? Math.floor(Math.random() * N) : 0);
+      rebuildOrder();
+    } else {
+      if (!audio.paused) audio.pause();
+      audio.removeAttribute('src'); audio.load();
+      stopMarquee();
+      titleEl.textContent = 'No tracks yet';
+      titleEl.parentNode.title = '';
+    }
+    albumName.innerHTML = '';
+    var who = document.createElement('b'); who.textContent = al.artist; albumName.appendChild(who);
+    if (al.album) albumName.appendChild(document.createTextNode(' \u00b7 ' + al.album));
+    try { localStorage.setItem('lp-album', al.folder); } catch (e) {}
+    if (renderInit) applyLook(al.look);              // (the first call happens once the renderers are set up)
+    if (opts.play && N) audio.play().catch(function () {});
   }
+
+  shuffle = stored('lp-shuffle');
+  repeatOne = stored('lp-repeat-one');
+  syncModeButtons();
+  (function () {
+    var want = null, start = 0;
+    try { want = localStorage.getItem('lp-album'); } catch (e) {}
+    for (var i = 0; i < albums.length; i++) if (albums[i].folder === want) { start = i; break; }
+    if (want === null) for (var j = 0; j < albums.length; j++) if (albums[j].tracks.length) { start = j; break; }
+    setAlbum(start, { first: true });
+  })();
+  albumPrev.hidden = albumNext.hidden = albums.length < 2;
+  function switchAlbum(dir) { setAlbum(albumIdx + dir, { play: !audio.paused }); }
+  albumPrev.addEventListener('click', function () { switchAlbum(-1); });
+  albumNext.addEventListener('click', function () { switchAlbum(1); });
 
   function setIcon(playing) {
     var i = toggleBtn.querySelector('i');
@@ -744,9 +805,8 @@
   // ---------- lock screen / Control Center / media keys ----------
   // Shows the song on the iPhone lock screen and macOS Now Playing, and lets the
   // play/pause, next and previous buttons there (and keyboard media keys) drive this player.
-  if ('mediaSession' in navigator && N) {
+  if ('mediaSession' in navigator) {
     var ms = navigator.mediaSession;
-    var artwork = [{ src: base + 'artwork-512.jpg', sizes: '512x512', type: 'image/jpeg' }];
     var splitTitle = function (t) {
       var m = t.match(/^(.*?)\s*-\s*([^-]+)$/);
       if (!m) return { title: t, artist: '' };
@@ -754,8 +814,11 @@
       return { title: m[1].trim(), artist: artist.charAt(0).toUpperCase() + artist.slice(1) };
     };
     var updateMeta = function () {
+      if (!N) return;
+      var al = albums[albumIdx], L = LOOKS[al.look];
       var p = splitTitle(prettyTitle(tracks[index]));
-      try { ms.metadata = new MediaMetadata({ title: p.title, artist: p.artist, album: 'v2llain.github.io', artwork: artwork }); } catch (e) {}
+      var art = [{ src: base + L.dir + L.art, sizes: '512x512', type: 'image/jpeg' }];
+      try { ms.metadata = new MediaMetadata({ title: p.title, artist: al.artist || p.artist, album: al.album || 'v2llain.github.io', artwork: art }); } catch (e) {}
     };
     var updatePos = function () {
       var d = audio.duration;
@@ -806,7 +869,12 @@
     try { st = JSON.parse(localStorage.getItem(STATE_KEY)); } catch (e) {}
     if (!st || !st.src) return;
     var i = -1;
-    for (var k = 0; k < N; k++) if (tracks[k].src === st.src) { i = k; break; }
+    for (var a = 0; a < albums.length && i < 0; a++) {
+      for (var k = 0; k < albums[a].tracks.length; k++) if (albums[a].tracks[k].src === st.src) {
+        if (a !== albumIdx) setAlbum(a);
+        i = k; break;
+      }
+    }
     if (i < 0) return;                                   // that song was removed from /music/
     restoring = true;
     if (i !== index) loadTrack(i);
@@ -839,7 +907,7 @@
     if (p && p.catch) p.catch(waitForGesture);
   }
 
-  if (N) restoreState();
+  if (allTracks.length) restoreState();
   // If the browser did allow the song to resume by itself, hook up the bars on the first click.
   function wakeViz() {
     document.removeEventListener('pointerdown', wakeViz, true);
@@ -847,49 +915,109 @@
   }
   document.addEventListener('pointerdown', wakeViz, true);
 
-  // ---------- disc rendering ----------
+  // ---------- record / CD rendering ----------
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var discCanvas = document.createElement('canvas');
-  discCanvas.width = discCanvas.height = DS;
-  var dctx = discCanvas.getContext('2d', { willReadFrequently: true });
-  var caseImg, discImg, light, glare, mask, ready = false;
+  var stage = root.querySelector('.lp-stage');
+  var renderers = {};                 // look name -> Promise of { draw(angle) }
+  var R = null, lookName = null, ready = false;
   var angle = 0, speed = 0, lastTs = 0, rafId = 0;
 
-  function loadImg(name) {
+  function loadImg(path) {
     return new Promise(function (res, rej) {
       var im = new Image();
       im.onload = function () { res(im); };
       im.onerror = rej;
-      im.src = base + name;
+      im.src = base + path;
     });
   }
 
-  function pixels(im) {
-    var c = document.createElement('canvas');
-    c.width = DS; c.height = DS;
-    var x = c.getContext('2d');
-    x.drawImage(im, 0, 0, DS, DS);
-    return x.getImageData(0, 0, DS, DS).data;
+  // Record under a still case: the case's lighting (light.png) and ridge highlights (glare.png)
+  // are applied after rotating, so only the print on the record turns.
+  function makeLp(L) {
+    var DS = L.ds;
+    var discCanvas = document.createElement('canvas');
+    discCanvas.width = discCanvas.height = DS;
+    var dctx = discCanvas.getContext('2d', { willReadFrequently: true });
+    function pixels(im) {
+      var c = document.createElement('canvas'); c.width = DS; c.height = DS;
+      var x = c.getContext('2d'); x.drawImage(im, 0, 0, DS, DS);
+      return x.getImageData(0, 0, DS, DS).data;
+    }
+    return Promise.all(['case.webp', 'disc.webp', 'light.png', 'glare.png', 'mask.png'].map(function (n) { return loadImg(L.dir + n); }))
+      .then(function (ims) {
+        var caseImg = ims[0], discImg = ims[1];
+        var l = pixels(ims[2]), g = pixels(ims[3]), m = pixels(ims[4]);
+        var light = new Float32Array(l.length), glare = new Float32Array(g.length);
+        for (var i = 0; i < l.length; i++) { light[i] = l[i] / 127.5; glare[i] = g[i] - 128; }
+        var mask = new Uint8ClampedArray(m.length);
+        for (var j = 0; j < m.length; j += 4) mask[j] = m[j];
+        return {
+          draw: function (ang) {
+            dctx.setTransform(1, 0, 0, 1, 0, 0);
+            dctx.clearRect(0, 0, DS, DS);
+            dctx.translate(DS / 2, DS / 2);
+            dctx.rotate(ang);
+            dctx.drawImage(discImg, -DS / 2, -DS / 2, DS, DS);
+            dctx.setTransform(1, 0, 0, 1, 0, 0);
+            var id = dctx.getImageData(0, 0, DS, DS), p = id.data, n = p.length;
+            for (var i = 0; i < n; i += 4) {
+              p[i]     = p[i]     * light[i]     + glare[i];
+              p[i + 1] = p[i + 1] * light[i + 1] + glare[i + 1];
+              p[i + 2] = p[i + 2] * light[i + 2] + glare[i + 2];
+              p[i + 3] = mask[i];
+            }
+            dctx.putImageData(id, 0, 0);
+            ctx.clearRect(0, 0, L.w, L.h);
+            ctx.drawImage(discCanvas, L.dx, L.dy);
+            ctx.drawImage(caseImg, 0, 0, L.w, L.h);
+          }
+        };
+      });
   }
 
-  function render() {
-    dctx.setTransform(1, 0, 0, 1, 0, 0);
-    dctx.clearRect(0, 0, DS, DS);
-    dctx.translate(DS / 2, DS / 2);
-    dctx.rotate(angle);
-    dctx.drawImage(discImg, -DS / 2, -DS / 2, DS, DS);
-    dctx.setTransform(1, 0, 0, 1, 0, 0);
-    var id = dctx.getImageData(0, 0, DS, DS), p = id.data, n = p.length;
-    for (var i = 0; i < n; i += 4) {
-      p[i]     = p[i]     * light[i]     + glare[i];
-      p[i + 1] = p[i + 1] * light[i + 1] + glare[i + 1];
-      p[i + 2] = p[i + 2] * light[i + 2] + glare[i + 2];
-      p[i + 3] = mask[i];
-    }
-    dctx.putImageData(id, 0, 0);
-    ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(discCanvas, DX, DY);
-    ctx.drawImage(caseImg, 0, 0, W, H);
+  // Discs turning behind a still cover (drawn back to front, cover last).
+  function makeCd(L) {
+    return Promise.all([loadImg(L.dir + 'cover.webp')].concat(L.discs.map(function (d) { return loadImg(L.dir + d.img); })))
+      .then(function (ims) {
+        var cover = ims[0], discs = ims.slice(1);
+        return {
+          draw: function (ang) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, L.w, L.h);
+            L.discs.forEach(function (d, i) {
+              ctx.setTransform(1, 0, 0, 1, d.cx, d.cy);
+              ctx.rotate(ang * (1 + i * 0.07));                 // a hair out of step, like two real discs
+              ctx.drawImage(discs[i], -d.size / 2, -d.size / 2, d.size, d.size);
+            });
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.drawImage(cover, 0, 0, L.w, L.h);
+          }
+        };
+      });
+  }
+
+  function applyLook(name) {
+    var L = LOOKS[name] || LOOKS.replica;
+    if (name === lookName) return;
+    lookName = name;
+    ready = false; R = null;
+    root.classList.remove('is-ready');
+    root.classList.toggle('is-cd', L.kind === 'cd');
+    root.classList.toggle('is-lp', L.kind !== 'cd');
+    stage.style.width = L.stageW + 'px';
+    stage.style.aspectRatio = L.w + ' / ' + L.h;
+    stage.style.backgroundImage = 'url("' + base + L.dir + L.still + '")';
+    toggleBtn.style.left = L.toggle[0] + '%';
+    toggleBtn.style.top = L.toggle[1] + '%';
+    canvas.width = L.w; canvas.height = L.h;
+    if (!renderers[name]) renderers[name] = (L.kind === 'cd' ? makeCd(L) : makeLp(L));
+    renderers[name].then(function (r) {
+      if (lookName !== name) return;                     // switched again while loading
+      R = r; ready = true;
+      R.draw(angle);
+      root.classList.add('is-ready');
+      if (!audio.paused) startSpin();
+    }).catch(function () { if (lookName === name) root.classList.add('is-fallback'); });
   }
 
   function frame(ts) {
@@ -899,8 +1027,9 @@
     var target = audio.paused || reduceMotion ? 0 : 1;
     var stepS = dt / SPIN_EASE;
     speed = target > speed ? Math.min(target, speed + stepS) : Math.max(target, speed - stepS);
-    angle = (angle + speed * dt * 2 * Math.PI / SECONDS_PER_TURN) % (2 * Math.PI);
-    render();
+    var turn = (LOOKS[lookName] && LOOKS[lookName].turn) || SECONDS_PER_TURN;
+    angle = (angle + speed * dt * 2 * Math.PI / turn) % (2 * Math.PI * 100);
+    if (R) R.draw(angle);
     if (speed > 0 || target > 0) rafId = requestAnimationFrame(frame);
     else lastTs = 0;
   }
@@ -909,19 +1038,6 @@
     if (ready && !rafId) { lastTs = 0; rafId = requestAnimationFrame(frame); }
   }
 
-  Promise.all(['case.webp', 'disc.webp', 'light.png', 'glare.png', 'mask.png'].map(loadImg))
-    .then(function (ims) {
-      caseImg = ims[0]; discImg = ims[1];
-      var l = pixels(ims[2]), g = pixels(ims[3]), m = pixels(ims[4]);
-      light = new Float32Array(l.length);
-      glare = new Float32Array(g.length);
-      for (var i = 0; i < l.length; i++) { light[i] = l[i] / 127.5; glare[i] = g[i] - 128; }
-      mask = new Uint8ClampedArray(m.length);
-      for (var j = 0; j < m.length; j += 4) mask[j] = m[j];
-      ready = true;
-      render();
-      root.classList.add('is-ready');
-      if (!audio.paused) startSpin();
-    })
-    .catch(function () { root.classList.add('is-fallback'); });
+  var renderInit = true;
+  applyLook(albums[albumIdx].look);
 })();

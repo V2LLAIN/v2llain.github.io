@@ -1,0 +1,11 @@
+# Albums for the sidebar player, in the order the ◀ ▶ buttons go through them.
+# folder: the folder inside /music/ that holds the album's songs
+# look:   which artwork/animation to use (replica = Vaundy LP, rejoice = Official髭男dism CDs)
+- folder: vaundy
+  artist: Vaundy
+  album: replica
+  look: replica
+- folder: official-hige-dandism
+  artist: Official髭男dism
+  album: Rejoice
+  look: rejoice
