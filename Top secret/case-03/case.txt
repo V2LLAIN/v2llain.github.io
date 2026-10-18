@@ -7,9 +7,11 @@ LEVEL: EYES ONLY
 요원의 해외 작전 및 극비 훈련 기록.
 지도 위의 핀을 누르면 현장 사진이 나옵니다.
 
-HQ: 서울 | 37.5665, 126.9780
-PIN: 이스탄불, 터키 | 2010 | 41.0082, 28.9784 | istanbul.jpg
-PIN: 산토리니, 그리스 | 2010 | 36.4166, 25.4318 | santorini.jpg
-PIN: 홍콩 | 2012 | 22.2855, 114.1577 | hongkong.jpg
-PIN: 시드니, 호주 | 2012 | -33.8568, 151.2153 | sydney.jpg
+HQ: Seoul, Korea | 37.5665, 126.9780
+PIN: Istanbul, Turkey | 2010 | 41.0082, 28.9784 | istanbul.jpg
+PIN: Santorini, Greece | 2010 | 36.4166, 25.4318 | santorini.jpg
+PIN: Hongkong | 2012 | 22.2855, 114.1577 | hongkong.jpg
+PIN: Sydney, Australia | 2012 | -33.8568, 151.2153 | sydney.jpg
 PIN: Paju | 2026 | 37.7599, 126.7802 | paju-1.jpg, paju-2.jpg
+
+
