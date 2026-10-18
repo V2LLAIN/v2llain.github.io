@@ -3,7 +3,6 @@ CODENAME: V2LLAIN
 STATUS: ACTIVE — UNDERCOVER
 LEVEL: EYES ONLY
 ---
-(이 아래는 예시입니다. 지우고 자유롭게 써 주세요.)
 
 본명: [[임형찬]]
 위장 신분: KAIST KIRC Lab 연구 인턴
