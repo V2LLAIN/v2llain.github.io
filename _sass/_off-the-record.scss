@@ -152,57 +152,77 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 // ---------- the bookmarks ----------
 .tsf-tabs { position: absolute; top: 44px; left: 686px; width: 174px; z-index: 1; display: flex; flex-direction: column; gap: 6px; }
 .tsf-tab {
-  // a brass cartridge: rim on the left, cannelure groove near the neck, the bullet (::after) on the right
-  --tip: linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%);
-  --tip-w: 30px;
   position: relative; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
-  width: 146px; height: var(--tab-h, 58px); padding: 0 12px 0 20px; margin: 0 var(--tip-w) 0 0; border: 0; border-radius: 2px 0 0 2px;
-  text-align: left; cursor: pointer; color: #45310e;
-  background:
-    linear-gradient(90deg, transparent calc(100% - 9px), rgba(70, 45, 5, .5) calc(100% - 9px), rgba(255, 236, 170, .55) calc(100% - 7px), rgba(70, 45, 5, .45) calc(100% - 5px), transparent calc(100% - 4px)),
-    linear-gradient(180deg, #7d5d1c 0%, #c9a24a 14%, #f4dc92 30%, #fff4cf 40%, #e3c26a 58%, #b48a34 80%, #7a581a 100%);
-  filter: drop-shadow(1px 3px 2px rgba(40, 25, 5, .38));
+  width: 174px; height: var(--tab-h, 58px); padding: 0 24px 0 22px; margin: 0; border: 0; text-align: left; cursor: pointer;
+  background: $tsf-paper, var(--tab-c, #ecd496); color: #2b2520;
+  clip-path: polygon(0 0, 89% 0, 100% 22%, 100% 78%, 89% 100%, 0 100%);
+  filter: drop-shadow(1px 2px 2px rgba(60, 40, 10, .3));
   opacity: 0; transform: translateX(-150px);
-  transition: transform .55s cubic-bezier(.2, .9, .3, 1.15) calc(var(--i, 0) * 90ms), opacity .3s ease calc(var(--i, 0) * 90ms);
+  transition: transform .55s cubic-bezier(.2, .9, .3, 1.15) calc(var(--i, 0) * 90ms), opacity .3s ease calc(var(--i, 0) * 90ms), background-color .2s;
 }
-.tsf-tab::before {                                     // the rim and extractor groove
-  content: ''; position: absolute; left: 0; top: -2px; bottom: -2px; width: 11px; border-radius: 2px 0 0 2px;
-  background: linear-gradient(90deg, #6e5016 0%, #d8b55e 30%, #f6e2a2 42%, #8a6a24 52%, #4a3410 64%, #b48e3e 76%, #7a5a1c 100%);
-  box-shadow: inset 0 0 0 .5px rgba(60, 40, 5, .4);
-}
-.tsf-tab::after {                                      // the bullet, seated in the neck
-  content: ''; position: absolute; left: 100%; top: 7%; bottom: 7%; width: var(--tip-w);
-  border-radius: 0 100% 100% 0 / 0 50% 50% 0; background: var(--tip);
-  transition: opacity .25s ease;
-}
-.tsf-tab:nth-child(4n + 2) { --tip: linear-gradient(180deg, #3c3f44 0%, #8d939b 24%, #e6eaee 42%, #a8aeb5 62%, #55595f 86%, #2e3034 100%); }   // steel
-.tsf-tab:nth-child(4n + 3) { --tip: linear-gradient(90deg, transparent 62%, #2f7d3a 62%) , linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%); }   // green-tipped
-.tsf-tab:nth-child(4n + 4) { --tip: linear-gradient(90deg, transparent 62%, #b3261e 62%), linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%); }   // tracer
-.tsf-tab.is-spent::after { opacity: 0; transition: none; }
+.tsf-tab:nth-child(5n + 1) { --tab-c: #ecd496; }
+.tsf-tab:nth-child(5n + 2) { --tab-c: #eaa898; }
+.tsf-tab:nth-child(5n + 3) { --tab-c: #a9cfba; }
+.tsf-tab:nth-child(5n + 4) { --tab-c: #abc6e0; }
+.tsf-tab:nth-child(5n + 5) { --tab-c: #cdb8de; }
 .tsf.is-declassified .tsf-tab { opacity: 1; transform: none; }
 .tsf.is-declassified .tsf-tab:hover, .tsf.is-declassified .tsf-tab:focus-visible { transform: translateX(9px); outline: none; }
-// engraved lettering
-.tsf-tab small, .tsf-tab b, .tsf-tab i { text-shadow: 0 1px 0 rgba(255, 246, 214, .7), 0 -1px 0 rgba(70, 45, 5, .35); }
-.tsf-tab small { font: 400 8.5px/1.3 $tsf-type; color: #7a2410; letter-spacing: .08em; }
+.tsf-tab small { font: 400 8.5px/1.3 $tsf-type; color: $tsf-red; letter-spacing: .06em; }
 .tsf-tab b { max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font: 700 10px/1.25 var(--font-ui); letter-spacing: .02em; text-transform: uppercase; }
-.tsf-tab i { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: normal 9px/1.3 var(--font-ui); color: #5a4416; }
+.tsf-tab i { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: normal 9px/1.3 var(--font-ui); opacity: .75; }
 .tsf-tab.is-empty { cursor: default; }
 
-// ---------- firing ----------
-.tsf-shot {
-  position: fixed; z-index: 200; pointer-events: none; border-radius: 0 100% 100% 0 / 0 50% 50% 0;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4));
+// ---------- the cartridges under the folder (one per case) ----------
+.tsf-mlist { display: none; flex-direction: column; gap: 10px; max-width: 460px; margin: 14px auto 0; }
+.tsf.is-declassified .tsf-mlist { display: flex; }
+.tsf-round {
+  --h: 54px; position: relative; display: flex; align-items: stretch; width: 100%; height: var(--h); margin: 0; padding: 0; border: 0;
+  background: none; cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .28)) drop-shadow(0 1px 1px rgba(0, 0, 0, .25));
+  transition: transform .25s cubic-bezier(.2, .9, .3, 1.2);
 }
-.tsf-shot::before {                                    // motion streak behind it
-  content: ''; position: absolute; right: 60%; top: 30%; bottom: 30%; width: 220px;
-  background: linear-gradient(90deg, rgba(255, 220, 160, 0), rgba(255, 230, 180, .75)); border-radius: 3px;
+.tsf-round:hover, .tsf-round:focus-visible { transform: translateX(8px); outline: none; }
+.tsf-round:focus-visible .r-body { box-shadow: 0 0 0 2px #b3261e; }
+// brass, as in a real photo: soft highlight band, dark edges, faint lathe lines
+.tsf-round .r-rim, .tsf-round .r-groove, .tsf-round .r-body {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, rgba(0, 0, 0, .02) 1px 3px),
+    linear-gradient(180deg, #4a3712 0%, #7d6128 9%, #b4934f 22%, #dcc68f 33%, #c6a965 43%, #9a7a38 60%, #745923 76%, #4f3b14 92%, #3a2a0c 100%);
 }
-.tsf-flash {
-  position: fixed; z-index: 201; width: 70px; height: 70px; margin: -35px 0 0 -14px; pointer-events: none; border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 10%, #ffe28a 22%, rgba(255, 150, 40, .85) 40%, rgba(255, 90, 20, 0) 70%);
-  animation: tsf-flash .22s ease-out forwards;
+.tsf-round .r-rim { flex: 0 0 9px; border-radius: 3px 0 0 3px; filter: brightness(.88); }
+.tsf-round .r-groove { flex: 0 0 6px; margin: 7px 0; filter: brightness(.5); }
+.tsf-round .r-body {
+  flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 10px 0 12px;
+  color: rgba(52, 36, 8, .88);
 }
-@keyframes tsf-flash { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: 1; } 100% { transform: scale(1.4, .9); opacity: 0; } }
+.tsf-round .r-body small, .tsf-round .r-body b, .tsf-round .r-body i { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 0 rgba(255, 238, 190, .45), 0 -.5px 0 rgba(40, 25, 0, .35); }
+.tsf-round .r-body small { font: 400 10px/1.3 $tsf-type; letter-spacing: .14em; color: rgba(90, 30, 10, .85); }
+.tsf-round .r-body b { font: 700 12.5px/1.25 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; }
+.tsf-round .r-body i { font: normal 10.5px/1.3 var(--font-ui); color: rgba(60, 42, 10, .8); }
+.tsf-round .r-body .tsf-redact-bar { background: rgba(30, 20, 5, .8); }
+.tsf-round .r-tip { flex: 0 0 auto; height: 100%; width: auto; display: block; }
+
+// ---------- arming sequence: magazine → rifle → bolt → scope ----------
+.tsf-arm { position: fixed; inset: 0; z-index: 150; display: grid; place-items: center; background: rgba(8, 9, 11, 0); transition: background .25s ease; cursor: pointer; }
+.tsf-arm.is-on { background: rgba(8, 9, 11, .86); }
+.tsf-arm > svg { width: min(92vw, 900px); height: auto; overflow: visible; }
+.tsf-arm .arm-cap { position: absolute; left: 0; right: 0; bottom: 9vh; text-align: center; font: 13px/1.4 $tsf-type; letter-spacing: .2em; color: #d8cfb8; opacity: .85; }
+.tsf-fly { position: fixed; z-index: 160; pointer-events: none; transform-origin: 0 0; }
+.tsf-scope { position: fixed; inset: 0; z-index: 170; pointer-events: none; overflow: hidden; }
+.tsf-scope .lens {
+  position: absolute; left: 0; top: 0; width: var(--d); height: var(--d); margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2); border-radius: 50%;
+  box-shadow: 0 0 0 300vmax rgba(4, 5, 6, .95), inset 0 0 40px 18px rgba(0, 0, 0, .75), inset 0 0 0 3px #050505;
+}
+.tsf-scope .lens::before, .tsf-scope .lens::after { content: ''; position: absolute; background: rgba(10, 10, 10, .9); }
+.tsf-scope .lens::before { left: 0; right: 0; top: 50%; height: 1.5px; margin-top: -.75px;
+  background: linear-gradient(90deg, #000 0 30%, rgba(0, 0, 0, .85) 30% 47%, transparent 47% 53%, rgba(0, 0, 0, .85) 53% 70%, #000 70%); }
+.tsf-scope .lens::after { top: 0; bottom: 0; left: 50%; width: 1.5px; margin-left: -.75px;
+  background: linear-gradient(180deg, #000 0 30%, rgba(0, 0, 0, .85) 30% 47%, transparent 47% 53%, rgba(0, 0, 0, .85) 53% 70%, #000 70%); }
+.tsf-scope .dot { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: #d4171e; box-shadow: 0 0 4px #ff3b3b; }
+.tsf-scope .mils { position: absolute; inset: 0; background:
+  radial-gradient(circle, #000 1.6px, transparent 2px) 50% 50% / 100% 9% no-repeat; opacity: .0; }
+.tsf-scope .flash { position: absolute; inset: 0; background: radial-gradient(circle at var(--fx) var(--fy), rgba(255, 250, 230, .95), rgba(255, 220, 150, .5) 20%, transparent 50%); opacity: 0; }
+
 .tsf-hole { position: absolute; z-index: 5; width: 130px; height: 130px; margin: -65px 0 0 -65px; pointer-events: none; }
 .tsf-hole svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .tsf-hole.is-in svg { animation: tsf-hole-in .28s cubic-bezier(.2, 1.6, .4, 1); }
@@ -215,14 +235,6 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 .tsf-dossier.is-hit, .tsf-dossier.is-in.is-hit { animation: tsf-hit .32s cubic-bezier(.3, .7, .4, 1); }
 @keyframes tsf-hit { 0% { transform: none; } 18% { transform: translate(5px, -3px) rotate(.6deg); } 40% { transform: translate(-4px, 2px) rotate(-.4deg); } 65% { transform: translate(2px, -1px); } 100% { transform: none; } }
 
-// phones: the same bookmarks, listed under the folder at a readable size
-.tsf-mlist { display: none; flex-direction: column; gap: 8px; max-width: 360px; margin: 12px auto 0; }
-.tsf.is-small.is-declassified .tsf-mlist { display: flex; }
-.tsf-mlist .tsf-tab { --tip-w: 40px; width: calc(100% - var(--tip-w)); height: auto; min-height: 54px; padding: 8px 14px 8px 22px; opacity: 1; transform: none; transition: transform .2s ease; }
-.tsf-mlist .tsf-tab:active { transform: translateX(6px); }
-.tsf-mlist .tsf-tab small { font-size: 11px; }
-.tsf-mlist .tsf-tab b { font-size: 13px; }
-.tsf-mlist .tsf-tab i { font-size: 11.5px; }
 .tsf.is-small .tsf-hint-cases { display: none !important; }
 
 // ---------- hints under the folder ----------
