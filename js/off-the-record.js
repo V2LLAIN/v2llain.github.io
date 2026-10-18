@@ -259,7 +259,7 @@
         var plane = document.createElementNS(NS, 'g'); plane.setAttribute('class', 'tsf-plane');
         plane.innerHTML = '<path d="M1.6 0 L0.55 -0.2 L-0.25 -1.35 L-0.6 -1.35 L-0.15 -0.2 L-0.95 -0.15 L-1.3 -0.6 L-1.55 -0.6 L-1.3 0 L-1.55 0.6 L-1.3 0.6 L-0.95 0.15 L-0.15 0.2 L-0.6 1.35 L-0.25 1.35 L0.55 0.2 Z"/>';
         g.appendChild(line); g.appendChild(plane); rsvg.appendChild(g);
-        planes.push({ path: line, plane: plane, t0: ri * 1.6 });
+        planes.push({ path: line, plane: plane, t0: ri * 5 });
         var li = document.createElement('li'); li.className = 'tsf-trip-' + (ri % 4);
         li.innerHTML = '<i></i><b></b> <span></span>';
         li.querySelector('b').textContent = r.label; li.querySelector('span').textContent = r.stops.join(' \u2192 ');
@@ -272,7 +272,7 @@
       var fly = function (ts) {
         if (!box.isConnected) return;
         planes.forEach(function (pl) {
-          var L2 = pl.L || (pl.L = pl.path.getTotalLength()), dur = 2.2 + L2 / 22, cycle = dur + 1.4;
+          var L2 = pl.L || (pl.L = pl.path.getTotalLength()), dur = 6 + L2 / 7, cycle = dur + 2;
           var t = reduceFly ? 0.45 * dur : ((ts / 1000 + pl.t0) % cycle);
           var f = Math.min(1, t / dur), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;   // ease in and out of each trip
           var at = e * L2, p1 = pl.path.getPointAtLength(at), p2 = pl.path.getPointAtLength(Math.min(L2, at + 0.3)), p0 = pl.path.getPointAtLength(Math.max(0, at - 0.3));
