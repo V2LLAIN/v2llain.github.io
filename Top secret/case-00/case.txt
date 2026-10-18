@@ -1,15 +1,13 @@
 TITLE: SUBJECT DOSSIER
-SUBTITLE: 요주의 인물 신상 기록 — 그는 누구인가
-DATE: 2026.10.18
+SUBTITLE: 요주의 인물 신상 기록 — Who is he?
+DATE: 2026.10.14
 STATUS: UNDER INVESTIGATION
 LEVEL: EYES ONLY
 CODENAME: V2LLAIN
 ---
-(이 아래는 예시입니다. 지우고 자유롭게 써 주세요.)
-
 이름: 임형찬 (Hyeongchan Im)
-소속: KAIST KIRC Lab 연구 인턴
-활동 지역: 대전
+소속: KAIST KIRC Research Intern
+활동 지역: Daej[[아직 기밀입니다]]
 
-특이사항: 체스판 앞에서 자주 목격됨.
+특이사항: ♟️ Elo 1367.
 좋아하는 것: [[아직 기밀입니다]]
