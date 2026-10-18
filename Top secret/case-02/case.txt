@@ -4,6 +4,7 @@ DATE: 2026.10.18
 STATUS: ONGOING
 ---
 Overwatch - [[master]]
+          - **Tank**: Hazard, Roadhog  / **Damage**: Genji, Hanzo  /  **Support**: Kiriko, Ana
 Chess - elo [[1367]]
 Pokémon - Pokémon Master[[DP, BW]]
 [[Dance]] - [[https://www.youtube.com/watch?v=G05Qe1Y6CeI]]
