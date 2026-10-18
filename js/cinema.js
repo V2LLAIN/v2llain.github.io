@@ -1,36 +1,39 @@
-// "Absolute Cinema": click the profile photo → it opens into a vertical short in the style of the
-// "Absolute Cinema" edits — caption bar on top, glowing ABSOLUTE CINEMA title cards, the three pictures
-// (the original, the base photo, my version) punched in and cut on Life Force's beat — then it folds back.
+// "Absolute Cinema": click the profile photo → it bursts into a 4:3 black & white edit in the style of the
+// "absolute cinema meme template": frantic cuts between the pictures (the original, the base photo, my version),
+// "absolute cinema" title cards flashing in between, glitches, split screens, and a strobing collage at the end —
+// all on Life Force's beat — then it folds back into the circle.
 (function () {
   var img = document.querySelector('.sidebar .profile-img');
   if (!img) return;
   var BASE = img.getAttribute('data-cinema') || 'images/cinema/';
-  var CAPTION = img.getAttribute('data-cinema-caption') || 'POV: the experiment finally works on the first try';
-  var P = {                                          // picture + the point the punch-in centres on (% of the picture)
-    s: { src: BASE + 'scorsese.jpg', face: [50, 30] },
-    b: { src: BASE + 'base.jpg', face: [52, 33] },
-    m: { src: BASE + 'me.jpg', face: [50, 38] }
+  var P = {                                          // picture + the point zooms centre on (% of the picture)
+    s: { src: BASE + 'scorsese.jpg', f: [50, 34] },
+    b: { src: BASE + 'base.jpg', f: [52, 36] },
+    m: { src: BASE + 'me.jpg', f: [50, 40] }
   };
-  // the timeline (seconds into Life Force); hits land at 0, 1.9, 3.85 and 7.7
-  var CUTS = [
-    { t: 0.00, kind: 'title' },                                   // glowing ABSOLUTE CINEMA on black
-    { t: 1.90, kind: 'pic', p: 's', z: [1.42, 1.55] },
-    { t: 2.85, kind: 'pic', p: 's', z: [1.75, 1.9] },             // punch in on the same shot
-    { t: 3.85, kind: 'pic', p: 'b', z: [1.42, 1.55] },
-    { t: 4.80, kind: 'pic', p: 'b', z: [1.75, 1.9] },
-    { t: 5.80, kind: 'title', ghost: 1 },                         // the swell: the title again, doubled
-    { t: 6.95, kind: 'whip', p: 'm' },                            // motion-blurred whip into the last shot
-    { t: 7.70, kind: 'pic', p: 'm', z: [1.5, 1.22], flash: 1 },   // the drop: my version, easing out
-    { t: 10.9, kind: 'end' }
+  var KEYS = ['s', 'b', 'm'];
+  var B = 0.475;                                     // a quarter of Life Force's 1.9 s stab-to-stab
+  // the edit, in beats (stabs land on 0, 4, 8 of each 16-beat phrase)
+  var EDIT = [
+    [0, 'pic', 's', 1.0, 1.06], [1, 'pic', 's', 1.18, 1.22], [2, 'text', 'sm'], [3, 'text', 'slide'],
+    [4, 'pic', 'b', 1.0, 1.07], [5, 'glitch', 'b'], [6, 'text', 'lg'], [7, 'pic', 'm', 1.12, 1.16],
+    [8, 'pic', 's', 1.0, 1.05], [9, 'text', 'bold'], [10, 'split', 'b', 'm'], [11, 'text', 'slideL'],
+    [12, 'pic', 'm', 1.0, 1.06], [13, 'glitch', 's'], [14, 'text', 'sm'], [15, 'strobe'],
+    [16, 'pic', 'b', 1.0, 1.06], [17, 'pic', 'b', 1.2, 1.25], [18, 'text', 'lg'], [19, 'split', 's', 'b'],
+    [20, 'pic', 'm', 1.0, 1.07], [21, 'text', 'slide'], [22, 'glitch', 'm'], [23, 'text', 'bold'],
+    [24, 'pic', 's', 1.0, 1.05], [25, 'split', 'm', 's'], [26, 'text', 'sm'], [27, 'pic', 'b', 1.15, 1.2],
+    [28, 'glitch', 'b'], [29, 'text', 'slideL'], [30, 'strobe'],
+    [32, 'final', 'm']
   ];
-  var END = 11.6;
+  var CUTS = EDIT.map(function (e) { return { t: e[0] * B, kind: e[1], a: e[2], b: e[3], c: e[4] }; });
+  var END = 32 * B + 3.4;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   img.classList.add('is-cinema');
   img.setAttribute('role', 'button'); img.setAttribute('tabindex', '0');
   img.setAttribute('title', 'ABSOLUTE CINEMA ▶');
   var warmed = false;
-  function warm() { if (warmed) return; warmed = true; Object.keys(P).forEach(function (k) { var i = new Image(); i.src = P[k].src; }); }
+  function warm() { if (warmed) return; warmed = true; KEYS.forEach(function (k) { var i = new Image(); i.src = P[k].src; }); }
   img.addEventListener('pointerenter', warm); img.addEventListener('focus', warm);
 
   var ov = null;
@@ -42,84 +45,102 @@
     if (lpWas) lp.pause();
 
     ov = document.createElement('div'); ov.className = 'cine';
+    var cells = ''; for (var k = 0; k < 9; k++) cells += '<img alt="">';
     ov.innerHTML = '<div class="cine-stage">' +
-      '<div class="cine-cap"><span></span></div>' +
-      '<div class="cine-view"><div class="cine-pic"><img alt=""></div>' +
-        '<div class="cine-title"><b>ABSOLUTE CINEMA</b><b class="ghost" aria-hidden="true">ABSOLUTE CINEMA</b></div>' +
-        '<div class="cine-grain"></div><div class="cine-vig"></div><div class="cine-flash"></div></div>' +
+      '<div class="cine-pic"><img class="p1" alt=""><img class="p2" alt=""></div>' +
+      '<div class="cine-glitch"><img alt=""><img alt=""></div>' +
+      '<div class="cine-collage">' + cells + '</div>' +
+      '<div class="cine-text"><span>absolute cinema</span></div>' +
+      '<div class="cine-grain"></div><div class="cine-vig"></div><div class="cine-flash"></div>' +
       '<div class="cine-bar"><i></i></div>' +
       '<button type="button" class="cine-x" aria-label="Close">&times;</button></div>';
-    ov.querySelector('.cine-cap span').textContent = CAPTION;
     document.body.appendChild(ov);
     document.documentElement.classList.add('cine-lock');
-    var stage = ov.querySelector('.cine-stage'), view = ov.querySelector('.cine-view'), pic = ov.querySelector('.cine-pic'), picImg = pic.querySelector('img'),
-        title = ov.querySelector('.cine-title'), flash = ov.querySelector('.cine-flash'), bar = ov.querySelector('.cine-bar i');
+    var q = function (s) { return ov.querySelector(s); };
+    var stage = q('.cine-stage'), pic = q('.cine-pic'), p1 = q('.p1'), p2 = q('.p2'), gl = q('.cine-glitch'), gimgs = gl.querySelectorAll('img'),
+        col = q('.cine-collage'), cimgs = col.querySelectorAll('img'), text = q('.cine-text'), flash = q('.cine-flash'), bar = q('.cine-bar i');
 
-    var H = Math.min(window.innerHeight * 0.92, window.innerWidth * 0.94 * 16 / 9), W = H * 9 / 16;
-    stage.style.width = W + 'px'; stage.style.height = H + 'px'; stage.style.fontSize = (W / 360 * 16) + 'px';
+    var W = Math.min(window.innerWidth * 0.94, 920, window.innerHeight * 0.9 * 4 / 3), H = W * 3 / 4;
+    stage.style.width = W + 'px'; stage.style.height = H + 'px'; stage.style.fontSize = (W / 640 * 16) + 'px';
     var to = { left: (window.innerWidth - W) / 2, top: (window.innerHeight - H) / 2 };
     stage.style.left = to.left + 'px'; stage.style.top = to.top + 'px';
     var fold = function () {
       var r = img.getBoundingClientRect();
       return 'translate(' + (r.left - to.left) + 'px,' + (r.top - to.top) + 'px) scale(' + (r.width / W) + ',' + (r.height / H) + ')';
     };
-    if (!reduce) stage.animate([{ transform: fold(), borderRadius: '50%' }, { transform: 'none', borderRadius: '8px' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
-    ov.animate([{ backgroundColor: 'rgba(0,0,0,0)' }, { backgroundColor: 'rgba(0,0,0,.93)' }], { duration: 450, fill: 'forwards' });
+    if (!reduce) stage.animate([{ transform: fold(), borderRadius: '50%' }, { transform: 'none', borderRadius: '4px' }], { duration: 550, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    ov.animate([{ backgroundColor: 'rgba(0,0,0,0)' }, { backgroundColor: 'rgba(0,0,0,.94)' }], { duration: 400, fill: 'forwards' });
 
-    var cur = -1, t0 = performance.now(), started = false, closing = false, raf = 0;
-    audio.addEventListener('playing', function () { started = true; t0 = performance.now() - audio.currentTime * 1000; });
+    var cur = -1, t0 = performance.now(), started = false, closing = false, raf = 0, strobeNext = 0;
+    audio.addEventListener('playing', function () { started = true; });
     var pr = audio.play(); if (pr && pr.catch) pr.catch(function () {});
     var clock = function () { return started && !audio.paused ? audio.currentTime : (performance.now() - t0) / 1000; };
 
-    function showPic(c, dur) {
-      var pp = P[c.p];
-      if (picImg.getAttribute('src') !== pp.src) picImg.src = pp.src;
-      picImg.style.transformOrigin = pp.face[0] + '% ' + pp.face[1] + '%';
-      title.classList.remove('is-on'); pic.style.opacity = 1; pic.style.filter = '';
-      if (reduce) { picImg.style.transform = 'scale(' + c.z[1] + ')'; return; }
-      picImg.animate([{ transform: 'scale(' + c.z[0] + ')' }, { transform: 'scale(' + c.z[1] + ')' }], { duration: dur * 1000, easing: c.flash ? 'cubic-bezier(.1,.7,.2,1)' : 'linear', fill: 'forwards' });
-      view.animate([{ transform: 'scale(1.06)' }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.3,1)' });
-      flash.animate([{ opacity: c.flash ? 0.9 : 0.28 }, { opacity: 0 }], { duration: c.flash ? 380 : 140, easing: 'ease-out' });
-    }
-    function showTitle(c, dur) {
-      pic.style.opacity = 0;
-      title.classList.toggle('is-ghost', !!c.ghost);
-      title.classList.remove('is-on'); void title.offsetWidth; title.classList.add('is-on');
-      title.style.setProperty('--d', dur + 's');
-    }
-    function whip(c, dur) {
-      var pp = P[c.p];
-      picImg.src = pp.src; picImg.style.transformOrigin = pp.face[0] + '% ' + pp.face[1] + '%';
-      title.classList.remove('is-on'); pic.style.opacity = 1;
-      if (reduce) return;
-      pic.animate([{ transform: 'translateY(-35%) scaleY(1.4)', filter: 'blur(14px) brightness(1.4)', opacity: 0 },
-                   { transform: 'translateY(8%) scaleY(1.15)', filter: 'blur(10px)', opacity: 1, offset: 0.6 },
-                   { transform: 'none', filter: 'blur(4px)', opacity: 1 }], { duration: dur * 1000, easing: 'cubic-bezier(.4,0,.6,1)' });
-      picImg.animate([{ transform: 'scale(1.6)' }, { transform: 'scale(1.5)' }], { duration: dur * 1000, fill: 'forwards' });
-    }
+    var layers = function (on) { pic.style.display = on === 'pic' ? '' : 'none'; gl.style.display = on === 'glitch' ? '' : 'none'; col.style.display = on === 'strobe' ? '' : 'none'; text.style.display = on === 'text' ? '' : 'none'; };
+    var setImg = function (el, key) { var pp = P[key]; if (el.getAttribute('src') !== pp.src) el.src = pp.src; el.style.transformOrigin = pp.f[0] + '% ' + pp.f[1] + '%'; };
+    var zoom = function (el, a, b, dur) { if (reduce) { el.style.transform = 'scale(' + b + ')'; return; } el.animate([{ transform: 'scale(' + a + ')' }, { transform: 'scale(' + b + ')' }], { duration: dur * 1000, easing: 'linear', fill: 'forwards' }); };
+    var hit = function (amt, ms) { if (reduce) return; flash.animate([{ opacity: amt }, { opacity: 0 }], { duration: ms || 120, easing: 'ease-out' }); };
+    var bump = function () { if (!reduce) stage.animate([{ transform: 'scale(1.03)' }, { transform: 'none' }], { duration: 180, easing: 'ease-out' }); };
+
     function step(i) {
-      var c = CUTS[i], next = CUTS[i + 1] ? CUTS[i + 1].t : END, dur = Math.max(0.2, next - c.t);
-      if (c.kind === 'pic') showPic(c, dur);
-      else if (c.kind === 'title') showTitle(c, dur);
-      else if (c.kind === 'whip') whip(c, dur);
-      else if (c.kind === 'end') close();
+      var c = CUTS[i], next = CUTS[i + 1] ? CUTS[i + 1].t : END, dur = Math.max(0.15, next - c.t), beat = Math.round(c.t / B);
+      var onStab = beat % 4 === 0;
+      if (c.kind === 'pic' || c.kind === 'final') {
+        layers('pic'); pic.classList.remove('is-split'); p2.style.display = 'none';
+        setImg(p1, c.a);
+        if (c.kind === 'final') { zoom(p1, 1.25, 1.0, dur * 0.9); hit(0.95, 500); bump(); }
+        else { zoom(p1, c.b, c.c, dur); hit(onStab ? 0.5 : 0.18); if (onStab) bump(); }
+      } else if (c.kind === 'split') {                  // two pictures side by side
+        layers('pic'); pic.classList.add('is-split'); p2.style.display = '';
+        setImg(p1, c.a); setImg(p2, c.b); zoom(p1, 1.1, 1.15, dur); zoom(p2, 1.15, 1.1, dur); hit(0.2);
+      } else if (c.kind === 'glitch') {                 // horizontal slices jumping sideways
+        layers('glitch'); gimgs.forEach(function (g) { setImg(g, c.a); });
+        if (!reduce) {
+          gimgs[1].animate([{ clipPath: 'inset(30% 0 52% 0)', transform: 'translateX(6%)' }, { clipPath: 'inset(58% 0 28% 0)', transform: 'translateX(-9%)', offset: 0.35 },
+            { clipPath: 'inset(12% 0 76% 0)', transform: 'translateX(4%)', offset: 0.7 }, { clipPath: 'inset(44% 0 40% 0)', transform: 'translateX(-3%)' }], { duration: dur * 1000, easing: 'steps(6)', fill: 'forwards' });
+          gimgs[0].animate([{ transform: 'scale(1.08)' }, { transform: 'scale(1.12)' }], { duration: dur * 1000, fill: 'forwards' });
+        }
+        hit(0.35);
+      } else if (c.kind === 'text') {                   // the black "absolute cinema" cards
+        layers('text'); text.className = 'cine-text t-' + c.a;
+        var sp = text.querySelector('span');
+        if (!reduce) {
+          if (c.a === 'slide' || c.a === 'slideL') {
+            var d = c.a === 'slide' ? 1 : -1;
+            sp.animate([{ transform: 'translateX(' + (d * 45) + '%)' }, { transform: 'translateX(' + (-d * 25) + '%)' }], { duration: dur * 1000, easing: 'linear', fill: 'forwards' });
+          } else sp.animate([{ transform: 'scale(1.12)', filter: 'blur(2px)' }, { transform: 'scale(1)', filter: 'blur(0)', offset: 0.25 }, { transform: 'scale(.97)', filter: 'blur(0)' }], { duration: dur * 1000, fill: 'forwards' });
+        }
+      } else if (c.kind === 'strobe') { layers('strobe'); strobeNext = 0; }
+    }
+    function strobe(t) {                                 // the frantic collage: re-shuffle every ~0.12 s
+      if (t < strobeNext) return;
+      strobeNext = t + 0.11 + Math.random() * 0.06;
+      cimgs.forEach(function (ci, n) {
+        var key = KEYS[Math.floor(Math.random() * 3)];
+        if (n === 4) { ci.className = 'big'; ci.src = P[key].src; ci.style.opacity = Math.random() < 0.8 ? 1 : 0; return; }
+        ci.className = ''; ci.src = P[key].src; ci.style.opacity = Math.random() < 0.85 ? 1 : 0;
+      });
+      col.style.filter = Math.random() < 0.4 ? 'brightness(1.8) contrast(1.4)' : '';
+      hit(Math.random() < 0.45 ? 0.7 : 0.15, 90);
     }
     function tick() {
       raf = 0; if (closing) return;
       var t = clock();
       var i = cur; while (i + 1 < CUTS.length && t >= CUTS[i + 1].t) i++;
       if (i !== cur) { cur = i; step(i); }
+      if (CUTS[cur].kind === 'strobe') strobe(t);
       bar.style.transform = 'scaleX(' + Math.min(1, t / END) + ')';
-      if (!closing) raf = requestAnimationFrame(tick);
+      if (t >= END) { close(); return; }
+      raf = requestAnimationFrame(tick);
     }
     function close() {
       if (closing) return; closing = true; cancelAnimationFrame(raf);
       var v0 = audio.volume, tf = performance.now();
-      (function fade() { var k = Math.min(1, (performance.now() - tf) / 700); audio.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(fade); else audio.pause(); })();
+      (function fade() { var k2 = Math.min(1, (performance.now() - tf) / 700); audio.volume = v0 * (1 - k2); if (k2 < 1) requestAnimationFrame(fade); else audio.pause(); })();
       var done = function () { if (ov) ov.remove(); ov = null; document.documentElement.classList.remove('cine-lock'); document.removeEventListener('keydown', key); if (lpWas) lp.play().catch(function () {}); img.focus({ preventScroll: true }); };
       if (reduce) { done(); return; }
-      ov.animate([{ backgroundColor: 'rgba(0,0,0,.93)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 650, fill: 'forwards' });
-      stage.animate([{ transform: 'none', borderRadius: '8px' }, { transform: fold(), borderRadius: '50%' }],
+      ov.animate([{ backgroundColor: 'rgba(0,0,0,.94)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 650, fill: 'forwards' });
+      stage.animate([{ transform: 'none', borderRadius: '4px' }, { transform: fold(), borderRadius: '50%' }],
         { duration: 650, easing: 'cubic-bezier(.6,0,.3,1)', fill: 'forwards' }).onfinish = done;
     }
     ov.addEventListener('click', close);
