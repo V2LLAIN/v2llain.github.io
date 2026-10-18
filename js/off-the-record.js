@@ -19,7 +19,7 @@
   var IMG = /\.(jpe?g|png|gif|webp|avif|svg)$/i, VID = /\.(mp4|webm|m4v|mov|ogv)$/i;
   // ---- sound effects, synthesized with Web Audio (no files): 착 · 철컥 · 탕 ----
   var SFX = (function () {
-    var ac = null, out = null, noise = null, verb = null;
+    var ac = null, out = null, noise = null, verb = null, far = null, shaper = null;
     var on = true; try { on = localStorage.getItem('tsf-sound') !== '0'; } catch (e) {}
     function init() {
       if (ac || !on) return !!ac;
@@ -76,13 +76,25 @@
           lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(out); o.start(t); lfo.start(t); o.stop(t + 0.5); lfo.stop(t + 0.5); });
       },
       boltDown: function () { if (!ac || !on) return; var t = now(); metal(t, 2600, 0.35, 0.06); },
-      shot: function () {                              // 탕: crack + boom + room
+      shot: function () {                              // 탕—: supersonic crack, heavy blast, rolling echo across the valley
         if (!ac || !on) return; var t = now();
-        hiss(t, 'highpass', 1200, 0.7, 1.0, 0.07);
-        hiss(t, 'lowpass', 2500, 0.7, 0.9, 0.35, 300);
-        hiss(t, 'lowpass', 1800, 0.7, 0.7, 0.5, 200, verb);
-        thump(t, 95, 32, 1.0, 0.45);
-        metal(t + 0.55, 3400, 0.05, 0.08);              // a faint ring afterwards
+        if (!far) {                                    // a long outdoor tail + slap-back echoes, built once
+          far = ac.createGain(); far.gain.value = 1;
+          var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+          var dl = ac.createDelay(2); dl.delayTime.value = 0.32; var fb = ac.createGain(); fb.gain.value = 0.42;
+          var dl2 = ac.createDelay(2); dl2.delayTime.value = 0.57; var fb2 = ac.createGain(); fb2.gain.value = 0.3;
+          far.connect(lp); lp.connect(dl); dl.connect(fb); fb.connect(dl); lp.connect(dl2); dl2.connect(fb2); fb2.connect(dl2);
+          var eg = ac.createGain(); eg.gain.value = 0.55; dl.connect(eg); dl2.connect(eg); eg.connect(out);
+          var tail = ac.createConvolver(), len = Math.floor(ac.sampleRate * 3.4), ir = ac.createBuffer(2, len, ac.sampleRate);
+          for (var c2 = 0; c2 < 2; c2++) { var x2 = ir.getChannelData(c2); for (var j2 = 0; j2 < len; j2++) x2[j2] = (Math.random() * 2 - 1) * Math.pow(1 - j2 / len, 2.2) * (j2 < ac.sampleRate * 0.02 ? j2 / (ac.sampleRate * 0.02) : 1); }
+          tail.buffer = ir; var tg = ac.createGain(); tg.gain.value = 0.6; lp.connect(tail); tail.connect(tg); tg.connect(out);
+          shaper = ac.createWaveShaper(); var cv = new Float32Array(1024); for (var q2 = 0; q2 < 1024; q2++) { var xx = q2 / 512 - 1; cv[q2] = Math.tanh(xx * 3.2); } shaper.curve = cv;
+          shaper.connect(out); shaper.connect(far);
+        }
+        hiss(t, 'highpass', 3000, 0.7, 1.0, 0.035);                 // crack
+        hiss(t, 'lowpass', 4000, 0.6, 1.4, 0.65, 180, shaper);       // blast, saturated
+        hiss(t + 0.01, 'bandpass', 900, 0.8, 0.9, 0.4, 250, far);
+        thump(t, 72, 26, 1.4, 0.75); thump(t, 140, 50, 0.6, 0.25);   // chest punch
       }
     };
     return api;
@@ -91,6 +103,37 @@
 
   // the cover's DATE / ACTION / INITIAL log: empty ruled rows
   var rows = root.querySelector('.tsf-log-rows');
+  // ---- visitors logged on the cover: total readers, and which reader you are (counted once per browser) ----
+  (function () {
+    var log = root.querySelector('.tsf-log');
+    var today = new Date(), ymd = today.getFullYear() + '.' + ('0' + (today.getMonth() + 1)).slice(-2) + '.' + ('0' + today.getDate()).slice(-2);
+    var entry = function (row, date, action, initial) {
+      var e = document.createElement('div'); e.className = 'tsf-log-entry'; e.style.top = (18 + row * 19) + 'px';
+      e.innerHTML = '<span></span><span></span><span></span>';
+      e.children[0].textContent = date; e.children[1].innerHTML = action; e.children[2].textContent = initial;
+      log.appendChild(e); return e;
+    };
+    var total = entry(2, '', 'READ BY <b class="tsf-count">\u2588\u2588\u2588\u2588</b> PERSONNEL', 'V2');
+    var you = entry(3, ymd, 'ACCESS \u2014 YOU ARE READER <b class="tsf-count">#\u2588\u2588\u2588\u2588</b>', '??');
+    var API = 'https://abacus.jasoncameron.dev/', NS = 'v2llain-github-io', KEY = 'off-the-record-readers';
+    var mine = null; try { mine = localStorage.getItem('tsf-reader'); } catch (e) {}
+    var url = API + (mine ? 'get/' : 'hit/') + NS + '/' + KEY;
+    var fmt = function (n) { return ('000000' + Math.max(0, Math.round(n))).slice(-6).replace(/(\d{3})(\d{3})$/, '$1,$2'); };
+    var show = function (el, n, hash) {
+      var b2 = el.querySelector('.tsf-count'), t0 = null, dur = 1300;
+      var step = function (ts) { if (!t0) t0 = ts; var f = Math.min(1, (ts - t0) / dur), v = n * (1 - Math.pow(1 - f, 3)); b2.textContent = (hash ? '#' : '') + fmt(v); if (f < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    };
+    fetch(url).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d || typeof d.value !== 'number') return;
+      if (!mine) { mine = String(d.value); try { localStorage.setItem('tsf-reader', mine); } catch (e) {} }
+      var go = function () { show(total, d.value); show(you, +mine, true); };
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); go(); } }, { threshold: 0.3 });
+        io.observe(root);
+      } else go();
+    }).catch(function () {});
+  })();
   for (var i = 0; i < 9; i++) rows.appendChild(document.createElement('div'));
 
   // ---- scale the fixed-size drawing to the column width ----
@@ -449,8 +492,9 @@
         fl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out' });
         lens.animate([at(tx, ty), at(tx + 6, ty - 34), at(tx, ty)], { duration: 320, easing: 'cubic-bezier(.2,.8,.3,1)' });
         SFX.shot(); punchHole({ x: tx, y: ty });
+        T(SFX.boltUp, 950); T(SFX.boltBack, 1060); T(SFX.boltFwd, 1300); T(SFX.boltDown, 1520);   // cycle the bolt for the next shot
         T(function () {
-          scope.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: 'forwards' }).onfinish = function () { scope.remove(); scope = null; finish(false); };
+          scope.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: 'forwards' }).onfinish = function () { scope.remove(); scope = null; armBusy = false; armSkip = null; round.style.visibility = ''; };
         }, 360);
       }, 1550);
     }, 4350);
@@ -478,15 +522,27 @@
     dossier.classList.remove('is-hit'); void dossier.offsetWidth; dossier.classList.add('is-hit');
   }
   function clearPins() { modal.querySelectorAll('.tsf-dagger').forEach(function (k) { k.remove(); }); dossier.querySelectorAll('.tsf-slit').forEach(function (k) { k.remove(); }); }
+  // a military combat knife (blackened clip-point blade with a serrated spine, ringed grip); the part below y=104 sinks into the paper
   function daggerSVG() {
-    var n = (gid = (gid || 0) + 1), st = 'ds' + n, gr = 'dg' + n;
-    return '<svg viewBox="0 0 30 120" aria-hidden="true"><defs><linearGradient id="' + st + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6c737b"/><stop offset=".45" stop-color="#f4f7f9"/><stop offset=".55" stop-color="#aeb5bc"/><stop offset="1" stop-color="#4f555b"/></linearGradient>' +
-      '<linearGradient id="' + gr + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#15110d"/><stop offset=".5" stop-color="#4a3b2c"/><stop offset="1" stop-color="#120e0a"/></linearGradient></defs>' +
-      '<path class="d-tip" d="M10.6 100 L15 120 L19.4 100 Z" fill="url(#' + st + ')"/>' +
-      '<path d="M10 48 L20 48 L19.4 100 L10.6 100 Z" fill="url(#' + st + ')"/><path d="M15 50 L15 98" stroke="rgba(60,66,72,.6)" stroke-width="1"/>' +
-      '<rect x="2" y="42" width="26" height="6" rx="2" fill="url(#' + st + ')"/>' +
-      '<rect x="11" y="12" width="8" height="30" rx="2" fill="url(#' + gr + ')"/><path d="M11 17 h8 M11 22 h8 M11 27 h8 M11 32 h8 M11 37 h8" stroke="rgba(0,0,0,.6)" stroke-width="1.2"/>' +
-      '<circle cx="15" cy="8" r="5.5" fill="url(#' + st + ')"/></svg>';
+    var n = (gid = (gid || 0) + 1), bl = 'kb' + n, ed = 'ke' + n, gr = 'kg' + n, gd = 'kd' + n;
+    var spine = 'M10 46';
+    for (var y = 52; y < 76; y += 4) spine += ' L10 ' + y + ' L8.6 ' + (y + 2);
+    spine += ' L10 78 L10 96 Q11 104 12.4 104';
+    var blade = spine + ' L20 104 L20 46 Z';
+    return '<svg viewBox="0 0 30 120" aria-hidden="true"><defs>' +
+      '<linearGradient id="' + bl + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1c1e21"/><stop offset=".45" stop-color="#4d5257"/><stop offset=".7" stop-color="#2c2f33"/><stop offset="1" stop-color="#16181a"/></linearGradient>' +
+      '<linearGradient id="' + ed + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a9198"/><stop offset=".6" stop-color="#eef2f5"/><stop offset="1" stop-color="#9aa1a8"/></linearGradient>' +
+      '<linearGradient id="' + gr + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d0e0f"/><stop offset=".5" stop-color="#34373b"/><stop offset="1" stop-color="#0b0c0d"/></linearGradient>' +
+      '<linearGradient id="' + gd + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c6166"/><stop offset=".5" stop-color="#2a2d31"/><stop offset="1" stop-color="#15171a"/></linearGradient></defs>' +
+      '<path class="d-tip" d="M12.4 104 Q14 113 15 120 Q17.4 112 20 104 Z" fill="url(#' + bl + ')"/><path class="d-tip" d="M18.6 104 Q18 112 15 120 Q17.4 112 20 104 Z" fill="url(#' + ed + ')"/>' +
+      '<path d="' + blade + '" fill="url(#' + bl + ')"/>' +
+      '<path d="M18.2 47 L20 47 L20 104 L18.6 104 Z" fill="url(#' + ed + ')"/>' +          // honed edge
+      '<path d="M13 50 L13 92" stroke="#0e0f11" stroke-width="1.6" stroke-linecap="round"/>' +   // fuller
+      '<path d="M2.5 41 Q15 38 27.5 41 L27.5 46 Q15 43.5 2.5 46 Z" fill="url(#' + gd + ')"/>' +   // guard
+      '<rect x="9.5" y="9" width="11" height="32" rx="3" fill="url(#' + gr + ')"/>' +
+      '<path d="M9.5 14 h11 M9.5 18 h11 M9.5 22 h11 M9.5 26 h11 M9.5 30 h11 M9.5 34 h11 M9.5 38 h11" stroke="rgba(0,0,0,.7)" stroke-width="1.4"/>' +
+      '<path d="M9.5 15 h11 M9.5 19 h11 M9.5 23 h11 M9.5 27 h11 M9.5 31 h11 M9.5 35 h11" stroke="rgba(255,255,255,.08)" stroke-width=".6"/>' +
+      '<path d="M8 3 Q15 0 22 3 L21 9 L9 9 Z" fill="url(#' + gd + ')"/><circle cx="15" cy="5" r="1.4" fill="#8a9198"/></svg>';
   }
   function openCase(c, tab) {
     clearPins();

@@ -144,6 +144,12 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 .tsf-log-head span + span { border-left: 1px solid rgba(50, 35, 20, .7); }
 .tsf-log-rows div { height: 19px; border-bottom: 1px solid rgba(50, 35, 20, .35); background:
   linear-gradient(90deg, transparent 50px, rgba(50, 35, 20, .7) 50px, rgba(50, 35, 20, .7) 51px, transparent 51px, transparent calc(100% - 51px), rgba(50, 35, 20, .7) calc(100% - 51px), rgba(50, 35, 20, .7) calc(100% - 50px), transparent calc(100% - 50px)); }
+.tsf-log-entry { position: absolute; left: 0; right: 0; height: 19px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; pointer-events: none;
+  font: 400 8.6px/1 $tsf-type; color: #1e2a57; letter-spacing: .02em; }
+.tsf-log-entry span { padding: 0 5px; white-space: nowrap; overflow: hidden; }
+.tsf-log-entry span:first-child { padding: 0 2px; font-size: 7.4px; letter-spacing: 0; text-align: center; }
+.tsf-log-entry span:last-child { text-align: center; font-size: 10px; transform: rotate(-4deg); }
+.tsf-log-entry .tsf-count { font-weight: 400; font-size: 10.5px; color: #b3261e; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .tsf-st-orig { top: 24px; left: 64px; border: 0; padding: 0; font: 700 15px/1 Arial, sans-serif; letter-spacing: .02em; color: #3f9a4a; transform: rotate(-2deg); }
 .tsf-st-cls { right: 22px; bottom: 64px; font-size: 24px; letter-spacing: .04em; transform: rotate(7deg); font-family: 'Special Elite', Georgia, serif; font-weight: 700; }
 .tsf-st-copy { left: 18px; bottom: 44px; border: 0; padding: 0; font: 700 14px/1.05 Arial, sans-serif; color: #2e52b8; transform: rotate(-9deg); text-align: left; }
@@ -226,7 +232,7 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 .tsf-scope .flash { position: absolute; inset: 0; background: radial-gradient(circle at var(--fx) var(--fy), rgba(255, 250, 230, .95), rgba(255, 220, 150, .5) 20%, transparent 50%); opacity: 0; }
 
 // the thrown dagger: its tip (at 15,104 of 30x120, where it enters the paper) sits on left/top
-.tsf-dagger { position: fixed; z-index: 120; width: 34px; height: 136px; margin: -117.9px 0 0 -17px; transform-origin: 17px 117.9px; pointer-events: none;
+.tsf-dagger { position: fixed; z-index: 120; width: 42px; height: 168px; margin: -145.6px 0 0 -21px; transform-origin: 21px 145.6px; pointer-events: none;
   filter: drop-shadow(-4px 6px 4px rgba(0, 0, 0, .45)); }
 .tsf-modal > .tsf-dagger { position: absolute; transform: rotate(24deg); }
 .tsf-dagger svg { display: block; width: 100%; height: 100%; }
