@@ -125,10 +125,10 @@
       b.querySelector('small').textContent = 'CASE #' + pad(c.no);
       b.querySelector('b').textContent = c.meta.TITLE;
       if (c.meta.SUBTITLE) { var s = document.createElement('i'); s.innerHTML = redactOnly(c.meta.SUBTITLE); b.appendChild(s); }
-      b.addEventListener('click', function () { openCase(c, b); });
+      b.addEventListener('click', function () { fire(c, b); });
       tabsEl.appendChild(b);
       var mb = b.cloneNode(true); mb.removeAttribute('role');
-      mb.addEventListener('click', function () { openCase(c, mb); });
+      mb.addEventListener('click', function () { fire(c, mb); });
       mlist.appendChild(mb);
     });
   }
@@ -176,7 +176,54 @@
   }
   function ytId(h) { var m = h.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/))([\w-]{6,})/); return m && m[1]; }
   var lastTab = null;
+  // ---- a bookmark is a cartridge: clicked, its bullet fires off to the right, the file opens and takes the hit ----
+  var firing = false;
+  var reduceShot = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fire(c, tab) {
+    if (firing) return;
+    if (reduceShot || !document.body.animate) { openCase(c, tab); return; }
+    firing = true;
+    var r = tab.getBoundingClientRect(), tip = getComputedStyle(tab, '::after');
+    var tw = parseFloat(tip.width) * (r.width / tab.offsetWidth || 1), th = r.height * 0.86, x = r.right, y = r.top + r.height * 0.07;
+    var shot = document.createElement('div'); shot.className = 'tsf-shot';
+    shot.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + tw + 'px;height:' + th + 'px;background:' + tip.backgroundImage;
+    var flash = document.createElement('div'); flash.className = 'tsf-flash'; flash.style.left = (x + tw) + 'px'; flash.style.top = (y + th / 2) + 'px';
+    document.body.appendChild(shot); document.body.appendChild(flash);
+    flash.addEventListener('animationend', function () { flash.remove(); });
+    tab.classList.add('is-spent');
+    tab.animate([{ translate: '0 0' }, { translate: '-10px 0', offset: 0.25 }, { translate: '0 0' }], { duration: 320, easing: 'ease-out' });   // recoil
+    var dist = window.innerWidth - x + 80;
+    shot.animate([{ transform: 'translateX(0) scaleX(1)' }, { transform: 'translateX(' + dist + 'px) scaleX(1.25)' }], { duration: Math.min(320, 120 + dist * 0.18), easing: 'cubic-bezier(.5, 0, .9, .6)', fill: 'forwards' })
+      .onfinish = function () {
+        shot.remove();
+        openCase(c, tab);
+        setTimeout(function () { punchHole(); firing = false; }, 360);
+      };
+    setTimeout(function () { tab.classList.remove('is-spent'); }, 1400);     // chamber the next round
+  }
+  function punchHole() {
+    if (modal.hidden) return;
+    var W = dossier.clientWidth, H = Math.min(dossier.scrollHeight, dossier.clientHeight);
+    var hole = document.createElement('div'); hole.className = 'tsf-hole is-in';
+    hole.style.left = Math.round(W * (0.6 + Math.random() * 0.25)) + 'px';
+    hole.style.top = Math.round(Math.min(H - 60, 150 + Math.random() * 140) + dossier.scrollTop) + 'px';
+    var cracks = '';
+    for (var i = 0, n = 9 + Math.floor(Math.random() * 4); i < n; i++) {
+      var a = (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.5, L = 18 + Math.random() * 26, px = Math.cos(a) * 7, py = Math.sin(a) * 7, d = 'M' + px.toFixed(1) + ' ' + py.toFixed(1);
+      for (var k = 1; k <= 3; k++) { var rr = 7 + (L - 7) * k / 3, aa = a + (Math.random() - 0.5) * 0.35; d += 'L' + (Math.cos(aa) * rr).toFixed(1) + ' ' + (Math.sin(aa) * rr).toFixed(1); }
+      cracks += '<path d="' + d + '"/>';
+    }
+    hole.innerHTML = '<svg viewBox="-48 -48 96 96" aria-hidden="true">' +
+      '<defs><radialGradient id="tsfBurn"><stop offset="0" stop-color="#1a1209"/><stop offset=".55" stop-color="#3a2614" stop-opacity=".85"/><stop offset="1" stop-color="#6b4a26" stop-opacity="0"/></radialGradient></defs>' +
+      '<g fill="none" stroke="rgba(45, 30, 15, .55)" stroke-width=".9" stroke-linecap="round">' + cracks + '</g>' +
+      '<circle r="13" fill="url(#tsfBurn)"/>' +
+      '<circle r="7.2" fill="none" stroke="rgba(255, 250, 235, .7)" stroke-width="1.6" stroke-dasharray="3 2.2"/>' +
+      '<circle r="5.6" fill="#0b0805"/><circle cx="-1.4" cy="-1.6" r="2.2" fill="#2b2118"/></svg>';
+    dossier.appendChild(hole);
+    dossier.classList.remove('is-hit'); void dossier.offsetWidth; dossier.classList.add('is-hit');
+  }
   function openCase(c, tab) {
+    dossier.querySelectorAll('.tsf-hole').forEach(function (h) { h.remove(); });
     lastTab = tab;
     var p = c.parsed || { meta: {}, body: '', links: [] };
     dossier.querySelector('.tsf-d-no').textContent = 'CASE FILE #' + pad(c.no);

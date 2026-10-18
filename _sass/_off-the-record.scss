@@ -152,30 +152,73 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
 // ---------- the bookmarks ----------
 .tsf-tabs { position: absolute; top: 44px; left: 686px; width: 174px; z-index: 1; display: flex; flex-direction: column; gap: 6px; }
 .tsf-tab {
+  // a brass cartridge: rim on the left, cannelure groove near the neck, the bullet (::after) on the right
+  --tip: linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%);
+  --tip-w: 30px;
   position: relative; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
-  width: 174px; height: var(--tab-h, 58px); padding: 0 24px 0 22px; margin: 0; border: 0; text-align: left; cursor: pointer;
-  background: $tsf-paper, var(--tab-c, #ecd496); color: #2b2520;
-  clip-path: polygon(0 0, 89% 0, 100% 22%, 100% 78%, 89% 100%, 0 100%);
-  filter: drop-shadow(1px 2px 2px rgba(60, 40, 10, .3));
+  width: 146px; height: var(--tab-h, 58px); padding: 0 12px 0 20px; margin: 0 var(--tip-w) 0 0; border: 0; border-radius: 2px 0 0 2px;
+  text-align: left; cursor: pointer; color: #45310e;
+  background:
+    linear-gradient(90deg, transparent calc(100% - 9px), rgba(70, 45, 5, .5) calc(100% - 9px), rgba(255, 236, 170, .55) calc(100% - 7px), rgba(70, 45, 5, .45) calc(100% - 5px), transparent calc(100% - 4px)),
+    linear-gradient(180deg, #7d5d1c 0%, #c9a24a 14%, #f4dc92 30%, #fff4cf 40%, #e3c26a 58%, #b48a34 80%, #7a581a 100%);
+  filter: drop-shadow(1px 3px 2px rgba(40, 25, 5, .38));
   opacity: 0; transform: translateX(-150px);
-  transition: transform .55s cubic-bezier(.2, .9, .3, 1.15) calc(var(--i, 0) * 90ms), opacity .3s ease calc(var(--i, 0) * 90ms), background-color .2s;
+  transition: transform .55s cubic-bezier(.2, .9, .3, 1.15) calc(var(--i, 0) * 90ms), opacity .3s ease calc(var(--i, 0) * 90ms);
 }
-.tsf-tab:nth-child(5n + 1) { --tab-c: #ecd496; }
-.tsf-tab:nth-child(5n + 2) { --tab-c: #eaa898; }
-.tsf-tab:nth-child(5n + 3) { --tab-c: #a9cfba; }
-.tsf-tab:nth-child(5n + 4) { --tab-c: #abc6e0; }
-.tsf-tab:nth-child(5n + 5) { --tab-c: #cdb8de; }
+.tsf-tab::before {                                     // the rim and extractor groove
+  content: ''; position: absolute; left: 0; top: -2px; bottom: -2px; width: 11px; border-radius: 2px 0 0 2px;
+  background: linear-gradient(90deg, #6e5016 0%, #d8b55e 30%, #f6e2a2 42%, #8a6a24 52%, #4a3410 64%, #b48e3e 76%, #7a5a1c 100%);
+  box-shadow: inset 0 0 0 .5px rgba(60, 40, 5, .4);
+}
+.tsf-tab::after {                                      // the bullet, seated in the neck
+  content: ''; position: absolute; left: 100%; top: 7%; bottom: 7%; width: var(--tip-w);
+  border-radius: 0 100% 100% 0 / 0 50% 50% 0; background: var(--tip);
+  transition: opacity .25s ease;
+}
+.tsf-tab:nth-child(4n + 2) { --tip: linear-gradient(180deg, #3c3f44 0%, #8d939b 24%, #e6eaee 42%, #a8aeb5 62%, #55595f 86%, #2e3034 100%); }   // steel
+.tsf-tab:nth-child(4n + 3) { --tip: linear-gradient(90deg, transparent 62%, #2f7d3a 62%) , linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%); }   // green-tipped
+.tsf-tab:nth-child(4n + 4) { --tip: linear-gradient(90deg, transparent 62%, #b3261e 62%), linear-gradient(180deg, #5e2410 0%, #b8582a 22%, #f2a774 38%, #ffd2ae 46%, #cf7440 64%, #7a3214 88%, #4e1d0c 100%); }   // tracer
+.tsf-tab.is-spent::after { opacity: 0; transition: none; }
 .tsf.is-declassified .tsf-tab { opacity: 1; transform: none; }
 .tsf.is-declassified .tsf-tab:hover, .tsf.is-declassified .tsf-tab:focus-visible { transform: translateX(9px); outline: none; }
-.tsf-tab small { font: 400 8.5px/1.3 $tsf-type; color: $tsf-red; letter-spacing: .06em; }
+// engraved lettering
+.tsf-tab small, .tsf-tab b, .tsf-tab i { text-shadow: 0 1px 0 rgba(255, 246, 214, .7), 0 -1px 0 rgba(70, 45, 5, .35); }
+.tsf-tab small { font: 400 8.5px/1.3 $tsf-type; color: #7a2410; letter-spacing: .08em; }
 .tsf-tab b { max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font: 700 10px/1.25 var(--font-ui); letter-spacing: .02em; text-transform: uppercase; }
-.tsf-tab i { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: normal 9px/1.3 var(--font-ui); opacity: .75; }
+.tsf-tab i { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: normal 9px/1.3 var(--font-ui); color: #5a4416; }
 .tsf-tab.is-empty { cursor: default; }
+
+// ---------- firing ----------
+.tsf-shot {
+  position: fixed; z-index: 200; pointer-events: none; border-radius: 0 100% 100% 0 / 0 50% 50% 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4));
+}
+.tsf-shot::before {                                    // motion streak behind it
+  content: ''; position: absolute; right: 60%; top: 30%; bottom: 30%; width: 220px;
+  background: linear-gradient(90deg, rgba(255, 220, 160, 0), rgba(255, 230, 180, .75)); border-radius: 3px;
+}
+.tsf-flash {
+  position: fixed; z-index: 201; width: 70px; height: 70px; margin: -35px 0 0 -14px; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 10%, #ffe28a 22%, rgba(255, 150, 40, .85) 40%, rgba(255, 90, 20, 0) 70%);
+  animation: tsf-flash .22s ease-out forwards;
+}
+@keyframes tsf-flash { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: 1; } 100% { transform: scale(1.4, .9); opacity: 0; } }
+.tsf-hole { position: absolute; z-index: 5; width: 130px; height: 130px; margin: -65px 0 0 -65px; pointer-events: none; }
+.tsf-hole svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.tsf-hole.is-in svg { animation: tsf-hole-in .28s cubic-bezier(.2, 1.6, .4, 1); }
+.tsf-hole::after {                                     // the shock ring: 팡
+  content: ''; position: absolute; inset: 30%; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .9);
+  opacity: 0; animation: tsf-ring .45s ease-out;
+}
+@keyframes tsf-hole-in { from { transform: scale(.2) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tsf-ring { 0% { transform: scale(.3); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
+.tsf-dossier.is-hit, .tsf-dossier.is-in.is-hit { animation: tsf-hit .32s cubic-bezier(.3, .7, .4, 1); }
+@keyframes tsf-hit { 0% { transform: none; } 18% { transform: translate(5px, -3px) rotate(.6deg); } 40% { transform: translate(-4px, 2px) rotate(-.4deg); } 65% { transform: translate(2px, -1px); } 100% { transform: none; } }
 
 // phones: the same bookmarks, listed under the folder at a readable size
 .tsf-mlist { display: none; flex-direction: column; gap: 8px; max-width: 360px; margin: 12px auto 0; }
 .tsf.is-small.is-declassified .tsf-mlist { display: flex; }
-.tsf-mlist .tsf-tab { width: 100%; height: auto; min-height: 50px; padding: 8px 34px 8px 16px; opacity: 1; transform: none; transition: transform .2s ease; }
+.tsf-mlist .tsf-tab { --tip-w: 40px; width: calc(100% - var(--tip-w)); height: auto; min-height: 54px; padding: 8px 14px 8px 22px; opacity: 1; transform: none; transition: transform .2s ease; }
 .tsf-mlist .tsf-tab:active { transform: translateX(6px); }
 .tsf-mlist .tsf-tab small { font-size: 11px; }
 .tsf-mlist .tsf-tab b { font-size: 13px; }
@@ -446,6 +489,7 @@ body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 
 }
 @media (prefers-reduced-motion: reduce) {
   .tsf-folder, .tsf-cover, .tsf-tab { transition-duration: .01s !important; transition-delay: 0s !important; }
+  .tsf-dossier.is-hit, .tsf-hole.is-in svg, .tsf-hole::after { animation: none; }
   .tsf.is-open .tsf-stamp, .tsf.is-stamping .tsf-stamp, .tsf-dossier.is-in, .tsf-dossier.is-in .tsf-d-stamp, .tsf-agent-photo b { animation: none; }
   .tsf-fan-card { transition-duration: .01s; }
 }
