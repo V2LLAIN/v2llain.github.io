@@ -71,11 +71,17 @@
       var m = lines[i].match(KEYS); if (m) meta[m[1].toUpperCase()] = m[2].trim(); i++;
     }
     if (i < lines.length && /^\s*-{3,}\s*$/.test(lines[i])) i++;
-    var body = [], links = [], pins = [], hq = null;
+    var body = [], links = [], pins = [], hq = null, routes = [];
     lines.slice(i).forEach(function (l) {
       var v = l.match(/^\s*(VIDEO|IMAGE|PHOTO|LINK)\s*[:：]\s*(\S+)\s*$/i);
       // PIN: 도시 | 연도 | 위도, 경도 | 사진파일      HQ: 도시 | 위도, 경도
       var pn = l.match(/^\s*(PIN|HQ)\s*[:：]\s*(.+)$/i);
+      // ROUTE: 2010 | 서울 > 산토리니 > 이스탄불 > 서울   (a trip, flown in that order)
+      var rt = l.match(/^\s*ROUTE\s*[:：]\s*(.+)$/i);
+      if (rt) {
+        var rf = rt[1].split('|').map(function (x) { return x.trim(); }), stops = rf.filter(function (x) { return /[>→]/.test(x); })[0];
+        if (stops) { routes.push({ label: rf.filter(function (x) { return x !== stops; })[0] || '', stops: stops.split(/\s*(?:>|→|->)\s*/).filter(Boolean) }); return; }
+      }
       if (v) links.push({ kind: v[1].toUpperCase(), href: v[2] });
       else if (pn) {
         var f = pn[2].split('|').map(function (x) { return x.trim(); });
@@ -87,7 +93,7 @@
       }
       else body.push(l);
     });
-    return { meta: meta, body: body.join('\n').replace(/^\n+|\n+$/g, ''), links: links, pins: pins, hq: hq };
+    return { meta: meta, body: body.join('\n').replace(/^\n+|\n+$/g, ''), links: links, pins: pins, hq: hq, routes: routes };
   }
   var loading = null;
   function loadAll() {
@@ -225,12 +231,69 @@
     world.style.width = (360 / w * 100) + '%'; world.style.height = (180 / h * 100) + '%';
     world.style.left = (-(L + 180) / w * 100) + '%'; world.style.top = (-(90 - T) / h * 100) + '%';
     view.appendChild(world);
-    // dashed flight routes from HQ
+    // flight routes: ROUTE lines (each trip in order, with a little plane flying it), or else dashed lines from HQ
+    var NS = 'http://www.w3.org/2000/svg', k = h / w;
+    var placeOf = function (name) {
+      var key = name.split(',')[0].trim().toLowerCase(), all = (p.hq ? [p.hq] : []).concat(p.pins);
+      return all.filter(function (q) { return q.name.split(',')[0].trim().toLowerCase() === key; })[0]
+          || all.filter(function (q) { return q.name.toLowerCase().indexOf(key) >= 0; })[0];
+    };
+    var planes = [];
+    if (p.routes && p.routes.length) {
+      var rsvg = document.createElementNS(NS, 'svg');
+      rsvg.setAttribute('class', 'tsf-map-routes tsf-map-trips'); rsvg.setAttribute('viewBox', '0 0 100 ' + (100 * k).toFixed(3)); rsvg.setAttribute('preserveAspectRatio', 'none');
+      var legend = document.createElement('ol'); legend.className = 'tsf-map-legend';
+      p.routes.forEach(function (r, ri) {
+        var pts = r.stops.map(placeOf).filter(Boolean);
+        if (pts.length < 2) return;
+        var d = '', xy = pts.map(function (q) { return [X(q.lon), Y(q.lat) * k]; });
+        for (var j = 1; j < xy.length; j++) {
+          var a = xy[j - 1], b = xy[j], dx = b[0] - a[0], dy = b[1] - a[1], dd = Math.hypot(dx, dy) || 1;
+          var bend = Math.min(9, dd * 0.2);                      // bow to the left of the direction of travel: out and back don't overlap
+          var qx = (a[0] + b[0]) / 2 + dy / dd * bend, qy = (a[1] + b[1]) / 2 - dx / dd * bend;
+          d += (j === 1 ? 'M' + a[0].toFixed(2) + ' ' + a[1].toFixed(2) : '') + 'Q' + qx.toFixed(2) + ' ' + qy.toFixed(2) + ' ' + b[0].toFixed(2) + ' ' + b[1].toFixed(2);
+        }
+        var g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'tsf-trip tsf-trip-' + (ri % 4));
+        var line = document.createElementNS(NS, 'path'); line.setAttribute('d', d); line.setAttribute('class', 'tsf-trip-line');
+        line.style.animationDelay = (0.25 + ri * 0.3) + 's';
+        var plane = document.createElementNS(NS, 'g'); plane.setAttribute('class', 'tsf-plane');
+        plane.innerHTML = '<path d="M1.6 0 L0.55 -0.2 L-0.25 -1.35 L-0.6 -1.35 L-0.15 -0.2 L-0.95 -0.15 L-1.3 -0.6 L-1.55 -0.6 L-1.3 0 L-1.55 0.6 L-1.3 0.6 L-0.95 0.15 L-0.15 0.2 L-0.6 1.35 L-0.25 1.35 L0.55 0.2 Z"/>';
+        g.appendChild(line); g.appendChild(plane); rsvg.appendChild(g);
+        planes.push({ path: line, plane: plane, t0: ri * 1.6 });
+        var li = document.createElement('li'); li.className = 'tsf-trip-' + (ri % 4);
+        li.innerHTML = '<i></i><b></b> <span></span>';
+        li.querySelector('b').textContent = r.label; li.querySelector('span').textContent = r.stops.join(' \u2192 ');
+        legend.appendChild(li);
+      });
+      view.appendChild(rsvg);
+      box.appendChild(legend);
+      // fly each plane along its route, over and over (a mouse/finger can still click pins through it)
+      var reduceFly = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var fly = function (ts) {
+        if (!box.isConnected) return;
+        planes.forEach(function (pl) {
+          var L2 = pl.L || (pl.L = pl.path.getTotalLength()), dur = 2.2 + L2 / 22, cycle = dur + 1.4;
+          var t = reduceFly ? 0.45 * dur : ((ts / 1000 + pl.t0) % cycle);
+          var f = Math.min(1, t / dur), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;   // ease in and out of each trip
+          var at = e * L2, p1 = pl.path.getPointAtLength(at), p2 = pl.path.getPointAtLength(Math.min(L2, at + 0.3)), p0 = pl.path.getPointAtLength(Math.max(0, at - 0.3));
+          var ang = Math.atan2(p2.y - p0.y, p2.x - p0.x) * 180 / Math.PI;
+          var fade = t > dur ? Math.max(0, 1 - (t - dur) / 0.5) : Math.min(1, t / 0.3);
+          pl.plane.setAttribute('transform', 'translate(' + p1.x.toFixed(3) + ' ' + p1.y.toFixed(3) + ') rotate(' + ang.toFixed(1) + ') scale(' + pl.sc + ')');
+          pl.plane.style.opacity = reduceFly ? 1 : fade.toFixed(2);
+        });
+        if (!reduceFly) requestAnimationFrame(fly);
+      };
+      requestAnimationFrame(function () {
+        var px = box.clientWidth / 100;                         // keep the plane ~24px however wide the map is
+        planes.forEach(function (pl) { pl.sc = (12 / px / 1.6).toFixed(3); });
+        requestAnimationFrame(fly);
+      });
+    }
     if (p.hq) {
-      var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+      var svg = document.createElementNS(NS, 'svg');
       svg.setAttribute('class', 'tsf-map-routes'); svg.setAttribute('viewBox', '0 0 100 ' + (100 * h / w).toFixed(3)); svg.setAttribute('preserveAspectRatio', 'none');
-      var k = h / w, hx = X(p.hq.lon), hy = Y(p.hq.lat) * k;
-      p.pins.forEach(function (pin, i) {
+      var hx = X(p.hq.lon), hy = Y(p.hq.lat) * k;
+      if (!planes.length) p.pins.forEach(function (pin, i) {
         var px = X(pin.lon), py = Y(pin.lat) * k, mx = (hx + px) / 2, my = (hy + py) / 2, dx = px - hx, dy = py - hy, d = Math.hypot(dx, dy) || 1;
         var bend = d * 0.22, qx = mx + dy / d * bend * (dx > 0 ? -1 : 1), qy = my - Math.abs(dx / d) * bend - 2;
         var path = document.createElementNS(NS, 'path');
@@ -354,6 +417,7 @@
     requestAnimationFrame(function () {
       if (scroller.scrollWidth <= scroller.clientWidth + 2) return;
       hint.textContent = 'swipe the map \u2194 \u00b7 tap a pin';
+      var lg = box.querySelector('.tsf-map-legend'); if (lg) { lg.classList.add('is-below'); scroller.insertAdjacentElement('afterend', lg); }
       var mid = p.pins.reduce(function (s2, q) { return s2 + X(q.lon); }, 0) / p.pins.length;
       scroller.scrollLeft = mid / 100 * scroller.scrollWidth - scroller.clientWidth / 2;
     });

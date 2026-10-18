@@ -14,4 +14,5 @@ PIN: Hongkong | 2012 | 22.2855, 114.1577 | hongkong.jpg
 PIN: Sydney, Australia | 2012 | -33.8568, 151.2153 | sydney.jpg
 PIN: Paju | 2026 | 37.7599, 126.7802 | paju-1.jpg, paju-2.jpg
 
-
+ROUTE: 2010 | Seoul > Santorini > Istanbul > Seoul
+ROUTE: 2012 | Seoul > Sydney > Hongkong > Seoul

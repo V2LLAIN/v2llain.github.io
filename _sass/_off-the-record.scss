@@ -282,6 +282,25 @@ body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 
   opacity: 0; animation: tsf-route 1s ease forwards;
 }
 @keyframes tsf-route { from { opacity: 0; stroke-dashoffset: 60; } to { opacity: .8; stroke-dashoffset: 0; } }
+.tsf-trip { --c: #b3261e; }
+.tsf-trip-1 { --c: #1e3a8a; }
+.tsf-trip-2 { --c: #1f7a4a; }
+.tsf-trip-3 { --c: #8a3fb0; }
+.tsf-trip-line { fill: none; stroke: var(--c) !important; stroke-width: 2px; stroke-dasharray: 7 5 !important; opacity: 0; animation: tsf-route 1s ease forwards; }
+.tsf-map-routes .tsf-plane path { fill: var(--c); stroke: #f8f2e2; stroke-width: 1.2px; stroke-dasharray: none; paint-order: stroke; opacity: 1; animation: none; }
+.tsf-plane { opacity: 0; filter: drop-shadow(0 .25px .3px rgba(0, 0, 0, .45)); }
+.tsf-map-legend {
+  position: absolute; left: 8px; bottom: 8px; z-index: 3; margin: 0; padding: 6px 9px; list-style: none;
+  background: rgba(248, 242, 226, .9); border: 1px solid #c9bb9b; border-radius: 2px; font: 400 11px/1.6 $tsf-type; color: #2a2622;
+}
+.tsf-map-legend.is-below { position: static; margin: 8px 0 0; }
+.tsf-map-legend li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tsf-map-legend i { width: 18px; height: 0; border-top: 2px dashed var(--c); }
+.tsf-map-legend b { font-weight: 400; color: var(--c); }
+.tsf-map-legend .tsf-trip-0 { --c: #b3261e; }
+.tsf-map-legend .tsf-trip-1 { --c: #1e3a8a; }
+.tsf-map-legend .tsf-trip-2 { --c: #1f7a4a; }
+.tsf-map-legend .tsf-trip-3 { --c: #8a3fb0; }
 .tsf-hq { position: absolute; z-index: 1; translate: -50% -50%; pointer-events: none; }
 .tsf-hq i { display: block; width: 10px; height: 10px; background: #1e2a57; rotate: 45deg; box-shadow: 0 0 0 2px #f3ead4; }
 .tsf-hq.no-label b { display: none; }
@@ -414,6 +433,7 @@ body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 
 
 @media (max-width: 600px) {
   .tsf-pin-label { font-size: 8.5px; padding: 0 3px; }
+  .tsf-map-legend { font-size: 9.5px; padding: 4px 7px; }
   .tsf-hq b { font-size: 9px; }
   .tsf-dossier { padding: 22px 18px 18px; }
   .tsf-d-bar { flex-direction: column; gap: 2px; font-size: 10.5px; }
