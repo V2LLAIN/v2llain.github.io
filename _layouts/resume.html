@@ -186,6 +186,7 @@
           <a href="#publications">Publications</a>
           <a href="#experience">Research Experience</a>
           <a href="#projects">Projects</a>
+          <a href="#off-the-record">Off the Record</a>
         </nav>
 
       </aside>
@@ -360,6 +361,8 @@
           </div>
         </section>
         {% endif %}
+        <!-- Off the Record (daily life, as classified case files) -->
+        {% include off-the-record.html %}
         <!-- Visitors -->
         <!-- <section id="visitors" class="section">
           <button type="button" class="section-header visitor-toggle" aria-expanded="false" aria-controls="visitor-map">
@@ -473,6 +476,7 @@
       });
     </script>
     <script src="{{ '/js/lp-player.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="{{ '/js/off-the-record.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
 
   </body>
 
