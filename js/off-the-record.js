@@ -17,6 +17,69 @@
   var zoom = modal.querySelector('.tsf-zoom');
   var DESIGN_W = 860, DESIGN_H = 470;
   var IMG = /\.(jpe?g|png|gif|webp|avif|svg)$/i, VID = /\.(mp4|webm|m4v|mov|ogv)$/i;
+  // ---- sound effects, synthesized with Web Audio (no files): 착 · 철컥 · 탕 ----
+  var SFX = (function () {
+    var ac = null, out = null, noise = null, verb = null;
+    var on = true; try { on = localStorage.getItem('tsf-sound') !== '0'; } catch (e) {}
+    function init() {
+      if (ac || !on) return !!ac;
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+      ac = new AC();
+      var comp = ac.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 8; comp.connect(ac.destination);
+      out = ac.createGain(); out.gain.value = 0.55; out.connect(comp);
+      noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      var d = noise.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      verb = ac.createConvolver();                     // a small concrete room for the shot
+      var len = Math.floor(ac.sampleRate * 1.6), ir = ac.createBuffer(2, len, ac.sampleRate);
+      for (var c = 0; c < 2; c++) { var x = ir.getChannelData(c); for (var j = 0; j < len; j++) x[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / len, 3.2); }
+      verb.buffer = ir; var vg = ac.createGain(); vg.gain.value = 0.35; verb.connect(vg); vg.connect(out);
+      return true;
+    }
+    function wake() { if (init() && ac.state === 'suspended') ac.resume(); }
+    function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+    // a burst of filtered noise
+    function hiss(t, type, f, q, peak, dec, f2, dest) {
+      var src = ac.createBufferSource(); src.buffer = noise;
+      var bq = ac.createBiquadFilter(); bq.type = type; bq.frequency.setValueAtTime(f, t); if (f2) bq.frequency.exponentialRampToValueAtTime(f2, t + dec); bq.Q.value = q;
+      var g = ac.createGain(); env(g, t, 0.002, peak, dec);
+      src.connect(bq); bq.connect(g); g.connect(dest || out); src.start(t, Math.random() * 0.5); src.stop(t + dec + 0.05);
+    }
+    // a metallic tick: a few inharmonic partials that die fast
+    function metal(t, f, peak, dec) {
+      [1, 2.76, 5.4, 8.9].forEach(function (k, i) {
+        var o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f * k * (0.98 + Math.random() * 0.04);
+        var g = ac.createGain(); env(g, t, 0.001, peak / (i + 1.3), dec / (1 + i * 0.6));
+        o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + 0.05);
+      });
+      hiss(t, 'bandpass', f * 1.6, 2, peak * 0.8, 0.03);
+    }
+    function thump(t, f0, f1, peak, dec) {
+      var o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dec);
+      var g = ac.createGain(); env(g, t, 0.003, peak, dec); o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + 0.05);
+    }
+    var now = function () { return ac.currentTime + 0.005; };
+    var api = {
+      wake: wake,
+      get on() { return on; },
+      toggle: function () { on = !on; try { localStorage.setItem('tsf-sound', on ? '1' : '0'); } catch (e) {} if (on) wake(); return on; },
+      press: function () { if (!ac || !on) return; var t = now(); metal(t, 2400, 0.25, 0.06); hiss(t + 0.03, 'bandpass', 1800, 3, 0.2, 0.05); metal(t + 0.07, 3100, 0.18, 0.05); },        // round pushed into the magazine
+      magIn: function () { if (!ac || !on) return; var t = now(); hiss(t, 'lowpass', 900, 1, 0.6, 0.09); thump(t, 160, 70, 0.5, 0.12); metal(t + 0.035, 1500, 0.4, 0.09); },          // magazine seated: 철컥
+      boltUp: function () { if (!ac || !on) return; var t = now(); metal(t, 2800, 0.3, 0.05); },
+      boltBack: function () { if (!ac || !on) return; var t = now(); hiss(t, 'bandpass', 2400, 4, 0.22, 0.15, 900); metal(t + 0.15, 1300, 0.45, 0.08); },
+      boltFwd: function () { if (!ac || !on) return; var t = now(); hiss(t, 'bandpass', 900, 4, 0.22, 0.15, 2600); metal(t + 0.16, 2100, 0.55, 0.1); thump(t + 0.16, 140, 60, 0.35, 0.1); },
+      boltDown: function () { if (!ac || !on) return; var t = now(); metal(t, 2600, 0.35, 0.06); },
+      shot: function () {                              // 탕: crack + boom + room
+        if (!ac || !on) return; var t = now();
+        hiss(t, 'highpass', 1200, 0.7, 1.0, 0.07);
+        hiss(t, 'lowpass', 2500, 0.7, 0.9, 0.35, 300);
+        hiss(t, 'lowpass', 1800, 0.7, 0.7, 0.5, 200, verb);
+        thump(t, 95, 32, 1.0, 0.45);
+        metal(t + 0.55, 3400, 0.05, 0.08);              // a faint ring afterwards
+      }
+    };
+    return api;
+  })();
+
 
   // the cover's DATE / ACTION / INITIAL log: empty ruled rows
   var rows = root.querySelector('.tsf-log-rows');
@@ -129,6 +192,12 @@
       tabsEl.appendChild(b);
       mlist.appendChild(makeRound(c));
     });
+    if (cases.length) {                               // sound on/off for the rifle
+      var snd = document.createElement('button'); snd.type = 'button'; snd.className = 'tsf-sound';
+      var lab = function () { snd.textContent = SFX.on ? '\uD83D\uDD0A SOUND ON' : '\uD83D\uDD07 SOUND OFF'; snd.setAttribute('aria-pressed', SFX.on ? 'true' : 'false'); };
+      lab(); snd.addEventListener('click', function () { SFX.toggle(); lab(); });
+      mlist.appendChild(snd);
+    }
   }
   renderTabs();
 
@@ -176,25 +245,32 @@
   var lastTab = null;
   var gid;
   // ---- the cases as rifle cartridges: load → mount → chamber → scope → 팡 ----
-  function BRASS() { return [[0, '#4a3712'], [.09, '#7d6128'], [.22, '#b4934f'], [.33, '#dcc68f'], [.43, '#c6a965'], [.6, '#9a7a38'], [.76, '#745923'], [.92, '#4f3b14'], [1, '#3a2a0c']]; }
-  function COPPER() { return [[0, '#3e1a0c'], [.14, '#7a3a1c'], [.3, '#b86a3e'], [.4, '#e3a77e'], [.5, '#c98256'], [.68, '#8f4824'], [.86, '#5c2a12'], [1, '#341608']]; }
+  // polished cartridge brass, copper jacket, silver polymer tip (like a match-grade rifle round)
+  function BRASS() { return [[0, '#5a430c'], [.07, '#a3801f'], [.18, '#e6c254'], [.27, '#fff1b8'], [.32, '#fffbe6'], [.38, '#f7d870'], [.52, '#d6a935'], [.7, '#a77f1c'], [.86, '#765710'], [1, '#4a3606']]; }
+  function COPPER() { return [[0, '#4e1e0e'], [.13, '#9c4a26'], [.27, '#e0956c'], [.36, '#ffd9c2'], [.44, '#f0a982'], [.6, '#c06e46'], [.8, '#86391c'], [1, '#43180a']]; }
+  function STEEL() { return [[0, '#5c636b'], [.25, '#c9d0d6'], [.38, '#ffffff'], [.55, '#bfc6cc'], [.8, '#7d858d'], [1, '#4b5157']]; }
   function grad(id, stops) { return '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' + stops.map(function (st) { return '<stop offset="' + st[0] + '" stop-color="' + st[1] + '"/>'; }).join('') + '</linearGradient>'; }
-  // the front of a cartridge (shoulder, neck, bullet) for the list; the body is the flexible part drawn in CSS
+  // the front of a cartridge (shoulder, long neck, bullet) for the list; the body is the flexible part drawn in CSS
   function tipSVG() {
-    var b = 'tb' + (gid = (gid || 0) + 1), c = 'tc' + gid;
-    return '<svg class="r-tip" viewBox="0 0 112 54" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><defs>' + grad(b, BRASS()) + grad(c, COPPER()) + '</defs>' +
-      '<path d="M0 0 L22 13 L40 13 L40 41 L22 41 L0 54 Z" fill="url(#' + b + ')"/>' +
-      '<path d="M22 13 L22 41" stroke="rgba(40,25,5,.35)" stroke-width="1"/>' +
-      '<path d="M39 13.5 L62 14 C88 16 106 23 112 27 C106 31 88 38 62 40 L39 40.5 Z" fill="url(#' + c + ')"/>' +
-      '<path d="M39 13 L39 41" stroke="rgba(30,15,5,.55)" stroke-width="1.2"/></svg>';
+    var n = (gid = (gid || 0) + 1), b = 'tb' + n, c = 'tc' + n, t = 'tt' + n, k = 'tk' + n;
+    var bullet = 'M45 15.5 L64 16 C88 18 108 22.5 124 27 C108 31.5 88 36 64 38 L45 38.5 Z';
+    return '<svg class="r-tip" viewBox="0 0 124 54" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><defs>' + grad(b, BRASS()) + grad(c, COPPER()) + grad(t, STEEL()) +
+      '<clipPath id="' + k + '"><rect x="105" y="0" width="20" height="54"/></clipPath></defs>' +
+      '<path d="M0 0 L13 15 L46 15 L46 39 L13 39 L0 54 Z" fill="url(#' + b + ')"/>' +
+      '<path d="M13 15 L13 39" stroke="rgba(70,45,0,.35)" stroke-width="1"/>' +
+      '<path d="' + bullet + '" fill="url(#' + c + ')"/>' +
+      '<path d="' + bullet + '" fill="url(#' + t + ')" clip-path="url(#' + k + ')"/>' +
+      '<path d="M45 15 L45 39" stroke="rgba(60,30,5,.5)" stroke-width="1.2"/></svg>';
   }
   // a whole cartridge lying on its side, pointing right (viewBox 200 x 40)
   function roundSVG(cls) {
-    var b = 'rb' + (gid = (gid || 0) + 1), c = 'rc' + gid;
-    return '<svg class="' + (cls || '') + '" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><defs>' + grad(b, BRASS()) + grad(c, COPPER()) + '</defs>' +
-      '<rect x="0" y="1" width="6" height="38" rx="1.5" fill="url(#' + b + ')"/><rect x="6" y="6" width="4" height="28" fill="#3a2a0c"/>' +
-      '<path d="M10 2 L128 2 L146 10 L164 10 L164 30 L146 30 L128 38 L10 38 Z" fill="url(#' + b + ')"/>' +
-      '<path d="M163 10.5 L176 11 C188 13 197 17 200 20 C197 23 188 27 176 29 L163 29.5 Z" fill="url(#' + c + ')"/></svg>';
+    var n = (gid = (gid || 0) + 1), b = 'rb' + n, c = 'rc' + n, t = 'rt' + n, k = 'rk' + n;
+    var bullet = 'M155 11.5 L168 12 C181 13.5 193 17 200 20 C193 23 181 26.5 168 28 L155 28.5 Z';
+    return '<svg class="' + (cls || '') + '" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true"><defs>' + grad(b, BRASS()) + grad(c, COPPER()) + grad(t, STEEL()) +
+      '<clipPath id="' + k + '"><rect x="188" y="0" width="12" height="40"/></clipPath></defs>' +
+      '<rect x="0" y="1" width="6" height="38" rx="1.5" fill="url(#' + b + ')"/><rect x="6" y="6" width="4" height="28" fill="#4a3606"/>' +
+      '<path d="M10 2 L120 2 L130 11 L156 11 L156 29 L130 29 L120 38 L10 38 Z" fill="url(#' + b + ')"/>' +
+      '<path d="' + bullet + '" fill="url(#' + c + ')"/><path d="' + bullet + '" fill="url(#' + t + ')" clip-path="url(#' + k + ')"/></svg>';
   }
   function makeRound(c) {
     var r = document.createElement('button'); r.type = 'button'; r.className = 'tsf-round';
@@ -251,6 +327,7 @@
     if (armBusy) return;
     if (reduceShot || !document.body.animate) { openCase(c, round); punchHole(); return; }
     armBusy = true;
+    SFX.wake();
     var T = function (fn, ms) { armTimers.push(setTimeout(fn, ms)); };
     var ov = document.createElement('div'); ov.className = 'tsf-arm';
     ov.innerHTML = rifleSVG() + '<p class="arm-cap">LOADING MAGAZINE</p>';
@@ -281,7 +358,7 @@
         { transform: 'translate(' + dx * 0.55 + 'px,' + (dy * 0.55 - 80) + 'px) scale(' + (1 + sx) / 2 + ',' + (1 + sy) / 2 + ') rotate(-8deg)', offset: 0.55 },
         { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' }
       ], { duration: 650, easing: 'cubic-bezier(.4,.1,.3,1)', fill: 'forwards' }).onfinish = function () {
-        fly.remove(); fly = null; slot.style.opacity = 1;
+        fly.remove(); fly = null; slot.style.opacity = 1; SFX.press();
         slot.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(7px)', offset: 0.4 }, { transform: 'translateY(0)' }], { duration: 260, easing: 'ease-out' });
       };
     }, 120);
@@ -291,11 +368,13 @@
       Array.prototype.forEach.call(rifle, function (g) { g.animate([{ opacity: 0, transform: 'translateX(-60px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' }); });
     }, 1050);
     T(function () {
+      T(SFX.magIn, 320);
       mag.animate([{ transform: 'translate(0px,150px)' }, { transform: 'translate(0px,-4px)', offset: 0.85 }, { transform: 'translate(0px,0px)' }], { duration: 380, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' });
     }, 1500);
     // 3. work the bolt: 철컥
     T(function () {
       cap.textContent = 'CHAMBERING';
+      SFX.boltUp(); T(SFX.boltBack, 110); T(SFX.boltFwd, 340); T(SFX.boltDown, 560);
       bolt.animate([{ transform: 'translateX(0)' }, { transform: 'translate(-6px,-10px)', offset: 0.18 }, { transform: 'translate(-56px,-10px)', offset: 0.45 }, { transform: 'translate(-56px,-10px)', offset: 0.55 }, { transform: 'translate(-2px,-10px)', offset: 0.85 }, { transform: 'translateX(0)' }], { duration: 620, easing: 'ease-in-out', fill: 'forwards' });
     }, 2000);
     // 4. open the file, look at it through the scope, fire
@@ -323,7 +402,7 @@
         var fl = scope.querySelector('.flash'); scope.style.setProperty('--fx', tx + 'px'); scope.style.setProperty('--fy', ty + 'px');
         fl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out' });
         lens.animate([at(tx, ty), at(tx + 6, ty - 34), at(tx, ty)], { duration: 320, easing: 'cubic-bezier(.2,.8,.3,1)' });
-        punchHole({ x: tx, y: ty });
+        SFX.shot(); punchHole({ x: tx, y: ty });
         T(function () {
           scope.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: 'forwards' }).onfinish = function () { scope.remove(); scope = null; finish(false); };
         }, 360);

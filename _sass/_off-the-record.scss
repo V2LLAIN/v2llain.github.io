@@ -181,19 +181,21 @@ $tsf-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' wi
   filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .28)) drop-shadow(0 1px 1px rgba(0, 0, 0, .25));
   transition: transform .25s cubic-bezier(.2, .9, .3, 1.2);
 }
+.tsf-sound { align-self: flex-end; margin: 2px 0 0; padding: 3px 8px; border: 1px solid var(--border-color); border-radius: 3px; background: none; cursor: pointer; font: 11px/1.4 $tsf-type; letter-spacing: .08em; color: var(--text-muted); }
+.tsf-sound:hover { color: #b3261e; border-color: #b3261e; }
 .tsf-round:hover, .tsf-round:focus-visible { transform: translateX(8px); outline: none; }
 .tsf-round:focus-visible .r-body { box-shadow: 0 0 0 2px #b3261e; }
 // brass, as in a real photo: soft highlight band, dark edges, faint lathe lines
 .tsf-round .r-rim, .tsf-round .r-groove, .tsf-round .r-body {
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .025) 0 1px, rgba(0, 0, 0, .02) 1px 3px),
-    linear-gradient(180deg, #4a3712 0%, #7d6128 9%, #b4934f 22%, #dcc68f 33%, #c6a965 43%, #9a7a38 60%, #745923 76%, #4f3b14 92%, #3a2a0c 100%);
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .02) 0 1px, rgba(0, 0, 0, .012) 1px 4px),
+    linear-gradient(180deg, #5a430c 0%, #a3801f 7%, #e6c254 18%, #fff1b8 27%, #fffbe6 32%, #f7d870 38%, #d6a935 52%, #a77f1c 70%, #765710 86%, #4a3606 100%);
 }
 .tsf-round .r-rim { flex: 0 0 9px; border-radius: 3px 0 0 3px; filter: brightness(.88); }
 .tsf-round .r-groove { flex: 0 0 6px; margin: 7px 0; filter: brightness(.5); }
 .tsf-round .r-body {
   flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 10px 0 12px;
-  color: rgba(52, 36, 8, .88);
+  color: rgba(60, 40, 0, .82);
 }
 .tsf-round .r-body small, .tsf-round .r-body b, .tsf-round .r-body i { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 0 rgba(255, 238, 190, .45), 0 -.5px 0 rgba(40, 25, 0, .35); }
 .tsf-round .r-body small { font: 400 10px/1.3 $tsf-type; letter-spacing: .14em; color: rgba(90, 30, 10, .85); }
