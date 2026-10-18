@@ -3,7 +3,7 @@ SUBTITLE: 특수훈련 기록 — 근접전투 · 기초군사 · 체력단련
 DATE: 2024 – PRESENT
 STATUS: ONGOING
 LEVEL: EYES ONLY
-CODENAME: VA1
+CODENAME: V2LLAIN
 ---
 요원의 특수훈련 기록. 일부 사진은 신원 보호를 위해 가려져 있음.
 
@@ -17,5 +17,5 @@ Deadlift - [[190]]
 매일 밤, 장소 미상의 [[체력단련실]]에서 반복 훈련 중.
 
 **PHASE 3 — CQB (근접전투)**
-실내 진입 및 제압 훈련. 콜사인 [[VA1]].
+실내 진입 및 제압 훈련. 콜사인 [[V2LLAIN]].
 분대 단위 합동 훈련 수료.
