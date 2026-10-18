@@ -107,7 +107,7 @@
       b.innerHTML = '<small></small><b></b>';
       b.querySelector('small').textContent = 'CASE #' + pad(c.no);
       b.querySelector('b').textContent = c.meta.TITLE;
-      if (c.meta.SUBTITLE) { var s = document.createElement('i'); s.textContent = c.meta.SUBTITLE; b.appendChild(s); }
+      if (c.meta.SUBTITLE) { var s = document.createElement('i'); s.innerHTML = redactOnly(c.meta.SUBTITLE); b.appendChild(s); }
       b.addEventListener('click', function () { openCase(c, b); });
       tabsEl.appendChild(b);
       var mb = b.cloneNode(true); mb.removeAttribute('role');
@@ -140,6 +140,7 @@
   reseal.addEventListener('click', function () { root.classList.remove('is-declassified', 'is-open', 'is-stamping'); });
 
   // ---- the case file ----
+  function redactOnly(s) { return esc(s).replace(/\[\[([\s\S]+?)\]\]/g, '<span class="tsf-redact-bar">$1</span>'); }   // bookmarks: just the black bar
   function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function inline(s) {
     s = esc(s);
@@ -159,7 +160,7 @@
     var p = c.parsed || { meta: {}, body: '', links: [] };
     dossier.querySelector('.tsf-d-no').textContent = 'CASE FILE #' + pad(c.no);
     dossier.querySelector('.tsf-d-title').textContent = c.meta.TITLE;
-    var sub = dossier.querySelector('.tsf-d-sub'); sub.textContent = c.meta.SUBTITLE || ''; sub.hidden = !c.meta.SUBTITLE;
+    var sub = dossier.querySelector('.tsf-d-sub'); sub.innerHTML = c.meta.SUBTITLE ? inline(c.meta.SUBTITLE) : ''; sub.hidden = !c.meta.SUBTITLE;
     var meta = dossier.querySelector('.tsf-d-meta'); meta.innerHTML = '';
     [['DATE', c.meta.DATE], ['STATUS', c.meta.STATUS || 'OPEN'], ['LEVEL', c.meta.LEVEL || 'EYES ONLY'], ['CODENAME', c.meta.CODENAME], ['LOCATION', c.meta.LOCATION]].forEach(function (kv) {
       if (!kv[1]) return; var d = document.createElement('div'); d.innerHTML = '<dt></dt><dd></dd>';

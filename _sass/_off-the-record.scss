@@ -230,13 +230,17 @@ html.tsf-locked { overflow: hidden; }
 .tsf-d-meta dd { margin: 0; font-size: 13.5px; }
 .tsf-d-body { font-size: 15px; line-height: 1.9; }
 .tsf-d-body p { margin: 0 0 1em; overflow-wrap: anywhere; }
-.tsf-d-body a { color: #1e3a8a; border-bottom: 1px solid rgba(30, 58, 138, .35); }
+body.theme-default .tsf-d-body a { color: #1e3a8a; border-bottom: 1px solid rgba(30, 58, 138, .35); }
 .tsf-d-empty { color: #8a7f6c; }
 .tsf-redact {
   padding: 0 2px; border-radius: 1px; background: #161412; color: transparent; cursor: help;
   -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background .25s ease, color .25s ease;
 }
 .tsf-redact:hover, .tsf-redact:focus { background: rgba(22, 20, 18, .1); color: inherit; outline: none; }
+body.theme-default .tsf-redact a { color: transparent; border-bottom-color: transparent; }           // a link inside stays hidden too
+body.theme-default .tsf-redact:hover a, body.theme-default .tsf-redact:focus a, body.theme-default .tsf-redact:focus-within a { color: #1e3a8a; border-bottom-color: rgba(30, 58, 138, .35); }
+.tsf-redact:focus-within { background: rgba(22, 20, 18, .1); color: inherit; }
+.tsf-redact-bar { padding: 0 2px; background: #161412; color: transparent; border-radius: 1px; }
 .tsf-d-evidence h4 { margin: 8px 0 14px; font: 400 13px/1 $tsf-type; letter-spacing: .14em; color: #b3261e; }
 .tsf-d-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 22px 18px; padding: 6px 4px 10px; }
 .tsf-ev {
@@ -252,7 +256,7 @@ html.tsf-locked { overflow: hidden; }
 .tsf-ev video { display: block; width: 100%; max-height: 70vh; background: #000; }
 .tsf-ev-frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
 .tsf-ev-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.tsf-ev-link { display: block; padding: 18px 6px; font-size: 12px; overflow-wrap: anywhere; color: #1e3a8a; }
+body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 12px; overflow-wrap: anywhere; color: #1e3a8a; }
 .tsf-ev figcaption { position: absolute; left: 10px; bottom: 6px; font-size: 10.5px; letter-spacing: .1em; color: #6b6255; }
 .tsf-d-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #b3a78f; font-size: 10px; letter-spacing: .1em; color: #8a7f6c; }
 .tsf-zoom { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; background: rgba(0, 0, 0, .86); cursor: zoom-out; }
