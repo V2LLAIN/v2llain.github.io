@@ -59,8 +59,15 @@
             <span class="tsf-st tsf-st-copy">DO NOT<br>PHOTOCOPY</span>
             <span class="tsf-eyes">FOR YOUR EYES ONLY</span>
           </div>
-          <div class="tsf-cover-inside" aria-hidden="true">
-            <span class="tsf-inside-note">PROPERTY OF V2LLAIN<br>RETURN IF FOUND</span>
+          <div class="tsf-cover-inside">
+            <!-- an unknown agent clipped to the inside of the cover -->
+            <button type="button" class="tsf-agent-card" aria-label="Unknown agent — open the personnel file">
+              <span class="tsf-pclip" aria-hidden="true"></span>
+              <span class="tsf-agent-photo"><img src="{{ '/images/off-the-record/silhouette.png' | relative_url }}" alt="" draggable="false"><b aria-hidden="true">?</b></span>
+              <span class="tsf-agent-cap">AGENT ???</span>
+            </button>
+            <button type="button" class="tsf-stamp tsf-stamp-agent" aria-label="TOP SECRET — open the personnel file"><span>TOP SECRET</span></button>
+            <span class="tsf-inside-note" aria-hidden="true">PROPERTY OF V2LLAIN<br>RETURN IF FOUND</span>
           </div>
         </div>
       </div>
@@ -87,6 +94,25 @@
       <footer class="tsf-d-foot"><span>END OF FILE</span><span class="tsf-d-path"></span></footer>
     </article>
     <div class="tsf-zoom" hidden><img alt=""></div>
+  </div>
+
+  <!-- the agent's personnel file -->
+  <div class="tsf-modal tsf-agent" hidden>
+    <div class="tsf-modal-backdrop"></div>
+    <article class="tsf-dossier tsf-pfile" role="dialog" aria-modal="true" aria-labelledby="tsf-a-title">
+      <button type="button" class="tsf-close" aria-label="Close the personnel file">&times;</button>
+      <header class="tsf-d-bar"><span>PERSONNEL FILE</span><span>CLEARANCE: <b>EYES ONLY</b></span></header>
+      <div class="tsf-a-photo">
+        <span class="tsf-pclip" aria-hidden="true"></span>
+        <img src="{{ '/images/off-the-record/agent.jpg' | relative_url }}" alt="The agent, face scribbled out" draggable="false">
+        <span class="tsf-a-stamp" aria-hidden="true">IDENTITY<br>WITHHELD</span>
+      </div>
+      <h3 class="tsf-d-title tsf-a-title" id="tsf-a-title">AGENT ???</h3>
+      <dl class="tsf-d-meta tsf-a-meta" hidden></dl>
+      <div class="tsf-d-body tsf-a-body"></div>
+      <div class="tsf-fan" tabindex="0" role="button" aria-label="Attached photographs — spread them out"></div>
+      <p class="tsf-fan-hint">ATTACHED PHOTOGRAPHS &middot; <span class="tsf-fan-hint-m">click</span> to lay them out</p>
+    </article>
   </div>
 
   <script type="application/json" id="tsf-files">[{% assign tsf_first = true %}{% for f in site.static_files %}{% assign tsf_dir = f.path | slice: 0, 12 %}{% if tsf_dir == "/Top secret/" %}{% unless tsf_first %},{% endunless %}{{ f.path | prepend: site.baseurl | jsonify }}{% assign tsf_first = false %}{% endif %}{% endfor %}]</script>
