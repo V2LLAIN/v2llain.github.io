@@ -5,6 +5,7 @@ STATUS: ONGOING
 ---
 Overwatch - [[master]]
 Chess - elo [[1367]]
+Pokémon - master[[DP, BW]]
 [[Dance]] - [[https://www.youtube.com/watch?v=G05Qe1Y6CeI]]
 
 Squat - 160
