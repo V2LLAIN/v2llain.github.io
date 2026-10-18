@@ -14,7 +14,7 @@
     SUBTITLE: 한 줄 부제
     DATE: 날짜
     STATUS: 상태 (예: OPEN, CLOSED, ONGOING)
-    LEVEL: 보안 등급 (예: EYES ONLY)
+    LEVEL: 보안 등급 (예: EYES ONLY ⏵ NOFORN ⏵ ORCON)
     CODENAME: 작전명
     LOCATION: 장소
   그 다음 줄에 --- 를 쓰고, 그 아래에 본문을 자유롭게 씁니다.
