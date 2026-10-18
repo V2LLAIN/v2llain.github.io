@@ -67,6 +67,14 @@
       boltUp: function () { if (!ac || !on) return; var t = now(); metal(t, 2800, 0.3, 0.05); },
       boltBack: function () { if (!ac || !on) return; var t = now(); hiss(t, 'bandpass', 2400, 4, 0.22, 0.15, 900); metal(t + 0.15, 1300, 0.45, 0.08); },
       boltFwd: function () { if (!ac || !on) return; var t = now(); hiss(t, 'bandpass', 900, 4, 0.22, 0.15, 2600); metal(t + 0.16, 2100, 0.55, 0.1); thump(t + 0.16, 140, 60, 0.35, 0.1); },
+      whoosh: function () { if (!ac || !on) return; var t = now(); hiss(t, 'bandpass', 500, 2.5, 0.35, 0.28, 2600); },
+      stab: function () {                              // the dagger bites into the paper: 퍽 + a little blade twang
+        if (!ac || !on) return; var t = now();
+        hiss(t, 'lowpass', 1400, 1, 0.8, 0.08); thump(t, 210, 80, 0.7, 0.14);
+        [1, 2.4].forEach(function (k) { var o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = 520 * k;
+          var g = ac.createGain(); env(g, t + 0.01, 0.002, 0.16 / k, 0.45); var lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 18; lg.gain.value = 0.07 / k;
+          lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(out); o.start(t); lfo.start(t); o.stop(t + 0.5); lfo.stop(t + 0.5); });
+      },
       boltDown: function () { if (!ac || !on) return; var t = now(); metal(t, 2600, 0.35, 0.06); },
       shot: function () {                              // 탕: crack + boom + room
         if (!ac || !on) return; var t = now();
@@ -333,10 +341,48 @@
     ov.innerHTML = rifleSVG() + '<p class="arm-cap">LOADING MAGAZINE</p>';
     document.body.appendChild(ov); void ov.offsetWidth; ov.classList.add('is-on');
     var cap = ov.querySelector('.arm-cap'), mag = ov.querySelector('.arm-mag'), slot = ov.querySelector('.arm-slot'), rifle = ov.querySelectorAll('.arm-rifle'), bolt = ov.querySelector('.arm-bolt');
-    var opened = false, fly = null, scope = null;
+    var opened = false, fly = null, scope = null, dropAnim = null, knife = null, pinAt = null;
+    // the file falls in from above; a thrown dagger nails its top edge and it swings to a stop
+    function pin() {
+      if (!pinAt || modal.hidden) return;
+      clearPins();
+      var k = document.createElement('div'); k.className = 'tsf-dagger is-pinned'; k.innerHTML = daggerSVG();
+      k.style.left = pinAt.x + 'px'; k.style.top = pinAt.y + 'px';
+      modal.appendChild(k);
+      var slit = document.createElement('span'); slit.className = 'tsf-slit'; slit.style.left = (pinAt.x - pinAt.dl) + 'px'; slit.style.top = (pinAt.y - pinAt.dt) + 'px';
+      dossier.appendChild(slit);
+    }
+    function dropAndPin() {
+      dossier.classList.remove('is-in');
+      var r = dossier.getBoundingClientRect();
+      pinAt = { x: r.left + r.width * 0.5, y: r.top + 16, dl: r.left, dt: r.top };
+      dossier.style.transformOrigin = (r.width * 0.5) + 'px 16px';
+      dropAnim = dossier.animate([
+        { transform: 'translateY(' + (-r.bottom - 60) + 'px) rotate(-7deg)', offset: 0 },
+        { transform: 'translateY(-14px) rotate(3deg)', offset: 0.42, easing: 'cubic-bezier(.5,0,1,1)' },
+        { transform: 'translateY(3px) rotate(-4deg)', offset: 0.5 },
+        { transform: 'rotate(2.6deg)', offset: 0.64 },
+        { transform: 'rotate(-1.4deg)', offset: 0.78 },
+        { transform: 'rotate(.6deg)', offset: 0.9 },
+        { transform: 'none', offset: 1 }
+      ], { duration: 1500, easing: 'ease-in' });
+      dropAnim.onfinish = function () { dropAnim = null; dossier.style.transformOrigin = ''; };
+      // the dagger leaves the top-right corner spinning and lands as the paper drops past
+      T(function () {
+        knife = document.createElement('div'); knife.className = 'tsf-dagger'; knife.innerHTML = daggerSVG();
+        knife.style.left = pinAt.x + 'px'; knife.style.top = pinAt.y + 'px';
+        document.body.appendChild(knife); SFX.whoosh();
+        var sx = window.innerWidth + 120 - pinAt.x, sy = -160 - pinAt.y;
+        knife.animate([{ transform: 'translate(' + sx + 'px,' + sy + 'px) rotate(-560deg)' }, { transform: 'translate(0,0) rotate(24deg)' }],
+          { duration: 330, easing: 'cubic-bezier(.2,.5,.6,1)' }).onfinish = function () {
+            if (knife) { knife.remove(); knife = null; } SFX.stab(); pin();
+          };
+      }, 300);
+    }
     function finish(hole) {
       armTimers.forEach(clearTimeout); armTimers = [];
       if (fly) fly.remove(); if (ov.isConnected) ov.remove(); if (scope) scope.remove();
+      if (dropAnim) dropAnim.finish(); if (knife) { knife.remove(); knife = null; pin(); }
       round.style.visibility = '';
       if (!opened) { opened = true; openCase(c, round); }
       if (hole) setTimeout(function () { punchHole(); }, opened ? 0 : 420);
@@ -382,7 +428,7 @@
       cap.textContent = 'TARGET ACQUIRED';
       ov.classList.remove('is-on'); ov.style.opacity = 1;
       ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).onfinish = function () { ov.remove(); };
-      opened = true; openCase(c, round);
+      opened = true; openCase(c, round); dropAndPin();
     }, 2750);
     T(function () {
       var dr = dossier.getBoundingClientRect();
@@ -407,7 +453,7 @@
           scope.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: 'forwards' }).onfinish = function () { scope.remove(); scope = null; finish(false); };
         }, 360);
       }, 1550);
-    }, 3300);
+    }, 4350);
   }
   function punchHole(pt) {
     if (modal.hidden) return;
@@ -431,7 +477,19 @@
     dossier.appendChild(hole);
     dossier.classList.remove('is-hit'); void dossier.offsetWidth; dossier.classList.add('is-hit');
   }
+  function clearPins() { modal.querySelectorAll('.tsf-dagger').forEach(function (k) { k.remove(); }); dossier.querySelectorAll('.tsf-slit').forEach(function (k) { k.remove(); }); }
+  function daggerSVG() {
+    var n = (gid = (gid || 0) + 1), st = 'ds' + n, gr = 'dg' + n;
+    return '<svg viewBox="0 0 30 120" aria-hidden="true"><defs><linearGradient id="' + st + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6c737b"/><stop offset=".45" stop-color="#f4f7f9"/><stop offset=".55" stop-color="#aeb5bc"/><stop offset="1" stop-color="#4f555b"/></linearGradient>' +
+      '<linearGradient id="' + gr + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#15110d"/><stop offset=".5" stop-color="#4a3b2c"/><stop offset="1" stop-color="#120e0a"/></linearGradient></defs>' +
+      '<path class="d-tip" d="M10.6 100 L15 120 L19.4 100 Z" fill="url(#' + st + ')"/>' +
+      '<path d="M10 48 L20 48 L19.4 100 L10.6 100 Z" fill="url(#' + st + ')"/><path d="M15 50 L15 98" stroke="rgba(60,66,72,.6)" stroke-width="1"/>' +
+      '<rect x="2" y="42" width="26" height="6" rx="2" fill="url(#' + st + ')"/>' +
+      '<rect x="11" y="12" width="8" height="30" rx="2" fill="url(#' + gr + ')"/><path d="M11 17 h8 M11 22 h8 M11 27 h8 M11 32 h8 M11 37 h8" stroke="rgba(0,0,0,.6)" stroke-width="1.2"/>' +
+      '<circle cx="15" cy="8" r="5.5" fill="url(#' + st + ')"/></svg>';
+  }
   function openCase(c, tab) {
+    clearPins();
     dossier.querySelectorAll('.tsf-hole').forEach(function (h) { h.remove(); });
     lastTab = tab;
     var p = c.parsed || { meta: {}, body: '', links: [] };
@@ -686,7 +744,7 @@
     if (modal.hidden) return;
     modal.querySelectorAll('video').forEach(function (v) { v.pause(); });
     modal.querySelectorAll('iframe').forEach(function (f) { f.src = 'about:blank'; });
-    modal.hidden = true; zoom.hidden = true;
+    modal.hidden = true; zoom.hidden = true; clearPins();
     document.documentElement.classList.remove('tsf-locked');
     if (lastTab) lastTab.focus({ preventScroll: true });
   }
