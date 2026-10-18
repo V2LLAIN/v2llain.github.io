@@ -230,15 +230,16 @@ html.tsf-locked { overflow: hidden; }
 .tsf-d-meta dd { margin: 0; font-size: 13.5px; }
 .tsf-d-body { font-size: 15px; line-height: 1.9; }
 .tsf-d-body p { margin: 0 0 1em; overflow-wrap: anywhere; }
+.tsf-link-arrow { font-size: .8em; }
 body.theme-default .tsf-d-body a { color: #1e3a8a; border-bottom: 1px solid rgba(30, 58, 138, .35); }
 .tsf-d-empty { color: #8a7f6c; }
 .tsf-redact {
   padding: 0 2px; border-radius: 1px; background: #161412; color: transparent; cursor: help;
   -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background .25s ease, color .25s ease;
 }
-.tsf-redact:hover, .tsf-redact:focus { background: rgba(22, 20, 18, .1); color: inherit; outline: none; }
+.tsf-redact:hover, .tsf-redact:focus, .tsf-redact.is-revealed { background: rgba(22, 20, 18, .1); color: inherit; outline: none; }
 body.theme-default .tsf-redact a { color: transparent; border-bottom-color: transparent; }           // a link inside stays hidden too
-body.theme-default .tsf-redact:hover a, body.theme-default .tsf-redact:focus a, body.theme-default .tsf-redact:focus-within a { color: #1e3a8a; border-bottom-color: rgba(30, 58, 138, .35); }
+body.theme-default .tsf-redact:hover a, body.theme-default .tsf-redact:focus a, body.theme-default .tsf-redact:focus-within a, body.theme-default .tsf-redact.is-revealed a { color: #1e3a8a; border-bottom-color: rgba(30, 58, 138, .35); }
 .tsf-redact:focus-within { background: rgba(22, 20, 18, .1); color: inherit; }
 .tsf-redact-bar { padding: 0 2px; background: #161412; color: transparent; border-radius: 1px; }
 .tsf-d-evidence h4 { margin: 8px 0 14px; font: 400 13px/1 $tsf-type; letter-spacing: .14em; color: #b3261e; }

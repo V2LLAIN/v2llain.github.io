@@ -24,6 +24,8 @@
   - 유튜브 영상:   VIDEO: https://youtu.be/영상주소
   - 외부 사진:     IMAGE: https://사진주소.jpg
   - 링크:          LINK: https://주소
+  - 본문 속 주소:  https://주소 를 그대로 쓰면 "link ↗" 로 보이고, 누르면 그 주소로 갑니다.
+                   [보여줄 글자](https://주소) 처럼 쓰면 원하는 글자로 보입니다. 예: [댄스 영상](https://youtu.be/...)
 
 ■ 사진·영상 (증거물 EXHIBIT)
   같은 폴더에 jpg, png, gif, webp, mp4, webm 파일을 올리면 자동으로 문서 아래에 붙습니다.

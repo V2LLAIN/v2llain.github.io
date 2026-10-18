@@ -146,8 +146,12 @@
     s = esc(s);
     s = s.replace(/\[\[([\s\S]+?)\]\]/g, '<span class="tsf-redact" tabindex="0" title="hover to reveal">$1</span>');   // [[hidden]]
     s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-    return s;
+    // links: [label](https://...) shows the label; a bare https://... address shows as "link"
+    var links = [];
+    var keep = function (href, label) { links.push('<a href="' + href + '" target="_blank" rel="noopener" title="' + href + '">' + label + ' <span class="tsf-link-arrow" aria-hidden="true">&#8599;</span></a>'); return '\u0000' + (links.length - 1) + '\u0000'; };
+    s = s.replace(/\[([^\[\]]+)\]\((https?:\/\/[^\s)<]+)\)/g, function (m, label, href) { return keep(href, label); });
+    s = s.replace(/https?:\/\/[^\s<]+/g, function (href) { return keep(href, 'link'); });
+    return s.replace(/\u0000(\d+)\u0000/g, function (m, i) { return links[+i]; });
   }
   function body(text) {
     if (!text) return '<p class="tsf-d-empty">[ This file has not been written yet. ]</p>';
@@ -196,6 +200,13 @@
     document.documentElement.classList.remove('tsf-locked');
     if (lastTab) lastTab.focus({ preventScroll: true });
   }
+  // a hidden link is uncovered by the first tap, followed by the next (a mouse uncovers it just by hovering)
+  section.addEventListener('click', function (e) {
+    var r = e.target.closest('.tsf-redact');
+    if (!r || r.classList.contains('is-revealed')) return;
+    r.classList.add('is-revealed');
+    if (e.target.closest('a') && !r.matches(':hover')) e.preventDefault();
+  });
   modal.querySelector('.tsf-close').addEventListener('click', closeCase);
   modal.querySelector('.tsf-modal-backdrop').addEventListener('click', closeCase);
   zoom.addEventListener('click', function () { zoom.hidden = true; });
