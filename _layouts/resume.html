@@ -28,7 +28,7 @@
       <aside class="sidebar">
         <div class="sidebar-profile">
           {% if site.resume_avatar == 'true' %}
-          <img src="images/Absolute_cinema.png" alt="{{ site.resume_name }}" class="profile-img" itemprop="image">
+          <img src="images/Absolute_cinema.png" alt="{{ site.resume_name }}" class="profile-img" itemprop="image" data-cinema="{{ '/images/cinema/' | relative_url }}">
           {% endif %}
           <h1 class="sidebar-name" itemprop="name">Hyeongchan Im</h1>
           <p class="sidebar-title" itemprop="jobTitle">Research Intern</p>
@@ -477,6 +477,7 @@
     </script>
     <script src="{{ '/js/lp-player.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
     <script src="{{ '/js/off-the-record.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="{{ '/js/cinema.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
 
   </body>
 
