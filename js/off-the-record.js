@@ -71,12 +71,23 @@
       var m = lines[i].match(KEYS); if (m) meta[m[1].toUpperCase()] = m[2].trim(); i++;
     }
     if (i < lines.length && /^\s*-{3,}\s*$/.test(lines[i])) i++;
-    var body = [], links = [];
+    var body = [], links = [], pins = [], hq = null;
     lines.slice(i).forEach(function (l) {
       var v = l.match(/^\s*(VIDEO|IMAGE|PHOTO|LINK)\s*[:：]\s*(\S+)\s*$/i);
-      if (v) links.push({ kind: v[1].toUpperCase(), href: v[2] }); else body.push(l);
+      // PIN: 도시 | 연도 | 위도, 경도 | 사진파일      HQ: 도시 | 위도, 경도
+      var pn = l.match(/^\s*(PIN|HQ)\s*[:：]\s*(.+)$/i);
+      if (v) links.push({ kind: v[1].toUpperCase(), href: v[2] });
+      else if (pn) {
+        var f = pn[2].split('|').map(function (x) { return x.trim(); });
+        var ll = f.filter(function (x) { return /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(x); })[0];
+        if (!ll) { body.push(l); return; }
+        var xy = ll.split(',').map(parseFloat), rest = f.filter(function (x) { return x !== ll; });
+        if (pn[1].toUpperCase() === 'HQ') hq = { name: rest[0] || 'HQ', lat: xy[0], lon: xy[1] };
+        else pins.push({ name: rest[0] || '', year: rest[1] || '', photo: rest[2] || '', lat: xy[0], lon: xy[1] });
+      }
+      else body.push(l);
     });
-    return { meta: meta, body: body.join('\n').replace(/^\n+|\n+$/g, ''), links: links };
+    return { meta: meta, body: body.join('\n').replace(/^\n+|\n+$/g, ''), links: links, pins: pins, hq: hq };
   }
   var loading = null;
   function loadAll() {
@@ -171,8 +182,11 @@
       d.firstChild.textContent = kv[0]; d.lastChild.textContent = kv[1]; meta.appendChild(d);
     });
     dossier.querySelector('.tsf-d-body').innerHTML = body(p.body);
+    var mapEl = dossier.querySelector('.tsf-map'); if (mapEl) mapEl.remove();
+    var pinned = (p.pins || []).map(function (pin) { return (pin.photo || '').toLowerCase(); });
+    if (p.pins && p.pins.length) dossier.querySelector('.tsf-d-body').insertAdjacentElement('afterend', buildMap(c, p));
     var grid = dossier.querySelector('.tsf-d-grid'); grid.innerHTML = '';
-    var items = c.media.map(function (m) { return { kind: VID.test(m) ? 'VIDEO' : 'IMAGE', href: url(m), local: true }; }).concat(p.links);
+    var items = c.media.filter(function (m) { return pinned.indexOf(m.split('/').pop().toLowerCase()) < 0; }).map(function (m) { return { kind: VID.test(m) ? 'VIDEO' : 'IMAGE', href: url(m), local: true }; }).concat(p.links);
     items.forEach(function (it, k) {
       var fig = document.createElement('figure'); fig.className = 'tsf-ev'; fig.style.setProperty('--tilt', ((k % 3) - 1) * 1.4 + 'deg');
       var label = 'EXHIBIT ' + String.fromCharCode(65 + (k % 26)) + (k >= 26 ? Math.floor(k / 26) : '');
@@ -192,6 +206,135 @@
     dossier.scrollTop = 0;
     dossier.querySelector('.tsf-close').focus({ preventScroll: true });
   }
+  // ---- a world map with a pin per trip; a pin opens its photo right by the city ----
+  var WORLD = section.getAttribute('data-world') || '/images/off-the-record/world.svg';
+  function buildMap(c, p) {
+    var pts = p.pins.concat(p.hq ? [p.hq] : []);
+    // the part of the world to show: around the pins, at least 130 x 65 degrees, 2:1
+    var lo0 = Math.min.apply(null, pts.map(function (q) { return q.lon; })), lo1 = Math.max.apply(null, pts.map(function (q) { return q.lon; }));
+    var la0 = Math.min.apply(null, pts.map(function (q) { return q.lat; })), la1 = Math.max.apply(null, pts.map(function (q) { return q.lat; }));
+    var w = Math.max(130, lo1 - lo0 + 50), h = Math.max(65, la1 - la0 + 40);
+    if (w / h > 2) h = w / 2; else w = h * 2;
+    w = Math.min(w, 360); h = Math.min(h, 145);
+    var cx = (lo0 + lo1) / 2, cy = (la0 + la1) / 2;
+    var L = Math.max(-180, Math.min(180 - w, cx - w / 2)), T = Math.min(85, Math.max(-60 + h, cy + h / 2));
+    var X = function (lon) { return (lon - L) / w * 100; }, Y = function (lat) { return (T - lat) / h * 100; };
+    var box = document.createElement('div'); box.className = 'tsf-map';
+    box.style.aspectRatio = (w / h).toFixed(4);
+    var view = document.createElement('div'); view.className = 'tsf-map-view'; box.appendChild(view);
+    var world = document.createElement('img'); world.className = 'tsf-map-world'; world.src = WORLD; world.alt = ''; world.draggable = false;
+    world.style.width = (360 / w * 100) + '%'; world.style.height = (180 / h * 100) + '%';
+    world.style.left = (-(L + 180) / w * 100) + '%'; world.style.top = (-(90 - T) / h * 100) + '%';
+    view.appendChild(world);
+    // dashed flight routes from HQ
+    if (p.hq) {
+      var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('class', 'tsf-map-routes'); svg.setAttribute('viewBox', '0 0 100 ' + (100 * h / w).toFixed(3)); svg.setAttribute('preserveAspectRatio', 'none');
+      var k = h / w, hx = X(p.hq.lon), hy = Y(p.hq.lat) * k;
+      p.pins.forEach(function (pin, i) {
+        var px = X(pin.lon), py = Y(pin.lat) * k, mx = (hx + px) / 2, my = (hy + py) / 2, dx = px - hx, dy = py - hy, d = Math.hypot(dx, dy) || 1;
+        var bend = d * 0.22, qx = mx + dy / d * bend * (dx > 0 ? -1 : 1), qy = my - Math.abs(dx / d) * bend - 2;
+        var path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', 'M' + hx + ' ' + hy + 'Q' + qx + ' ' + qy + ' ' + px + ' ' + py);
+        path.style.animationDelay = (0.25 + i * 0.18) + 's';
+        svg.appendChild(path);
+      });
+      view.appendChild(svg);
+      var home = document.createElement('span'); home.className = 'tsf-hq';
+      home.style.left = hx + '%'; home.style.top = Y(p.hq.lat) + '%';
+      home.innerHTML = '<i></i><b></b>'; home.querySelector('b').textContent = 'HQ \u00b7 ' + p.hq.name;
+      view.appendChild(home);
+    }
+    var pop = document.createElement('figure'); pop.className = 'tsf-map-pop'; pop.hidden = true;
+    pop.innerHTML = '<div class="tsf-map-photo"></div><figcaption><b></b><span></span></figcaption>';
+    box.appendChild(pop);
+    var current = null;
+    var pinsEls = p.pins.map(function (pin, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'tsf-pin';
+      b.style.left = X(pin.lon) + '%'; b.style.top = Y(pin.lat) + '%'; b.style.animationDelay = (0.5 + i * 0.18) + 's';
+      b.setAttribute('aria-label', (pin.year ? pin.year + ' ' : '') + pin.name);
+      b.innerHTML = '<i></i><span class="tsf-pin-label"></span>';
+      b.querySelector('.tsf-pin-label').textContent = (pin.year ? pin.year + ' \u00b7 ' : '') + pin.name;
+      b.addEventListener('click', function (e) { e.stopPropagation(); if (current === b) hide(); else show(pin, b); });
+      view.appendChild(b);
+      return b;
+    });
+    // labels of pins that sit close together go to opposite sides
+    requestAnimationFrame(function () {
+      // pins too close to tell apart (small screens): nudge them apart, with a thin line back to the real spot
+      var bw = box.clientWidth, bh = box.clientHeight;
+      var at = pinsEls.map(function (el) { return { x: parseFloat(el.style.left) / 100 * bw, y: parseFloat(el.style.top) / 100 * bh, ox: 0, oy: 0 }; });
+      for (var it = 0; it < 6; it++) at.forEach(function (q, i) {
+        at.forEach(function (o, j) {
+          if (j >= i) return;
+          var dx = (q.x + q.ox) - (o.x + o.ox), dy = (q.y + q.oy) - (o.y + o.oy), d = Math.hypot(dx, dy);
+          if (d >= 26) return;
+          if (d < 0.5) { dx = 0.6; dy = 0.8; d = 1; }
+          var push = (26 - d) / 2;
+          q.ox += dx / d * push; q.oy += dy / d * push; o.ox -= dx / d * push; o.oy -= dy / d * push;
+        });
+      });
+      at.forEach(function (q, i) {
+        if (Math.hypot(q.ox, q.oy) < 2) return;
+        pinsEls[i].style.translate = q.ox.toFixed(1) + 'px ' + q.oy.toFixed(1) + 'px';
+        var lead = document.createElement('span'); lead.className = 'tsf-pin-lead';
+        lead.style.left = (q.x / bw * 100) + '%'; lead.style.top = (q.y / bh * 100) + '%';
+        lead.style.width = Math.hypot(q.ox, q.oy) + 'px'; lead.style.rotate = Math.atan2(q.oy, q.ox) + 'rad';
+        view.insertBefore(lead, pinsEls[0]);
+      });
+      pinsEls.forEach(function (a, i) {
+        pinsEls.slice(0, i).forEach(function (o) {
+          var ra = a.getBoundingClientRect(), ro = o.getBoundingClientRect();
+          if (Math.abs(ra.left - ro.left) < 90 && Math.abs(ra.top - ro.top) < 26) {
+            (ra.top >= ro.top ? a : o).classList.add('label-below');
+            (ra.left >= ro.left ? a : o).classList.add('label-right');
+            (ra.left >= ro.left ? o : a).classList.add('label-left');
+          }
+        });
+      });
+      // keep every label inside the map: flip it below if it sticks out the top, slide it in from the sides
+      var vr = view.getBoundingClientRect();
+      pinsEls.forEach(function (el) {
+        var lab = el.querySelector('.tsf-pin-label'), r = lab.getBoundingClientRect();
+        if (r.top < vr.top + 2) { el.classList.add('label-below'); r = lab.getBoundingClientRect(); }
+        else if (r.bottom > vr.bottom - 2) { el.classList.remove('label-below'); r = lab.getBoundingClientRect(); }
+        var dx = r.left < vr.left + 3 ? vr.left + 3 - r.left : (r.right > vr.right - 3 ? vr.right - 3 - r.right : 0);
+        if (dx) lab.style.marginLeft = dx.toFixed(1) + 'px';
+      });
+    });
+    function show(pin, b) {
+      if (current) current.classList.remove('is-on');
+      current = b; b.classList.add('is-on');
+      var holder = pop.querySelector('.tsf-map-photo'); holder.innerHTML = '';
+      var file = pin.photo && c.media.filter(function (m) { return m.split('/').pop().toLowerCase() === pin.photo.toLowerCase(); })[0];
+      if (file) {
+        var im = document.createElement('img'); im.src = url(file); im.alt = pin.name; im.addEventListener('click', function (e) { e.stopPropagation(); zoom.querySelector('img').src = im.src; zoom.hidden = false; });
+        holder.appendChild(im);
+      } else holder.innerHTML = '<div class="tsf-map-nophoto"><span>PHOTO<br>CLASSIFIED</span></div>';
+      pop.querySelector('b').textContent = pin.name; pop.querySelector('figcaption span').textContent = pin.year;
+      pop.hidden = false;
+      var off = (b.style.translate || '0px 0px').split(' ').map(parseFloat);
+      var bw = box.clientWidth, bh = box.clientHeight, pw = Math.min(300, Math.max(170, bw * 0.46));
+      pop.style.width = pw + 'px';
+      var x = parseFloat(b.style.left) / 100 * bw + (off[0] || 0), y = parseFloat(b.style.top) / 100 * bh + (off[1] || 0) - 13;
+      var right = x + 18 + pw <= bw || x < bw / 2, left = right ? x + 18 : x - 18 - pw;
+      left = Math.max(-6, Math.min(bw - pw + 6, left));
+      var ph = pop.offsetHeight, top = Math.max(-30, Math.min(bh - ph + 30, y - ph / 2));
+      pop.style.left = left + 'px'; pop.style.top = top + 'px';
+      pop.style.transformOrigin = (right ? 'left ' : 'right ') + Math.max(0, Math.min(ph, y - top)) + 'px';
+      pop.classList.remove('is-in'); void pop.offsetWidth; pop.classList.add('is-in');
+    }
+    function hide() { if (current) current.classList.remove('is-on'); current = null; pop.hidden = true; }
+    box.addEventListener('click', function (e) { if (!e.target.closest('.tsf-map-pop')) hide(); });
+    var wrap = document.createElement('div'); wrap.className = 'tsf-map-wrap';
+    var head = document.createElement('h4'); head.textContent = 'FIELD MAP'; wrap.appendChild(head);
+    wrap.appendChild(box);
+    var hint = document.createElement('p'); hint.className = 'tsf-map-hint'; hint.textContent = 'click a pin to see the field photo'; wrap.appendChild(hint);
+    wrap.classList.add('tsf-map');               // (removed as one piece when another case opens)
+    box.classList.remove('tsf-map'); box.classList.add('tsf-map-box');
+    return wrap;
+  }
+
   function closeCase() {
     if (modal.hidden) return;
     modal.querySelectorAll('video').forEach(function (v) { v.pause(); });

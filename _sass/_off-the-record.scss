@@ -264,6 +264,66 @@ body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 
 .tsf-zoom[hidden] { display: none; }
 .tsf-zoom img { max-width: 94vw; max-height: 92vh; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
 
+// ---------- field map (cases with PIN: lines) ----------
+.tsf-map { margin: 6px 0 20px; }
+.tsf-map h4 { margin: 8px 0 12px; font: 400 13px/1 $tsf-type; letter-spacing: .14em; color: #b3261e; }
+.tsf-map-box {
+  position: relative; width: 100%; border: 1px solid #b9ab8e; border-radius: 2px;
+  background: $tsf-paper, radial-gradient(ellipse at 50% 40%, #f3ead4, #e6d9b9);
+  box-shadow: inset 0 0 30px rgba(120, 95, 50, .18);
+}
+.tsf-map-view { position: absolute; inset: 0; overflow: hidden; }
+.tsf-map-world { position: absolute; max-width: none; pointer-events: none; user-select: none; opacity: .95; }
+.tsf-map-routes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.tsf-map-routes path {
+  fill: none; stroke: #b3261e; stroke-width: 1.6px; vector-effect: non-scaling-stroke; stroke-dasharray: 6 5; stroke-linecap: round;
+  opacity: 0; animation: tsf-route 1s ease forwards;
+}
+@keyframes tsf-route { from { opacity: 0; stroke-dashoffset: 60; } to { opacity: .8; stroke-dashoffset: 0; } }
+.tsf-hq { position: absolute; z-index: 1; translate: -50% -50%; pointer-events: none; }
+.tsf-hq i { display: block; width: 10px; height: 10px; background: #1e2a57; rotate: 45deg; box-shadow: 0 0 0 2px #f3ead4; }
+.tsf-hq b { position: absolute; left: 14px; top: -3px; white-space: nowrap; font: 400 10px/1 $tsf-type; letter-spacing: .06em; color: #1e2a57; }
+.tsf-pin {
+  position: absolute; z-index: 2; width: 18px; height: 26px; margin: -26px 0 0 -9px; padding: 0; border: 0; background: none; cursor: pointer;
+  animation: tsf-pin-drop .55s cubic-bezier(.3, 1.5, .5, 1) backwards;
+}
+.tsf-pin i { position: absolute; left: 2px; top: 0; width: 14px; height: 14px; border-radius: 50%; transition: scale .2s ease;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #c8102e 60%, #6e0a18); box-shadow: 0 2px 3px rgba(0, 0, 0, .4); }
+.tsf-pin i::before { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(200, 16, 46, .55); animation: tsf-ping-ring 1.8s ease-out infinite; }
+.tsf-pin::after { content: ''; position: absolute; left: 8px; top: 12px; width: 2px; height: 14px; background: linear-gradient(#8a8f96, #4a4f56); border-radius: 1px; }
+.tsf-pin:hover i, .tsf-pin:focus-visible i, .tsf-pin.is-on i { scale: 1.25; }
+.tsf-pin:focus-visible { outline: none; }
+@keyframes tsf-pin-drop { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: none; } }
+@keyframes tsf-ping-ring { 0% { scale: .6; opacity: 1; } 100% { scale: 1.8; opacity: 0; } }
+.tsf-pin-label {
+  position: absolute; left: 50%; bottom: 100%; translate: -50% -3px; padding: 1px 5px; white-space: nowrap;
+  font: 400 10.5px/1.4 $tsf-type; color: #2a2622; background: rgba(248, 242, 226, .92); border: 1px solid #c9bb9b; border-radius: 2px;
+}
+.tsf-pin.label-below .tsf-pin-label { bottom: auto; top: 100%; translate: -50% 3px; }
+.tsf-pin.label-right .tsf-pin-label { translate: 8% -3px; }
+.tsf-pin.label-right.label-below .tsf-pin-label { translate: 8% 3px; }
+.tsf-pin.label-left .tsf-pin-label { translate: -108% -3px; }
+.tsf-pin.label-left.label-below .tsf-pin-label { translate: -108% 3px; }
+.tsf-pin.is-on .tsf-pin-label { background: #b3261e; border-color: #b3261e; color: #fff; }
+.tsf-map-pop {
+  position: absolute; z-index: 6; margin: 0; padding: 8px 8px 32px; background: #fff; rotate: -1.5deg;
+  box-shadow: 0 16px 34px -12px rgba(0, 0, 0, .6), 0 1px 2px rgba(0, 0, 0, .2);
+}
+.tsf-map-pop[hidden] { display: none; }
+.tsf-map-pop.is-in { animation: tsf-pop-in .45s cubic-bezier(.25, 1.5, .5, 1); }
+@keyframes tsf-pop-in { from { opacity: 0; transform: scale(.15); } to { opacity: 1; transform: none; } }
+.tsf-map-photo { aspect-ratio: 4 / 3; overflow: hidden; background: #eee; }
+.tsf-map-photo img { display: block; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.tsf-pin-lead { position: absolute; z-index: 1; height: 1.5px; margin-top: -.75px; background: #6b6255; transform-origin: 0 50%; pointer-events: none; }
+.tsf-pin-lead::before { content: ''; position: absolute; left: -3px; top: -2.25px; width: 6px; height: 6px; border-radius: 50%; background: #2a2622; }
+.tsf-map-nophoto { display: grid; place-items: center; height: 100%; background: repeating-linear-gradient(45deg, #2a2622 0 10px, #35312b 10px 20px); }
+.tsf-map-nophoto span { padding: 5px 10px 3px; border: 3px solid #e0403a; border-radius: 3px; rotate: -10deg; text-align: center; font: 400 17px/1.1 $tsf-stamp; letter-spacing: .06em; color: #e0403a; }
+.tsf-map-pop figcaption { position: absolute; left: 10px; right: 10px; bottom: 8px; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.tsf-map-pop figcaption b { font: 400 13px/1.2 $tsf-type; color: #2a2622; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tsf-map-pop figcaption span { font: 400 11px/1.2 $tsf-type; color: #b3261e; letter-spacing: .08em; }
+.tsf-map-hint { margin: 6px 0 0; text-align: center; font-size: 11px; letter-spacing: .1em; color: #8a7f6c; }
+@media (prefers-reduced-motion: reduce) { .tsf-pin, .tsf-pin i::before, .tsf-map-routes path, .tsf-map-pop.is-in { animation: none; } .tsf-map-routes path { opacity: .8; } }
+
 // ---------- the unknown agent clipped inside the cover ----------
 .tsf-agent-card {
   position: absolute; left: 66px; top: 56px; width: 196px; padding: 10px 10px 34px; margin: 0; border: 0; cursor: pointer;
@@ -341,6 +401,8 @@ body.theme-default .tsf-ev-link { display: block; padding: 18px 6px; font-size: 
 .tsf-board-photo.is-zoomed { z-index: 300 !important; cursor: zoom-out; }
 
 @media (max-width: 600px) {
+  .tsf-pin-label { font-size: 9px; padding: 0 3px; }
+  .tsf-hq b { font-size: 9px; }
   .tsf-dossier { padding: 22px 18px 18px; }
   .tsf-d-bar { flex-direction: column; gap: 2px; font-size: 10.5px; }
   .tsf-d-title { margin: 14px 0 2px; font-size: 22px; }
