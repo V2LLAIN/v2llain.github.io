@@ -178,7 +178,7 @@
   function pad(n) { return ('00' + n).slice(-3); }
 
   // case.txt: optional header lines (TITLE: ..., SUBTITLE: ..., DATE: ..., STATUS: ..., LEVEL: ...), an optional '---', then the text.
-  var KEYS = /^(TITLE|SUBTITLE|DATE|STATUS|LEVEL|CODENAME|LOCATION)\s*[:：]\s*(.*)$/i;
+  var KEYS = /^(TITLE|SUBTITLE|DATE|STATUS|LEVEL|CODENAME|LOCATION|LOCK|APP)\s*[:：]\s*(.*)$/i;
   function parse(txt) {
     var lines = txt.replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n'), meta = {}, i = 0;
     while (i < lines.length && (KEYS.test(lines[i]) || (!lines[i].trim() && !Object.keys(meta).length))) {
@@ -237,7 +237,7 @@
       b.style.setProperty('--i', i);
       b.innerHTML = '<small></small><b></b>';
       b.querySelector('small').textContent = 'CASE #' + pad(c.no);
-      b.querySelector('b').textContent = c.meta.TITLE;
+      b.querySelector('b').textContent = (c.meta.LOCK ? '\uD83D\uDD12 ' : '') + c.meta.TITLE;
       if (c.meta.SUBTITLE) { var s = document.createElement('i'); s.innerHTML = redactOnly(c.meta.SUBTITLE); b.appendChild(s); }
       b.addEventListener('click', function () { openCase(c, b); });
       tabsEl.appendChild(b);
@@ -328,7 +328,7 @@
     r.setAttribute('aria-label', 'Case #' + pad(c.no) + ' — ' + c.meta.TITLE);
     r.innerHTML = '<span class="r-rim"></span><span class="r-groove"></span><span class="r-body"><small></small><b></b></span>' + tipSVG();
     r.querySelector('small').textContent = 'CASE #' + pad(c.no);
-    r.querySelector('b').textContent = c.meta.TITLE;
+    r.querySelector('b').textContent = (c.meta.LOCK ? '\uD83D\uDD12 ' : '') + c.meta.TITLE;
     if (c.meta.SUBTITLE) { var s2 = document.createElement('i'); s2.innerHTML = redactOnly(c.meta.SUBTITLE); r.querySelector('.r-body').appendChild(s2); }
     r.addEventListener('click', function () { arm(c, r); });
     return r;
@@ -558,6 +558,14 @@
       d.firstChild.textContent = kv[0]; d.lastChild.textContent = kv[1]; meta.appendChild(d);
     });
     dossier.querySelector('.tsf-d-body').innerHTML = body(p.body);
+    var vb = dossier.querySelector('.vlt-mount'); if (vb) vb.remove();
+    dossier.classList.toggle('is-vault', !!c.meta.LOCK || /todo/i.test(c.meta.APP || ''));
+    dossier.querySelector('.tsf-d-stamp').textContent = dossier.classList.contains('is-vault') ? 'CLASSIFIED' : 'DECLASSIFIED';
+    if (dossier.classList.contains('is-vault') && window.TSFVault) {            // LEVEL 1: access code, then the TODO list
+      vb = document.createElement('div'); vb.className = 'vlt-mount';
+      dossier.querySelector('.tsf-d-body').insertAdjacentElement('afterend', vb);
+      window.TSFVault.mount(vb, { lock: c.meta.LOCK || '' });
+    }
     var mapEl = dossier.querySelector('.tsf-map'); if (mapEl) mapEl.remove();
     var pinned = [];
     (p.pins || []).forEach(function (pin) { pin.photos = (pin.photo || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean); pin.photos.forEach(function (x) { pinned.push(x.toLowerCase()); }); });

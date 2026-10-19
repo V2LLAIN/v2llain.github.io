@@ -50,3 +50,9 @@
   - 여행 경로:  ROUTE: 2010 | Seoul > Santorini > Istanbul > Seoul
                  (HQ·PIN 의 도시 이름 첫 단어로 이어지고, 비행기가 그 순서대로 날아갑니다. 줄마다 색이 다릅니다.)
   - 지도는 항상 전 세계가 다 보입니다 (미국, 남미 어디든 핀을 꽂을 수 있습니다).
+
+■ case-05 (OPERATION ORDERS · TODO)  — 1급 기밀
+  - 접근 코드(4자리)를 입력해야 열립니다. case.txt 의 LOCK 줄에는 코드가 아니라 코드의 해시가 들어 있습니다.
+    코드를 바꾸려면 "v2llain-vault:새코드" 를 SHA-256 으로 바꾼 값을 LOCK: sha256:<값> 으로 넣으면 됩니다. (요청하면 바꿔 드림)
+  - 할 일은 GitHub 저장소가 아니라, 홈페이지에서 직접 쓰면 본인 GitHub 계정의 '비밀 Gist'(todo.json)에 저장됩니다.
+    기기마다 처음 한 번 GitHub 키(Fine-grained token, Gists: Read and write)를 연결해야 합니다.

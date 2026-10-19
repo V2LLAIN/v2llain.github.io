@@ -1,0 +1,8 @@
+TITLE: OPERATION ORDERS
+SUBTITLE: 1급 기밀 — 요원 작전 지시서 (TODO)
+STATUS: ACTIVE
+LEVEL: LEVEL 1 · TOP SECRET
+LOCK: sha256:04793678abf0a0cbcbe3570cd9fb503334b828503c72522b20f7e0a9c93fd1df
+APP: todo
+---
+본 문서는 **1급 기밀**로 분류됨. 접근 코드 입력 후 열람 가능.
