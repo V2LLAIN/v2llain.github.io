@@ -429,8 +429,8 @@ body.dark .jrec-bubble b { color: #fb923c; }
   background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
   opacity: .85;
 }
-.pub-title-bar a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
-.pub-title-bar a:hover { border-bottom-color: rgba(255, 255, 255, .6); }
+body.theme-default .pub-title-bar a, body.theme-default .pub-title-bar a:hover { color: #fff; text-decoration: none; border-bottom: 1px solid transparent; }
+body.theme-default .pub-title-bar a:hover { border-bottom-color: rgba(255, 255, 255, .6); }
 .pub-figure {
   margin-top: 2px;
   padding: 6px;
