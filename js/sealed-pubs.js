@@ -23,7 +23,7 @@
       } else box.classList.add('sealed-img-empty');
     }
     var h3 = card.querySelector('.sealed-title');
-    if (h3) { h3.className = ''; h3.textContent = p.title || '(untitled)'; }
+    if (h3) { h3.classList.remove('sealed-title'); h3.textContent = p.title || '(untitled)'; }
     var au = card.querySelector('.sealed-authors');
     if (au) {
       au.classList.remove('sealed-authors');
@@ -80,10 +80,10 @@
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     var text = b64text(card.getAttribute('data-peek') || '').trim();
-    var lineH = 21, size = 16;
+    var size = 13.5, lineH = 18.5, maxLines = 3;
     if (!text) {   // no title given: grey placeholder strokes
       g.fillStyle = 'rgba(255,255,255,.22)';
-      g.fillRect(0, 5, w * .78, 10); g.fillRect(0, 26, w * .52, 10);
+      g.fillRect(0, 4, w * .82, 9); g.fillRect(0, 23, w * .55, 9);
       return;
     }
     var fam = getComputedStyle(card).fontFamily || 'sans-serif';
@@ -91,16 +91,17 @@
     g.fillStyle = '#fff';
     g.textBaseline = 'top';
     var words = text.split(/\s+/), lines = [''], k = 0;
-    for (var i = 0; i < words.length && k < 2; i++) {
+    for (var i = 0; i < words.length && k < maxLines; i++) {
       var t = lines[k] ? lines[k] + ' ' + words[i] : words[i];
       if (g.measureText(t).width <= w || !lines[k]) lines[k] = t;
-      else { k++; if (k < 2) lines[k] = words[i]; }
+      else { k++; if (k < maxLines) lines[k] = words[i]; }
     }
-    lines.slice(0, 2).forEach(function (ln, j) { g.fillText(ln, 0, 1 + j * lineH); });
+    lines.slice(0, maxLines).forEach(function (ln, j) { g.fillText(ln, 0, 1 + j * lineH); });
   }
 
   function init() {
     document.querySelectorAll('.pub-sealed').forEach(drawPeek);
+    var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { document.querySelectorAll('.pub-sealed').forEach(drawPeek); }, 150); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { document.querySelectorAll('.pub-sealed').forEach(drawPeek); });
     // the card may be hidden (other tab) at load: draw again when it becomes visible
     document.addEventListener('click', function (e) {

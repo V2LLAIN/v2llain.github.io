@@ -274,7 +274,7 @@
             {% unless prog == 'completed' or prog == 'in_progress' %}{% if publication.status == 'in_preparation' %}{% assign prog = 'in_progress' %}{% else %}{% assign prog = 'completed' %}{% endif %}{% endunless %}
             {% if prog == 'completed' %}{% assign prog_label = 'Completed' %}{% else %}{% assign prog_label = 'In Progress' %}{% endif %}
             <div class="pub-card pub-sealed" data-status="pending" data-progress="{{ prog }}"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}{% if publication.peek %} data-peek="{{ publication.peek | escape }}"{% endif %}>
-              {% comment %} The cover with a peeled corner. Only the decoy figure below peeks through it. {% endcomment %}
+              {% comment %} The cover with a peeled top-left corner. {% endcomment %}
               <div class="pub-cover-wrap">
                 <div class="pub-cover" role="img" aria-label="{{ prog_label }} — {{ pend_label }}">
                   <p class="pub-cover-label prog-{{ prog }}"><b><i class="prog-dot"></i>{{ prog_label | upcase }}</b><small>{{ pend_label }}</small></p>
@@ -286,8 +286,8 @@
                   </form>
                   {% endif %}
                 </div>
+                <span class="pub-cover-edge" aria-hidden="true"></span>
               </div>
-              <span class="pub-cover-edge" aria-hidden="true"></span>
               {% comment %}
                 What shows through the fold: a title bar + a blurred figure. The title bar is drawn on a canvas from
                 `peek` (base64 in publications.yml), so the words are not in the repo as text, not in the page text,
@@ -295,22 +295,22 @@
               {% endcomment %}
               <div class="pub-peek" aria-hidden="true">
                 <div class="pub-peek-bar"><canvas class="pub-peek-title"></canvas></div>
-                <div class="pub-peek-fig"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="pub-figure pub-peek-fig"><div class="sealed-img"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
               </div>
-              <div class="pub-card-img sealed-img" aria-hidden="true">
+              {% if publication.title %}
+              <h3 class="pub-title-bar">{{ publication.title }}</h3>
+              {% else %}
+              <h3 class="pub-title-bar sealed-title"><i class="fas fa-lock"></i> Title withheld until publication</h3>
+              {% endif %}
+              <div class="pub-figure">
                 {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
-                <div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="pub-card-img sealed-img" aria-hidden="true"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
               </div>
               <div class="pub-card-body">
                 <div class="pub-venue">
                   <span class="pub-venue-tag review">{{ pend_label }}</span>
                   <span class="pub-venue-tag prog prog-{{ prog }}"><i class="prog-dot"></i>{{ prog_label }}</span>
                 </div>
-                {% if publication.title %}
-                <h3>{{ publication.title }}</h3>
-                {% else %}
-                <h3 class="sealed-title"><i class="fas fa-lock"></i> Title withheld until publication</h3>
-                {% endif %}
                 {% if publication.authors %}
                 <p class="pub-authors">
                   {% assign author_list = publication.authors | split: ", " %}
@@ -321,36 +321,36 @@
                 {% elsif publication.title == nil %}
                 <p class="pub-authors sealed-authors">Authors withheld</p>
                 {% endif %}
+                <div class="pub-summary sealed-summary">Sealed until publication.</div>
                 <div class="pub-links">
                   {% if publication.url %}
                   <a class="pub-link pub-public-link" href="{{ publication.url }}" target="_blank" rel="noopener"><i class="fas fa-file-alt"></i> Paper</a>
                   {% endif %}
                   <span class="sealed-links"></span>
-                  <button type="button" class="tldr-toggle tldr-locked">TL;DR <i class="fas fa-lock"></i></button>
-                </div>
-                <div class="tldr-details">
-                  <p class="resume-item-copy sealed-summary">Sealed until publication.</p>
                 </div>
               </div>
             </div>
             {% else %}
             {% assign first_author = publication.authors | split: ', ' | first %}
             <div class="pub-card" data-status="accepted" data-first="{% if first_author contains 'Hyeongchan Im' %}true{% else %}false{% endif %}" itemscope itemtype="http://schema.org/ScholarlyArticle">
+              <h3 class="pub-title-bar" itemprop="name">{% if publication.url %}<a href="{{ publication.url }}" target="_blank" rel="noopener">{{ publication.title }}</a>{% else %}{{ publication.title }}{% endif %}</h3>
               {% if publication.image %}
-              <img class="pub-card-img" src="images/publications/{{ publication.image }}" alt="Thumbnail of {{ publication.title }}">
+              <div class="pub-figure"><img class="pub-card-img" src="images/publications/{{ publication.image }}" alt="Thumbnail of {{ publication.title }}" loading="lazy"></div>
               {% endif %}
               <div class="pub-card-body">
                 <div class="pub-venue">
                   <span class="pub-venue-tag">{{ publication.journal }}</span>
                   {% if publication.year %}<span class="pub-venue-year">{{ publication.year }}</span>{% endif %}
                 </div>
-                <h3 itemprop="name">{{ publication.title }}</h3>
                 <p class="pub-authors" itemprop="author">
                   {% assign author_list = publication.authors | split: ", " %}
                   {% for author in author_list %}
                     {% if author contains "Hyeongchan Im" %}<span class="me">{{ author }}</span>{% else %}{{ author }}{% endif %}{% unless forloop.last %}, {% endunless %}
                   {% endfor %}
                 </p>
+                {% if publication.summary %}
+                <div class="pub-summary">{{ publication.summary | markdownify }}</div>
+                {% endif %}
                 <div class="pub-links">
                   {% if publication.coming_soon %}
                   <span class="pub-link coming-soon-link"><i class="fas fa-clock"></i> Coming Soon</span>
@@ -366,15 +366,7 @@
                   {% if publication.url contains 'dbpia.co.kr' or publication.url contains 'kstudy.com' or publication.url contains 'kci.go.kr' %}
                   <a class="pub-link" href="{{ publication.url }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>
                   {% endif %}
-                  {% if publication.summary %}
-                  <span class="tldr-toggle">TL;DR</span>
-                  {% endif %}
                 </div>
-                {% if publication.summary %}
-                <div class="tldr-details">
-                  <p class="resume-item-copy">{{ publication.summary | markdownify }}</p>
-                </div>
-                {% endif %}
               </div>
             </div>
             {% endif %}

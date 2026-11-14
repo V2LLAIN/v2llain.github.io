@@ -391,28 +391,64 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .pub-filter:hover { border-color: var(--accent); color: var(--accent); }
 .pub-filter.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-.pub-grid { display: flex; flex-direction: column; gap: 16px; }
+// three cards per row (two on narrower screens, one on phones), like a set of trading cards
+// (the main column is at most ~800px wide, so this tops out at three per row)
+.pub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; align-items: stretch; }
+.pub-empty { grid-column: 1 / -1; }
 .pub-card {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 20px;
-  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  transition: all var(--transition);
-  align-items: start;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
 }
-.pub-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.pub-card-img {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
+.pub-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-3px); }
+// dark title bar on top of each card, with a thin rainbow rule under it
+.pub-title-bar {
+  position: relative;
+  margin: 0;
+  padding: 10px 12px 11px;
+  border-radius: 8px;
+  background: #1f232b;
+  color: #fff;
+  font-size: .86rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -.005em;
+}
+.pub-title-bar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -3px; height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+  opacity: .85;
+}
+.pub-title-bar a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+.pub-title-bar a:hover { border-bottom-color: rgba(255, 255, 255, .6); }
+.pub-figure {
+  margin-top: 2px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #fff;
   border: 1px solid var(--border-color);
 }
-.pub-card-body h3 { font-size: .98rem; font-weight: 600; line-height: 1.4; margin: 0 0 6px; letter-spacing: -.01em; }
-.pub-venue { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 5px; }
+.pub-card-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.pub-card-body { flex: 1; display: flex; flex-direction: column; gap: 7px; padding: 2px 4px 2px; }
+.pub-summary { font-size: .8rem; line-height: 1.5; color: var(--text-secondary); }
+.pub-summary p { margin: 0; }
+.pub-venue { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .pub-venue-tag {
   font-size: .7rem;
   font-weight: 700;
@@ -427,9 +463,10 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .pub-link.coming-soon-link { color: #b45309; cursor: default; border-bottom: 1px solid transparent; }
 .pub-link.coming-soon-link:hover { border-bottom-color: transparent; }
 .pub-venue-year { font-size: .75rem; color: var(--text-muted); }
-.pub-authors { font-size: .83rem; color: var(--text-secondary); margin: 0 0 8px; line-height: 1.5; }
+.pub-authors { font-size: .76rem; color: var(--text-secondary); margin: 0; padding-bottom: 7px; border-bottom: 1px solid var(--border-color); line-height: 1.5; }
 .pub-authors .me { color: var(--text-primary); font-weight: 600; }
-.pub-links { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.pub-links { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+.pub-links:empty { display: none; }
 .pub-link {
   font-size: .75rem;
   font-weight: 600;
@@ -501,13 +538,14 @@ body.dark .jrec-bubble b { color: #fb923c; }
 // not-yet-published cards: a cover with a peeled top-left corner over the card.
 // Only the decoy figure peeks through; the real title / figure are never in the page.
 .pub-venue-tag.review { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
-$peel-x: 210px;
-$peel-y: 126px;
-.pub-sealed { position: relative; min-height: 160px; }
+// peel: the fold runs from (56% of the width, top) to (left, 46% of the width) — container units keep the
+// fold the same shape at any card size
+.pub-sealed:hover { transform: none; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); border-color: var(--border-color); }
 .pub-cover-wrap {
   position: absolute;
   inset: -1px;
   z-index: 2;
+  container-type: inline-size;
   filter: drop-shadow(-3px 4px 6px rgba(0, 0, 0, .14));   // the lifted edge casts a soft shadow
   transition: opacity .45s ease, transform .45s ease;
   pointer-events: none;
@@ -516,11 +554,12 @@ $peel-y: 126px;
   position: absolute;
   inset: 0;
   border: 1.5px dashed var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: 14px;
   background:
-    radial-gradient(260px 200px at 72% 38%, rgba(255, 255, 255, .55), transparent 70%),
+    radial-gradient(70% 45% at 70% 52%, rgba(255, 255, 255, .6), transparent 70%),
     var(--bg-primary);
-  clip-path: polygon(#{$peel-x} 0, 100% 0, 100% 100%, 0 100%, 0 #{$peel-y});
+  clip-path: polygon(140px 0, 100% 0, 100% 100%, 0 100%, 0 115px);
+  clip-path: polygon(56cqw 0, 100% 0, 100% 100%, 0 100%, 0 46cqw);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -529,60 +568,47 @@ $peel-y: 126px;
 // dashed line along the fold (the clip cuts the box border there)
 .pub-cover-edge {
   position: absolute;
-  z-index: 3;
-  left: $peel-x - 1px;
-  top: -1px;
-  width: 245px;   // ≈ hypotenuse of the peel triangle
+  left: 56cqw;
+  top: 0;
+  width: 72.5cqw;   // hypotenuse of the fold: sqrt(56² + 46²)
   border-top: 1.5px dashed var(--border-strong);
   transform-origin: 0 0;
-  transform: rotate(149deg);   // 180° − atan(peel-y / peel-x)
-  pointer-events: none;
-  transition: opacity .45s ease;
+  transform: rotate(140.6deg);   // 180° − atan(46 / 56)
 }
-// the bit that peeks through the fold (title bar + blurred figure), like a card under the cover
+// what peeks through the fold: a title bar + a blurred figure, laid out like the card under the cover
 .pub-peek {
   position: absolute;
   z-index: 1;
   inset: 0;
-  padding: 14px;
-  border-radius: var(--radius);
+  padding: 10px;
+  border-radius: 14px;
   background: var(--bg-card);
   overflow: hidden;
   pointer-events: none;
   transition: opacity .45s ease;
 }
 .pub-peek-bar {
-  width: 320px;
-  height: 62px;
-  padding: 9px 12px;
-  border-radius: 7px;
-  background: #1f232b;
-  box-shadow: inset 0 -3px 0 0 transparent;
   position: relative;
+  height: 76px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #1f232b;
 }
-.pub-peek-bar::after {   // thin rainbow rule under the bar
+.pub-peek-bar::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: -3px; height: 3px;
   border-radius: 0 0 4px 4px;
   background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
-  opacity: .8;
+  opacity: .85;
 }
 .pub-peek-title { display: block; width: 100%; height: 100%; }
-.pub-peek-fig {
-  position: relative;
-  width: 320px;
-  height: 150px;
-  margin-top: 10px;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #fff;
-  border: 1px solid var(--border-color);
-}
+.pub-peek-fig { margin-top: 12px; }
+.pub-figure .sealed-img { border: 0; }
 .pub-sealed.unsealed .pub-peek { opacity: 0; }
 .pub-cover-label { margin: 0; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; user-select: none; }
-.pub-cover-label b { display: block; font-size: 1.05rem; font-weight: 500; letter-spacing: .32em; color: var(--text-secondary); padding-left: .32em; }
-.pub-cover-label small { display: block; margin-top: 6px; font-size: .74rem; letter-spacing: .14em; color: var(--text-muted); }
+.pub-cover-label b { display: block; font-size: .95rem; font-weight: 500; letter-spacing: .28em; color: var(--text-secondary); padding-left: .32em; }
+.pub-cover-label small { display: block; margin-top: 6px; font-size: .7rem; letter-spacing: .14em; color: var(--text-muted); }
 // Completed vs In Progress label (dot + word on the cover, and a tag once unlocked)
 .prog-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 10px; vertical-align: middle; position: relative; top: -2px; }
 .prog-completed .prog-dot { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, .18); }
@@ -600,8 +626,6 @@ body.dark .pub-venue-tag.prog-in_progress { background: rgba(245, 158, 11, .12);
 @media (prefers-reduced-motion: reduce) { .prog-in_progress .prog-dot { animation: none; } }
 .pub-sealed.unsealed .pub-cover-wrap { opacity: 0; transform: translate(24px, -16px) rotate(1.5deg); }
 .pub-sealed.unsealed .pub-cover { pointer-events: none; }
-.pub-sealed.unsealed .pub-cover-edge { opacity: 0; }
-.pub-sealed:hover { transform: none; box-shadow: none; }
 
 .sealed-img {
   position: relative;
@@ -622,7 +646,7 @@ body.dark .pub-venue-tag.prog-in_progress { background: rgba(245, 158, 11, .12);
 .sealed-blur i:nth-child(4) { left: 38%; top: 38%; width: 22%; height: 18%; background: #c7d2fe; }
 .sealed-blur i:nth-child(5) { left: 64%; top: 38%; width: 26%; height: 40%; background: #94a3b8; }
 .sealed-blur i:nth-child(6) { left: 8%;  top: 64%; width: 52%; height: 18%; background: #fde68a; }
-.pub-card-body h3.sealed-title { color: var(--text-muted); font-weight: 500; font-style: italic; }
+.pub-title-bar.sealed-title { color: rgba(255, 255, 255, .55); font-weight: 500; font-style: italic; }
 .sealed-title i { font-size: .8em; margin-right: 4px; font-style: normal; }
 .sealed-authors { font-style: italic; color: var(--text-muted); }
 .tldr-locked i, .tldr-toggle i { font-size: .65rem; margin-left: 5px; }
@@ -951,7 +975,6 @@ body.dark .lp-fader-slot::before {
 // ---- responsive -----------------------------------------------------------
 @media (max-width: 1024px) {
   .main-content { padding: 40px 32px 24px; }
-  .pub-card { grid-template-columns: 150px 1fr; }
 }
 @media (max-width: 768px) {
   .page-wrapper { flex-direction: column; }
@@ -966,8 +989,6 @@ body.dark .lp-fader-slot::before {
   }
   .sidebar .profile-img { width: 140px; height: 140px; }
   .main-content { padding: 32px 20px 24px; }
-  .pub-card { grid-template-columns: 1fr; }
-  .pub-card-img { max-height: 200px; }
   .news-row { grid-template-columns: 80px 1fr; gap: 12px; }
 }
 
@@ -1007,10 +1028,10 @@ body.dark .pub-venue-tag.review { background: rgba(251, 191, 36, .12); border-co
 body.dark .sealed-img { background: #1f2532; }
 body.dark .sealed-blur { opacity: .55; }
 body.dark .pub-peek-fig { background: #e9edf3; }
-body.dark .pub-peek-bar { background: #2b3242; }
+body.dark .pub-peek-bar, body.dark .pub-title-bar { background: #2b3242; }
 body.dark .pub-cover {
   background:
-    radial-gradient(240px 190px at 74% 40%, rgba(255, 255, 255, .07), transparent 70%),
+    radial-gradient(70% 45% at 70% 52%, rgba(255, 255, 255, .07), transparent 70%),
     #111318;
 }
 body.dark .pub-cover-wrap { filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, .55)); }
