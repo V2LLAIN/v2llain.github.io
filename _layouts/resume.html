@@ -269,7 +269,7 @@
               otherwise they live encrypted in sealed/<id>.json together with the TL;DR and the figure.
             {% endcomment %}
             {% if publication.status == 'submitted' %}{% assign pend_label = 'Submitted' %}{% elsif publication.status == 'in_preparation' %}{% assign pend_label = 'In Preparation' %}{% else %}{% assign pend_label = 'Under Review' %}{% endif %}
-            <div class="pub-card pub-sealed" data-status="pending"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
+            <div class="pub-card pub-sealed" data-status="pending"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}{% if publication.peek %} data-peek="{{ publication.peek | escape }}"{% endif %}>
               {% comment %} The cover with a peeled corner. Only the decoy figure below peeks through it. {% endcomment %}
               <div class="pub-cover-wrap">
                 <div class="pub-cover" role="img" aria-label="In progress — {{ pend_label }}">
@@ -284,6 +284,15 @@
                 </div>
               </div>
               <span class="pub-cover-edge" aria-hidden="true"></span>
+              {% comment %}
+                What shows through the fold: a title bar + a blurred figure. The title bar is drawn on a canvas from
+                `peek` (base64 in publications.yml), so the words are not in the repo as text, not in the page text,
+                and not picked up by GitHub search or search engines.
+              {% endcomment %}
+              <div class="pub-peek" aria-hidden="true">
+                <div class="pub-peek-bar"><canvas class="pub-peek-title"></canvas></div>
+                <div class="pub-peek-fig"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              </div>
               <div class="pub-card-img sealed-img" aria-hidden="true">
                 {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
                 <div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>

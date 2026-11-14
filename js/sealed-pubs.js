@@ -52,6 +52,7 @@
     document.querySelectorAll('.pub-sealed.unsealed').forEach(function (card) {
       card.innerHTML = card.__sealedHTML;
       card.classList.remove('unsealed');
+      drawPeek(card);
     });
   }
 
@@ -61,7 +62,50 @@
       .then(function (p) { reveal(card, p); });
   }
 
+  // Title that peeks through the fold. Drawn on a canvas, never put in the page as text.
+  function b64text(b) {
+    try {
+      var bin = atob(b), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(u);
+    } catch (e) { return ''; }
+  }
+  function drawPeek(card) {
+    var cv = card.querySelector('.pub-peek-title');
+    if (!cv) return;
+    var w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (!w || !h) return;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    var text = b64text(card.getAttribute('data-peek') || '').trim();
+    var lineH = 21, size = 16;
+    if (!text) {   // no title given: grey placeholder strokes
+      g.fillStyle = 'rgba(255,255,255,.22)';
+      g.fillRect(0, 5, w * .78, 10); g.fillRect(0, 26, w * .52, 10);
+      return;
+    }
+    var fam = getComputedStyle(card).fontFamily || 'sans-serif';
+    g.font = '700 ' + size + 'px ' + fam;
+    g.fillStyle = '#fff';
+    g.textBaseline = 'top';
+    var words = text.split(/\s+/), lines = [''], k = 0;
+    for (var i = 0; i < words.length && k < 2; i++) {
+      var t = lines[k] ? lines[k] + ' ' + words[i] : words[i];
+      if (g.measureText(t).width <= w || !lines[k]) lines[k] = t;
+      else { k++; if (k < 2) lines[k] = words[i]; }
+    }
+    lines.slice(0, 2).forEach(function (ln, j) { g.fillText(ln, 0, 1 + j * lineH); });
+  }
+
   function init() {
+    document.querySelectorAll('.pub-sealed').forEach(drawPeek);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { document.querySelectorAll('.pub-sealed').forEach(drawPeek); });
+    // the card may be hidden (other tab) at load: draw again when it becomes visible
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.pub-filter')) setTimeout(function () { document.querySelectorAll('.pub-sealed').forEach(drawPeek); }, 0);
+    });
     if (!window.crypto || !crypto.subtle || !window.SealCrypto) return;
     document.querySelectorAll('.pub-sealed').forEach(function (card) { card.__sealedHTML = card.innerHTML; });
 

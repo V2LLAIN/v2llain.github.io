@@ -503,7 +503,7 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .pub-venue-tag.review { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
 $peel-x: 210px;
 $peel-y: 126px;
-.pub-sealed { position: relative; min-height: 190px; }
+.pub-sealed { position: relative; min-height: 160px; }
 .pub-cover-wrap {
   position: absolute;
   inset: -1px;
@@ -539,6 +539,47 @@ $peel-y: 126px;
   pointer-events: none;
   transition: opacity .45s ease;
 }
+// the bit that peeks through the fold (title bar + blurred figure), like a card under the cover
+.pub-peek {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+.pub-peek-bar {
+  width: 320px;
+  height: 62px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  background: #1f232b;
+  box-shadow: inset 0 -3px 0 0 transparent;
+  position: relative;
+}
+.pub-peek-bar::after {   // thin rainbow rule under the bar
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -3px; height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+  opacity: .8;
+}
+.pub-peek-title { display: block; width: 100%; height: 100%; }
+.pub-peek-fig {
+  position: relative;
+  width: 320px;
+  height: 150px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+}
+.pub-sealed.unsealed .pub-peek { opacity: 0; }
 .pub-cover-label { margin: 0; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; user-select: none; }
 .pub-cover-label b { display: block; font-size: 1.05rem; font-weight: 500; letter-spacing: .32em; color: var(--text-secondary); padding-left: .32em; }
 .pub-cover-label small { display: block; margin-top: 6px; font-size: .74rem; letter-spacing: .14em; color: var(--text-muted); }
@@ -950,6 +991,8 @@ body.dark .pub-link.coming-soon-link { color: #fbbf24; }
 body.dark .pub-venue-tag.review { background: rgba(251, 191, 36, .12); border-color: rgba(251, 191, 36, .35); color: #fbbf24; }
 body.dark .sealed-img { background: #1f2532; }
 body.dark .sealed-blur { opacity: .55; }
+body.dark .pub-peek-fig { background: #e9edf3; }
+body.dark .pub-peek-bar { background: #2b3242; }
 body.dark .pub-cover {
   background:
     radial-gradient(240px 190px at 74% 40%, rgba(255, 255, 255, .07), transparent 70%),

@@ -76,6 +76,9 @@
 
   <section>
     <h2>공개되는 상태 · 암호</h2>
+    <label>덮개 사이로 살짝 보일 제목 <small>비워 두면 회색 줄만 보입니다 · 접힌 모서리로 앞 몇 단어만 보여요</small></label>
+    <input type="text" id="peek" autocomplete="off">
+    <p class="warn" style="color:var(--muted)">이 칸은 암호화가 아니라 가벼운 인코딩(base64)으로 저장됩니다. GitHub 검색·구글 검색에는 안 걸리지만, 마음먹고 소스를 뜯어보면 읽을 수 있어요. 보여줘도 되는 만큼만 적으세요.</p>
     <label>상태 <small>홈페이지 카드에 이 글자만 보입니다 (학회 이름은 안 보임)</small></label>
     <select id="status">
       <option value="in_preparation">In Preparation</option>
@@ -141,6 +144,14 @@
     shrink(f).then(setImage).catch(function (e) { $('sealMsg').textContent = e.message; });
   });
   $('clearImg').addEventListener('click', function () { $('image').value = ''; setImage(''); });
+  var peekTouched = false;
+  $('peek').addEventListener('input', function () { peekTouched = true; });
+  $('title').addEventListener('input', function () { if (!peekTouched) $('peek').value = this.value.slice(0, 48); });
+  function b64utf8(t) {
+    var bytes = new TextEncoder().encode(t), s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
   $('pass').addEventListener('input', function () { $('passWarn').hidden = this.value.length === 0 || this.value.length >= 12; });
 
   $('openBtn').addEventListener('click', function () {
@@ -152,6 +163,7 @@
       state.id = f.name.replace(/\.json$/i, '').replace(/[^a-z0-9-]/gi, '') || null;
       $('title').value = p.title || ''; $('authors').value = p.authors || ''; $('url').value = p.url || '';
       $('summary').value = p.summary || ''; $('venue').value = p.venue || ''; setImage(p.image || '');
+      if (p.peek != null) { $('peek').value = p.peek; peekTouched = true; } else if (!peekTouched) $('peek').value = (p.title || '').slice(0, 48);
       if (!$('pass').value) { $('pass').value = $('pass2').value = $('oldPass').value; }
       m.textContent = '열었습니다. 고친 뒤 봉인하면 같은 파일 이름(' + state.id + '.json)으로 나옵니다.';
     }).catch(function () { m.className = 'msg err'; m.textContent = '열 수 없습니다 — 암호나 파일을 확인하세요'; });
@@ -166,7 +178,7 @@
     if (pw !== $('pass2').value) { m.className = 'msg err'; m.textContent = '암호 확인이 다릅니다'; return; }
     var payload = {
       venue: $('venue').value.trim(), title: $('title').value.trim(), authors: $('authors').value.trim(), url: $('url').value.trim(),
-      summary: $('summary').value.trim(), image: state.image
+      summary: $('summary').value.trim(), peek: $('peek').value.trim(), image: state.image
     };
     this.disabled = true;
     m.textContent = '암호화하는 중…';
@@ -176,7 +188,9 @@
     }).then(function (rec) {
       if (!state.id) state.id = newId();
       lastBlob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
-      $('yaml').textContent = '- status: ' + $('status').value + '\n  sealed: ' + state.id + '\n';
+      var pk = $('peek').value.trim();
+      $('yaml').textContent = '- status: ' + $('status').value + '\n  sealed: ' + state.id + '\n' +
+        (pk ? '  peek: "' + b64utf8(pk) + '"\n' : '');
       Array.prototype.forEach.call(document.querySelectorAll('.fid'), function (e) { e.textContent = state.id; });
       $('out').hidden = false;
       m.textContent = '완료 (' + Math.round(lastBlob.size / 1024) + ' KB)';
