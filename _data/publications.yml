@@ -30,31 +30,37 @@
 #  • 게재가 확정되면: /seal/ 에서 그 파일을 열어 내용을 확인한 뒤, 일반 항목으로 옮기고
 #    sealed/<id>.json 은 지우면 됩니다.
 # ─────────────────────────────────────────────────────────────────────────────
+# Almight
 - status: in_preparation
   sealed: 63b39af62162
   progress: in_progress
   peek: "QWxtaWdodHk6IFBoeXNpY3MtR3JvdW5kZWQgSGF6YXJkIGFuZCBTdXJ2aXZvciBJ"
 
+# TRAVEL
 - status: in_preparation
   sealed: 1e31d9d8c28d
   progress: in_progress
   peek: "VFJBVkVMOiBXaGVuIEZvcmVuc2ljIFZMTXMgUG9pbnQgdG8gdGhlIFdyb25nIFBs"
 
+# IUS-SEG
 - status: in_preparation
   sealed: 3a9c8f3ae4f0
   progress: completed
   peek: "TG9vayB3aXRoIE1SSSwgRHJhdyB3aXRoIFVsdHJhc291bmQ6IFByaW9yLUNvbmRp"
 
+# Γ-NIFE
 - status: in_preparation
   sealed: 6a30ea136964
   progress: completed
   peek: "zpMtTklGRTogQ3V0dGluZyBDbGluaWNpYW4gRGlzYWdyZWVtZW50IGludG8="
 
+# KUDO
 - status: in_preparation
   sealed: 1568ffec9477
   progress: completed
   peek: "S1VETzogVW5tYXNraW5nIERlY2VwdGl2ZSBPYnM="
-
+  
+# HCF
 - status: submitted
   sealed: a9d908b436b9
   progress: completed
