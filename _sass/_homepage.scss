@@ -478,6 +478,78 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .tldr-details.visible { display: block; }
 .tldr-details .resume-item-copy { margin: 0; font-size: .8rem; line-height: 1.5; color: var(--text-secondary); }
 
+// Accepted / Under Review / All — the grid's data-mode decides what is shown (Accepted on first load)
+.pub-count {
+  display: inline-block;
+  min-width: 1.5em;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: .7rem;
+  line-height: 1.5;
+  text-align: center;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+.pub-filter.active .pub-count { background: rgba(255, 255, 255, .25); color: #fff; }
+.pub-grid[data-mode="accepted"] .pub-card[data-status="review"],
+.pub-grid[data-mode="review"] .pub-card[data-status="accepted"] { display: none; }
+.pub-empty { display: none; margin: 4px 0; font-size: .88rem; color: var(--text-muted); }
+.pub-grid[data-mode="accepted"] .pub-empty[data-for="accepted"],
+.pub-grid[data-mode="review"] .pub-empty[data-for="review"] { display: block; }
+
+// sealed (under review) cards
+.pub-venue-tag.review { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+.sealed-img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  background: repeating-linear-gradient(-45deg, var(--bg-hover) 0 10px, transparent 10px 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-muted);
+  user-select: none;
+}
+.sealed-img i { font-size: 1.5rem; }
+.sealed-img span { font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.sealed-img.sealed-img-empty i, .sealed-img.sealed-img-empty span { display: none; }
+.pub-card-body h3.sealed-title { color: var(--text-muted); font-weight: 500; font-style: italic; }
+.sealed-title i { font-size: .8em; margin-right: 4px; font-style: normal; }
+.sealed-authors { font-style: italic; color: var(--text-muted); }
+.tldr-locked i, .tldr-toggle i { font-size: .65rem; margin-left: 5px; }
+.sealed-note { display: flex; align-items: flex-start; gap: 10px; }
+.sealed-note[hidden], .sealed-pass[hidden] { display: none; }
+button.tldr-toggle { background: none; border: 0; font-family: inherit; }
+.sealed-note .resume-item-copy { flex: 1; }
+.sealed-unlock { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.sealed-key {
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  color: var(--text-muted);
+  opacity: .45;
+  cursor: pointer;
+  font-size: .75rem;
+}
+.sealed-key:hover, .sealed-key:focus-visible { opacity: 1; color: var(--accent); }
+.sealed-pass {
+  width: 130px;
+  padding: 3px 8px;
+  font-size: .75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.sealed-msg { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
+.sealed-links { display: contents; }
+button.pub-link { background: none; border: 0; border-bottom: 1px solid transparent; cursor: pointer; font-family: inherit; }
+.pub-sealed.unsealed { border-style: dashed; border-color: #fdba74; }
+
 // ---- experience (timeline) ------------------------------------------------
 .timeline { position: relative; padding-left: 28px; margin: 0; list-style: none; }
 .timeline::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--border-strong); }
@@ -826,6 +898,8 @@ body.dark .page-footer { border-top-color: var(--border-color); }
 body.dark .page-footer .footer-line,
 body.dark .page-footer p { color: var(--text-muted); }
 body.dark .pub-link.coming-soon-link { color: #fbbf24; }
+body.dark .pub-venue-tag.review { background: rgba(251, 191, 36, .12); border-color: rgba(251, 191, 36, .35); color: #fbbf24; }
+body.dark .pub-sealed.unsealed { border-color: rgba(251, 191, 36, .45); }
 body.dark .status-badge { color: #4ade80; }
 body.dark a.about-text a,
 body.dark .about-text a { border-bottom-color: rgba(96, 165, 250, .4); }

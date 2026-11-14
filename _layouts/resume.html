@@ -251,20 +251,60 @@
             <p>authors: <sup>†</sup> indicates equal contribution</p>
             <div class="line"></div>
           </div>
-          <div class="pub-filters no-print">
-            <button class="pub-filter active" data-filter="all">All</button>
-            <!-- <button class="pub-filter" data-filter="first">First Author</button> -->
+          {% assign pub_accepted = 0 %}{% assign pub_review = 0 %}
+          {% for publication in site.data.publications %}
+            {% if publication.status == 'under_review' or publication.journal contains 'Under Review' %}{% assign pub_review = pub_review | plus: 1 %}{% else %}{% assign pub_accepted = pub_accepted | plus: 1 %}{% endif %}
+          {% endfor %}
+          <div class="pub-filters no-print" role="tablist" aria-label="Filter publications">
+            <button class="pub-filter active" data-filter="accepted" role="tab" aria-selected="true">Accepted <span class="pub-count">{{ pub_accepted }}</span></button>
+            <button class="pub-filter" data-filter="review" role="tab" aria-selected="false">Under Review <span class="pub-count">{{ pub_review }}</span></button>
+            <button class="pub-filter" data-filter="all" role="tab" aria-selected="false">All <span class="pub-count">{{ site.data.publications.size }}</span></button>
           </div>
-          <div class="pub-grid">
+          <div class="pub-grid" data-mode="accepted">
             {% for publication in site.data.publications %}
+            {% if publication.status == 'under_review' or publication.journal contains 'Under Review' %}
+            {% comment %} Under review: never print title / authors / summary / image here. They live encrypted in sealed/<id>.json. {% endcomment %}
+            {% assign review_venue = publication.journal | default: '' | remove: 'Under Review' | strip %}
+            <div class="pub-card pub-sealed" data-status="review"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
+              <div class="pub-card-img sealed-img" aria-hidden="true">
+                <i class="fas fa-lock"></i>
+                <span>Sealed</span>
+              </div>
+              <div class="pub-card-body">
+                <div class="pub-venue">
+                  {% if review_venue != '' %}<span class="pub-venue-tag">{{ review_venue }}</span>{% endif %}
+                  <span class="pub-venue-tag review">Under Review</span>
+                </div>
+                <h3 class="sealed-title"><i class="fas fa-lock"></i> Title withheld during double-blind review</h3>
+                <p class="pub-authors sealed-authors">Authors withheld</p>
+                <div class="pub-links">
+                  <span class="sealed-links"></span>
+                  <button type="button" class="tldr-toggle tldr-locked">TL;DR <i class="fas fa-lock"></i></button>
+                </div>
+                <div class="tldr-details">
+                  <div class="sealed-note">
+                    <p class="resume-item-copy">This paper is under double-blind review, so its title, abstract and figure stay sealed until the review ends.</p>
+                    {% if publication.sealed %}
+                    <form class="sealed-unlock" autocomplete="off">
+                      <button type="button" class="sealed-key" title="Owner unlock" aria-label="Owner unlock"><i class="fas fa-key"></i></button>
+                      <input class="sealed-pass" type="password" placeholder="passphrase" aria-label="Passphrase" hidden>
+                      <span class="sealed-msg" aria-live="polite"></span>
+                    </form>
+                    {% endif %}
+                  </div>
+                  <p class="resume-item-copy sealed-summary" hidden></p>
+                </div>
+              </div>
+            </div>
+            {% else %}
             {% assign first_author = publication.authors | split: ', ' | first %}
-            <div class="pub-card" data-first="{% if first_author contains 'Youngmin Kim' %}true{% else %}false{% endif %}" itemscope itemtype="http://schema.org/ScholarlyArticle">
+            <div class="pub-card" data-status="accepted" data-first="{% if first_author contains 'Hyeongchan Im' %}true{% else %}false{% endif %}" itemscope itemtype="http://schema.org/ScholarlyArticle">
               {% if publication.image %}
               <img class="pub-card-img" src="images/publications/{{ publication.image }}" alt="Thumbnail of {{ publication.title }}">
               {% endif %}
               <div class="pub-card-body">
                 <div class="pub-venue">
-                  <span class="pub-venue-tag {% if publication.journal == 'Under Review' %}muted{% endif %}">{{ publication.journal }}</span>
+                  <span class="pub-venue-tag">{{ publication.journal }}</span>
                   {% if publication.year %}<span class="pub-venue-year">{{ publication.year }}</span>{% endif %}
                 </div>
                 <h3 itemprop="name">{{ publication.title }}</h3>
@@ -300,7 +340,10 @@
                 {% endif %}
               </div>
             </div>
+            {% endif %}
             {% endfor %}
+            {% if pub_accepted == 0 %}<p class="pub-empty" data-for="accepted">No accepted papers yet.</p>{% endif %}
+            {% if pub_review == 0 %}<p class="pub-empty" data-for="review">No papers under review right now.</p>{% endif %}
           </div>
         </section>
 
@@ -407,29 +450,27 @@
           tick();
         })();
 
-        // Publication filters (All / First Author)
+        // Publication filters (Accepted / Under Review / All) — Accepted is shown first
         (function () {
+          var grid = document.querySelector('.pub-grid');
           var filters = Array.prototype.slice.call(document.querySelectorAll('.pub-filter'));
-          var cards = Array.prototype.slice.call(document.querySelectorAll('.pub-card'));
-          if (!filters.length) return;
+          if (!grid || !filters.length) return;
           filters.forEach(function (f) {
             f.addEventListener('click', function () {
-              filters.forEach(function (x) { x.classList.remove('active'); });
+              filters.forEach(function (x) { x.classList.remove('active'); x.setAttribute('aria-selected', 'false'); });
               this.classList.add('active');
-              var mode = this.getAttribute('data-filter');
-              cards.forEach(function (c) {
-                var show = mode === 'all' || (mode === 'first' && c.getAttribute('data-first') === 'true');
-                c.style.display = show ? '' : 'none';
-              });
+              this.setAttribute('aria-selected', 'true');
+              grid.setAttribute('data-mode', this.getAttribute('data-filter'));
             });
           });
         })();
 
-        document.querySelectorAll('.tldr-toggle').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var d = this.parentElement.parentElement.querySelector('.tldr-details');
-            if (d) { this.classList.toggle('active'); d.classList.toggle('visible'); }
-          });
+        // TL;DR toggles (delegated, so cards re-rendered by sealed-pubs.js keep working)
+        document.addEventListener('click', function (e) {
+          var btn = e.target.closest && e.target.closest('.tldr-toggle');
+          if (!btn) return;
+          var d = btn.parentElement.parentElement.querySelector('.tldr-details');
+          if (d) { btn.classList.toggle('active'); d.classList.toggle('visible'); }
         });
 
         // Visitors map: collapsed by default, reveal by clicking the heading
@@ -476,6 +517,8 @@
       });
     </script>
     <script src="{{ '/js/lp-player.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="{{ '/js/seal-crypto.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+    <script src="{{ '/js/sealed-pubs.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
     <script src="{{ '/js/vault.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
     <script src="{{ '/js/off-the-record.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
     <script src="{{ '/js/cinema.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>

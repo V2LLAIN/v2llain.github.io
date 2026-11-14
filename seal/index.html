@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Seal a paper</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --line:#e3e6eb; --text:#1d2330; --muted:#6b7280; --accent:#2563eb; --warn:#b45309; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1115; --card:#171b25; --line:#2a3040; --text:#e7e9ee; --muted:#9aa3b2; --accent:#60a5fa; --warn:#fbbf24; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 36px 20px 60px; }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; font-size: .9rem; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  h2 { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  label { display: block; font-size: .82rem; font-weight: 600; margin: 12px 0 4px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input[type=text], input[type=url], input[type=password], textarea {
+    width: 100%; padding: 8px 10px; font: inherit; font-size: .9rem; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .imgrow { display: flex; gap: 14px; align-items: center; }
+  #preview { width: 160px; aspect-ratio: 16/10; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
+  #preview:not([src]) { visibility: hidden; }
+  button { font: inherit; font-size: .88rem; font-weight: 600; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+  .msg { font-size: .85rem; color: var(--muted); }
+  .msg.err { color: #dc2626; }
+  .warn { color: var(--warn); font-size: .8rem; margin: 6px 0 0; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: .85rem; margin: 8px 0 0; }
+  ol { margin: 8px 0 0; padding-left: 20px; font-size: .9rem; }
+  ol li { margin: 6px 0; }
+  code { font-size: .85em; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  #out[hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔒 Seal an under-review paper</h1>
+  <p class="lead">여기에 적은 내용은 이 브라우저 안에서만 암호화되고, 어디에도 전송되지 않습니다. 결과로 나오는 암호화 파일만 저장소에 올리면 됩니다.</p>
+
+  <section>
+    <h2>이미 봉인한 논문 고치기 (선택)</h2>
+    <div class="row">
+      <div><label>sealed/…json 파일</label><input type="file" id="oldFile" accept=".json,application/json"></div>
+      <div><label>그 파일의 암호</label><input type="password" id="oldPass" autocomplete="off"></div>
+    </div>
+    <div class="actions"><button class="ghost" id="openBtn" type="button">열어서 아래에 채우기</button><span class="msg" id="openMsg"></span></div>
+  </section>
+
+  <section>
+    <h2>논문 내용 (암호화됨)</h2>
+    <label>제목</label>
+    <input type="text" id="title" autocomplete="off">
+    <label>저자 <small>쉼표로 구분 · 예: Hyeongchan Im, SungRae Hong, Mun-Yong Yi</small></label>
+    <input type="text" id="authors" autocomplete="off">
+    <label>논문 링크 <small>선택 · OpenReview 등</small></label>
+    <input type="url" id="url" autocomplete="off" placeholder="https://">
+    <label>TL;DR <small>**굵게** 사용 가능</small></label>
+    <textarea id="summary"></textarea>
+    <label>대표 이미지 <small>선택 · 자동으로 1200px 이하로 줄여서 같이 암호화</small></label>
+    <div class="imgrow">
+      <input type="file" id="image" accept="image/*">
+      <img id="preview" alt="">
+      <button class="ghost" id="clearImg" type="button" hidden>이미지 빼기</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>공개되는 정보 · 암호</h2>
+    <label>학회 이름 <small>홈페이지에 그대로 보입니다 · 예: CVPR 2027</small></label>
+    <input type="text" id="venue" autocomplete="off">
+    <div class="row">
+      <div><label>암호</label><input type="password" id="pass" autocomplete="new-password"></div>
+      <div><label>암호 확인</label><input type="password" id="pass2" autocomplete="new-password"></div>
+    </div>
+    <p class="warn" id="passWarn" hidden>12자 이상, 단어 여러 개를 섞은 암호를 권장합니다. 암호 파일은 누구나 내려받을 수 있어서, 짧은 암호는 시간만 들이면 풀립니다.</p>
+    <p class="warn">암호를 잊으면 복구할 방법이 없습니다. 원본 내용은 따로 보관해 두세요.</p>
+    <div class="actions"><button id="sealBtn" type="button">봉인하기</button><span class="msg" id="sealMsg"></span></div>
+  </section>
+
+  <section id="out" hidden>
+    <h2>결과</h2>
+    <ol>
+      <li><button id="dl" type="button">sealed/<span class="fid"></span>.json 내려받기</button><br>
+        저장소의 <code>sealed/</code> 폴더에 이 파일을 그대로 올리세요 (GitHub: Add file → Upload files).</li>
+      <li><code>_data/publications.yml</code> 에 아래 내용을 붙여 넣으세요. <button class="ghost" id="copy" type="button">복사</button>
+        <pre id="yaml"></pre></li>
+      <li>홈페이지 Under Review 탭에서 카드의 TL;DR → 🔑 → 암호 입력으로 잘 열리는지 확인하세요.</li>
+    </ol>
+  </section>
+</main>
+
+<script src="/js/seal-crypto.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { id: null, image: '' };
+
+  function newId() {
+    return Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(6)), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+  function setImage(dataUrl) {
+    state.image = dataUrl || '';
+    if (state.image) $('preview').src = state.image; else $('preview').removeAttribute('src');
+    $('clearImg').hidden = !state.image;
+  }
+  function shrink(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var max = 1200, w = img.naturalWidth, h = img.naturalHeight, r = Math.min(1, max / w);
+        var c = document.createElement('canvas');
+        c.width = Math.round(w * r); c.height = Math.round(h * r);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        var out = c.toDataURL('image/webp', 0.85);
+        if (out.indexOf('data:image/webp') !== 0) out = c.toDataURL('image/jpeg', 0.88);
+        res(out);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('이미지를 읽을 수 없습니다')); };
+      img.src = url;
+    });
+  }
+
+  $('image').addEventListener('change', function () {
+    var f = this.files[0];
+    if (!f) return;
+    shrink(f).then(setImage).catch(function (e) { $('sealMsg').textContent = e.message; });
+  });
+  $('clearImg').addEventListener('click', function () { $('image').value = ''; setImage(''); });
+  $('pass').addEventListener('input', function () { $('passWarn').hidden = this.value.length === 0 || this.value.length >= 12; });
+
+  $('openBtn').addEventListener('click', function () {
+    var f = $('oldFile').files[0], m = $('openMsg');
+    m.className = 'msg';
+    if (!f) { m.textContent = '파일을 먼저 고르세요'; return; }
+    m.textContent = '여는 중…';
+    f.text().then(function (t) { return SealCrypto.open(JSON.parse(t), $('oldPass').value); }).then(function (p) {
+      state.id = f.name.replace(/\.json$/i, '').replace(/[^a-z0-9-]/gi, '') || null;
+      $('title').value = p.title || ''; $('authors').value = p.authors || ''; $('url').value = p.url || '';
+      $('summary').value = p.summary || ''; setImage(p.image || '');
+      if (!$('pass').value) { $('pass').value = $('pass2').value = $('oldPass').value; }
+      m.textContent = '열었습니다. 고친 뒤 봉인하면 같은 파일 이름(' + state.id + '.json)으로 나옵니다.';
+    }).catch(function () { m.className = 'msg err'; m.textContent = '열 수 없습니다 — 암호나 파일을 확인하세요'; });
+  });
+
+  var lastBlob = null;
+  $('sealBtn').addEventListener('click', function () {
+    var m = $('sealMsg'), pw = $('pass').value;
+    m.className = 'msg';
+    if (!$('title').value.trim()) { m.className = 'msg err'; m.textContent = '제목을 적어 주세요'; return; }
+    if (!pw) { m.className = 'msg err'; m.textContent = '암호를 정해 주세요'; return; }
+    if (pw !== $('pass2').value) { m.className = 'msg err'; m.textContent = '암호 확인이 다릅니다'; return; }
+    var payload = {
+      title: $('title').value.trim(), authors: $('authors').value.trim(), url: $('url').value.trim(),
+      summary: $('summary').value.trim(), image: state.image
+    };
+    this.disabled = true;
+    m.textContent = '암호화하는 중…';
+    var btn = this;
+    SealCrypto.seal(payload, pw).then(function (rec) {
+      return SealCrypto.open(rec, pw).then(function () { return rec; }); // round-trip check
+    }).then(function (rec) {
+      if (!state.id) state.id = newId();
+      lastBlob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
+      var venue = $('venue').value.trim().replace(/"/g, '');
+      $('yaml').textContent = '- status: under_review\n  journal: "' + (venue || 'Venue') + '"\n  sealed: ' + state.id + '\n';
+      Array.prototype.forEach.call(document.querySelectorAll('.fid'), function (e) { e.textContent = state.id; });
+      $('out').hidden = false;
+      m.textContent = '완료 (' + Math.round(lastBlob.size / 1024) + ' KB)';
+      $('out').scrollIntoView({ behavior: 'smooth' });
+    }).catch(function (e) { m.className = 'msg err'; m.textContent = '실패: ' + e.message; })
+      .then(function () { btn.disabled = false; });
+  });
+
+  $('dl').addEventListener('click', function () {
+    if (!lastBlob) return;
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(lastBlob);
+    a.download = state.id + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+  $('copy').addEventListener('click', function () {
+    var b = this;
+    navigator.clipboard.writeText($('yaml').textContent).then(function () { b.textContent = '복사됨'; setTimeout(function () { b.textContent = '복사'; }, 1500); });
+  });
+})();
+</script>
+</body>
+</html>

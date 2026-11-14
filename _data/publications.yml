@@ -1,12 +1,29 @@
-# - title: "HCForensics: "
-#   authors: Hyeongchan Im, SungRae Hong, Mun-Yong Yi. 
-#   url: https://openreview.net/pdf?id=???
-#   journal: "CVPR 2027 Under Review"
-#   image: HCForensics.png
-#   summary: We introducd <strong>HCForensics</strong>, ... and ... <strong>HFGM</strong>, improving structured forensic grounding ...
+# ─────────────────────────────────────────────────────────────────────────────
+# Publications
+#
+#  • 게재 확정(Accepted) 논문: 지금처럼 title / authors / url / journal / image / summary 를 적으면 됩니다.
+#    status 를 안 적으면 Accepted 로 취급합니다.
+#
+#  • 심사 중(Under Review) 논문: 이 파일에는 제목·저자·TLDR·이미지를 절대 평문으로 적지 마세요.
+#    이 저장소는 공개라서, 여기에 쓰는 순간 GitHub 검색·구글에 노출됩니다.
+#    대신 https://v2llain.github.io/seal/ 에서 내용을 적고 암호를 정하면
+#      ① sealed/<id>.json (암호화된 파일)  ② 아래에 붙여 넣을 3줄
+#    이 나옵니다. ①을 sealed/ 폴더에 올리고 ②를 이 파일에 붙여 넣으면 끝입니다.
+#    홈페이지에서는 제목·저자·TLDR·이미지가 잠긴 카드로 보이고, 암호를 아는 사람만 열 수 있습니다.
+#
+#      - status: under_review
+#        journal: "CVPR 2027"        # 공개돼도 되는 학회 이름만
+#        sealed: 3f9c2a7be1d4         # sealed/3f9c2a7be1d4.json (없으면 빈 잠금 카드)
+#
+#  • 게재가 확정되면: /seal/ 에서 그 파일을 열어 내용을 확인한 뒤, 일반 항목으로 옮기고
+#    sealed/<id>.json 은 지우면 됩니다.
+# ─────────────────────────────────────────────────────────────────────────────
+
+- status: under_review
+  journal: "CVPR 2027"
 
 - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
-  authors: Dasom Choi<sup></sup>, Sangjun Moon<sup></sup>, Hyeongchan Im<sup></sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura 
+  authors: Dasom Choi<sup></sup>, Sangjun Moon<sup></sup>, Hyeongchan Im<sup></sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura
   url: https://arxiv.org/abs/2609.19693
   journal: "AACL-IJCNLP 2026"
   image: IMFD.png
