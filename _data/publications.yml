@@ -27,7 +27,10 @@
 #    sealed/<id>.json 은 지우면 됩니다.
 # ─────────────────────────────────────────────────────────────────────────────
 
-- status: under_review
+- status: submitted
+  sealed: a9d908b436b9
+  peek: "SENGb3JlbnNpY3M6IFF1YW50aXRhdGl2ZWx5IEdyb3VuZGVkIFJlZ2lvbuKAk0FydGk="
+
 
 - title: "IMFD: End-to-end Multi-Face Forgery Detection through Instruction-based Large Vision-Language Models"
   authors: Dasom Choi<sup></sup>, Sangjun Moon<sup></sup>, Hyeongchan Im<sup></sup>, Jaeeon Park, Jingun Kwon, Hidetaka Kamigaito, Taro Watanabe, Manabu Okumura
