@@ -498,8 +498,55 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .pub-grid[data-mode="accepted"] .pub-empty[data-for="accepted"],
 .pub-grid[data-mode="pending"] .pub-empty[data-for="pending"] { display: block; }
 
-// sealed (under review) cards
+// not-yet-published cards: a cover with a peeled top-left corner over the card.
+// Only the decoy figure peeks through; the real title / figure are never in the page.
 .pub-venue-tag.review { background: #fff7ed; border-color: #fed7aa; color: #b45309; }
+$peel-x: 210px;
+$peel-y: 126px;
+.pub-sealed { position: relative; min-height: 190px; }
+.pub-cover-wrap {
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  filter: drop-shadow(-3px 4px 6px rgba(0, 0, 0, .14));   // the lifted edge casts a soft shadow
+  transition: opacity .45s ease, transform .45s ease;
+  pointer-events: none;
+}
+.pub-cover {
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(260px 200px at 72% 38%, rgba(255, 255, 255, .55), transparent 70%),
+    var(--bg-primary);
+  clip-path: polygon(#{$peel-x} 0, 100% 0, 100% 100%, 0 100%, 0 #{$peel-y});
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+// dashed line along the fold (the clip cuts the box border there)
+.pub-cover-edge {
+  position: absolute;
+  z-index: 3;
+  left: $peel-x - 1px;
+  top: -1px;
+  width: 245px;   // ≈ hypotenuse of the peel triangle
+  border-top: 1.5px dashed var(--border-strong);
+  transform-origin: 0 0;
+  transform: rotate(149deg);   // 180° − atan(peel-y / peel-x)
+  pointer-events: none;
+  transition: opacity .45s ease;
+}
+.pub-cover-label { margin: 0; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; user-select: none; }
+.pub-cover-label b { display: block; font-size: 1.05rem; font-weight: 500; letter-spacing: .32em; color: var(--text-secondary); padding-left: .32em; }
+.pub-cover-label small { display: block; margin-top: 6px; font-size: .74rem; letter-spacing: .14em; color: var(--text-muted); }
+.pub-sealed.unsealed .pub-cover-wrap { opacity: 0; transform: translate(24px, -16px) rotate(1.5deg); }
+.pub-sealed.unsealed .pub-cover { pointer-events: none; }
+.pub-sealed.unsealed .pub-cover-edge { opacity: 0; }
+.pub-sealed:hover { transform: none; box-shadow: none; }
+
 .sealed-img {
   position: relative;
   width: 100%;
@@ -519,45 +566,27 @@ body.dark .jrec-bubble b { color: #fb923c; }
 .sealed-blur i:nth-child(4) { left: 38%; top: 38%; width: 22%; height: 18%; background: #c7d2fe; }
 .sealed-blur i:nth-child(5) { left: 64%; top: 38%; width: 26%; height: 40%; background: #94a3b8; }
 .sealed-blur i:nth-child(6) { left: 8%;  top: 64%; width: 52%; height: 18%; background: #fde68a; }
-.sealed-lock {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(17, 24, 39, .55);
-  color: #fff;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
-  backdrop-filter: blur(2px);
-}
-.sealed-img.sealed-img-empty .sealed-lock { display: none; }
 .pub-card-body h3.sealed-title { color: var(--text-muted); font-weight: 500; font-style: italic; }
 .sealed-title i { font-size: .8em; margin-right: 4px; font-style: normal; }
 .sealed-authors { font-style: italic; color: var(--text-muted); }
 .tldr-locked i, .tldr-toggle i { font-size: .65rem; margin-left: 5px; }
-.sealed-note { display: flex; align-items: flex-start; gap: 10px; }
-.sealed-note[hidden], .sealed-pass[hidden] { display: none; }
 button.tldr-toggle { background: none; border: 0; font-family: inherit; }
-.sealed-note .resume-item-copy { flex: 1; }
-.sealed-unlock { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+
+// owner unlock: a faint key in the cover's bottom-right corner
+.sealed-unlock { position: absolute; right: 12px; bottom: 10px; display: flex; align-items: center; gap: 6px; margin: 0; }
+.sealed-pass[hidden] { display: none; }
 .sealed-key {
   border: 0;
   background: none;
-  padding: 2px 4px;
+  padding: 4px;
   color: var(--text-muted);
-  opacity: .45;
+  opacity: .3;
   cursor: pointer;
-  font-size: .75rem;
+  font-size: .72rem;
 }
-.sealed-key:hover, .sealed-key:focus-visible { opacity: 1; color: var(--accent); }
+.sealed-key:hover, .sealed-key:focus-visible, .sealed-unlock.open .sealed-key { opacity: 1; color: var(--accent); }
 .sealed-pass {
-  width: 130px;
+  width: 140px;
   padding: 3px 8px;
   font-size: .75rem;
   border: 1px solid var(--border-strong);
@@ -566,9 +595,9 @@ button.tldr-toggle { background: none; border: 0; font-family: inherit; }
   color: var(--text-primary);
 }
 .sealed-msg { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
+.sealed-msg:empty { display: none; }
 .sealed-links { display: contents; }
 button.pub-link { background: none; border: 0; border-bottom: 1px solid transparent; cursor: pointer; font-family: inherit; }
-.pub-sealed.unsealed { border-style: dashed; border-color: #fdba74; }
 
 // ---- experience (timeline) ------------------------------------------------
 .timeline { position: relative; padding-left: 28px; margin: 0; list-style: none; }
@@ -919,9 +948,14 @@ body.dark .page-footer .footer-line,
 body.dark .page-footer p { color: var(--text-muted); }
 body.dark .pub-link.coming-soon-link { color: #fbbf24; }
 body.dark .pub-venue-tag.review { background: rgba(251, 191, 36, .12); border-color: rgba(251, 191, 36, .35); color: #fbbf24; }
-body.dark .pub-sealed.unsealed { border-color: rgba(251, 191, 36, .45); }
 body.dark .sealed-img { background: #1f2532; }
 body.dark .sealed-blur { opacity: .55; }
+body.dark .pub-cover {
+  background:
+    radial-gradient(240px 190px at 74% 40%, rgba(255, 255, 255, .07), transparent 70%),
+    #111318;
+}
+body.dark .pub-cover-wrap { filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, .55)); }
 body.dark .status-badge { color: #4ade80; }
 body.dark a.about-text a,
 body.dark .about-text a { border-bottom-color: rgba(96, 165, 250, .4); }

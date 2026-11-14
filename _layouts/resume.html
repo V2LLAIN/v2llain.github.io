@@ -270,10 +270,23 @@
             {% endcomment %}
             {% if publication.status == 'submitted' %}{% assign pend_label = 'Submitted' %}{% elsif publication.status == 'in_preparation' %}{% assign pend_label = 'In Preparation' %}{% else %}{% assign pend_label = 'Under Review' %}{% endif %}
             <div class="pub-card pub-sealed" data-status="pending"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
+              {% comment %} The cover with a peeled corner. Only the decoy figure below peeks through it. {% endcomment %}
+              <div class="pub-cover-wrap">
+                <div class="pub-cover" role="img" aria-label="In progress — {{ pend_label }}">
+                  <p class="pub-cover-label"><b>IN PROGRESS</b><small>{{ pend_label }}</small></p>
+                  {% if publication.sealed %}
+                  <form class="sealed-unlock" autocomplete="off">
+                    <input class="sealed-pass" type="password" placeholder="passphrase" aria-label="Passphrase" hidden>
+                    <span class="sealed-msg" aria-live="polite"></span>
+                    <button type="button" class="sealed-key" title="Owner unlock" aria-label="Owner unlock"><i class="fas fa-key"></i></button>
+                  </form>
+                  {% endif %}
+                </div>
+              </div>
+              <span class="pub-cover-edge" aria-hidden="true"></span>
               <div class="pub-card-img sealed-img" aria-hidden="true">
                 {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
                 <div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                <span class="sealed-lock"><i class="fas fa-lock"></i></span>
               </div>
               <div class="pub-card-body">
                 <div class="pub-venue">
@@ -302,17 +315,7 @@
                   <button type="button" class="tldr-toggle tldr-locked">TL;DR <i class="fas fa-lock"></i></button>
                 </div>
                 <div class="tldr-details">
-                  <div class="sealed-note">
-                    <p class="resume-item-copy">This work is not published yet, so its details stay sealed until it is.</p>
-                    {% if publication.sealed %}
-                    <form class="sealed-unlock" autocomplete="off">
-                      <button type="button" class="sealed-key" title="Owner unlock" aria-label="Owner unlock"><i class="fas fa-key"></i></button>
-                      <input class="sealed-pass" type="password" placeholder="passphrase" aria-label="Passphrase" hidden>
-                      <span class="sealed-msg" aria-live="polite"></span>
-                    </form>
-                    {% endif %}
-                  </div>
-                  <p class="resume-item-copy sealed-summary" hidden></p>
+                  <p class="resume-item-copy sealed-summary">Sealed until publication.</p>
                 </div>
               </div>
             </div>

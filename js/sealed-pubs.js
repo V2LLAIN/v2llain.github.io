@@ -43,10 +43,8 @@
     if (venue && p.venue) venue.insertAdjacentHTML('afterbegin', '<span class="pub-venue-tag">' + esc(p.venue) + '</span>');
     var tl = card.querySelector('.tldr-locked');
     if (tl) { tl.classList.remove('tldr-locked'); tl.innerHTML = 'TL;DR <i class="fas fa-lock-open"></i>'; }
-    var note = card.querySelector('.sealed-note');
-    if (note) note.hidden = true;
     var sum = card.querySelector('.sealed-summary');
-    if (sum) { sum.innerHTML = window.SealCrypto.safeInline(p.summary) || '<em>No TL;DR yet.</em>'; sum.hidden = false; }
+    if (sum) sum.innerHTML = window.SealCrypto.safeInline(p.summary) || '<em>No TL;DR yet.</em>';
     card.classList.add('unsealed');
   }
 
@@ -73,6 +71,7 @@
       if (key) {
         var input = key.parentElement.querySelector('.sealed-pass');
         input.hidden = !input.hidden;
+        key.parentElement.classList.toggle('open', !input.hidden);
         if (!input.hidden) input.focus();
         return;
       }
