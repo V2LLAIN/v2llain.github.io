@@ -12,7 +12,7 @@
   }
 
   function reveal(card, p) {
-    var box = card.querySelector('.sealed-img');
+    var box = card.querySelector('.pub-card-inner .sealed-img');   // not the copy peeking through the fold
     if (box) {
       if (p.image) {
         var im = document.createElement('img');

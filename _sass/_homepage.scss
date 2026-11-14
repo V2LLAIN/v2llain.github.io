@@ -708,6 +708,18 @@ body.dark .pub-figure {
 .pub-peek-fig { margin-top: 11px; }
 .pub-figure .sealed-img { border: 0; }
 .pub-sealed.unsealed .pub-peek { opacity: 0; }
+// the paper's figure seen through frosted glass (only a 32px thumbnail exists in the page)
+.pub-cover-thumb {
+  position: absolute;
+  left: 8%; right: 8%; top: 24%; height: 52%;
+  width: 84%;
+  object-fit: cover;
+  border-radius: 8px;
+  filter: blur(10px) saturate(1.2);
+  opacity: .55;
+  pointer-events: none;
+}
+.pub-cover-label { position: relative; }
 .pub-cover-label { margin: 0; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; user-select: none; }
 .pub-cover-label b { display: block; font-size: .95rem; font-weight: 500; letter-spacing: .28em; color: var(--text-secondary); padding-left: .32em; }
 .pub-cover-label small { display: block; margin-top: 6px; font-size: .7rem; letter-spacing: .14em; color: var(--text-muted); }
@@ -740,6 +752,7 @@ body.dark .pub-venue-tag.prog-in_progress { background: rgba(245, 158, 11, .12);
   user-select: none;
 }
 // blurred stand-in that reads like a paper figure (boxes + arrows), not the real image
+.sealed-thumb { position: absolute; inset: -14px; width: calc(100% + 28px); height: calc(100% + 28px); object-fit: cover; filter: blur(9px) saturate(1.15); }
 .sealed-blur { position: absolute; inset: -12px; filter: blur(7px) saturate(1.1); }
 .sealed-blur i { position: absolute; border-radius: 4px; }
 .sealed-blur i:nth-child(1) { left: 8%;  top: 14%; width: 38%; height: 16%; background: #bfdbfe; }
@@ -1135,6 +1148,7 @@ body.dark .pub-cover {
     radial-gradient(70% 45% at 70% 52%, rgba(255, 255, 255, .07), transparent 70%),
     #111318;
 }
+body.dark .pub-cover-thumb { opacity: .4; }
 body.dark .pub-cover-wrap { filter: drop-shadow(-3px 4px 8px rgba(0, 0, 0, .55)); }
 body.dark .status-badge { color: #4ade80; }
 body.dark a.about-text a,

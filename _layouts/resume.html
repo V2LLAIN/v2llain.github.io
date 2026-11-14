@@ -280,6 +280,7 @@
               {% comment %} The cover with a peeled top-left corner. {% endcomment %}
               <div class="pub-cover-wrap">
                 <div class="pub-cover" role="img" aria-label="{{ prog_label }} — {{ pend_label }}">
+                  {% if publication.blur %}<img class="pub-cover-thumb" src="data:image/jpeg;base64,{{ publication.blur | escape }}" alt="">{% endif %}
                   <p class="pub-cover-label prog-{{ prog }}"><b><i class="prog-dot"></i>{{ prog_label | upcase }}</b><small>{{ pend_label }}</small></p>
                   {% if publication.sealed %}
                   <form class="sealed-unlock" autocomplete="off">
@@ -298,7 +299,7 @@
               {% endcomment %}
               <div class="pub-peek" aria-hidden="true">
                 <div class="pub-peek-bar"><canvas class="pub-peek-title"></canvas></div>
-                <div class="pub-figure pub-peek-fig"><div class="sealed-img"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="pub-figure pub-peek-fig"><div class="sealed-img">{% if publication.blur %}<img class="sealed-thumb" src="data:image/jpeg;base64,{{ publication.blur | escape }}" alt="">{% else %}<div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>{% endif %}</div></div>
               </div>
               <div class="pub-card-inner">
                 {% if publication.title %}
@@ -307,8 +308,11 @@
                 <h3 class="pub-title-bar sealed-title"><i class="fas fa-lock"></i> Title withheld until publication</h3>
                 {% endif %}
                 <div class="pub-figure">
-                  {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
-                  <div class="pub-card-img sealed-img" aria-hidden="true"><div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                  {% comment %}
+                  `blur`: a 32px-wide thumbnail of the figure (made by /seal/), shown heavily blurred — only colours and layout
+                  survive. Without it, decoy shapes. The full figure is only in the encrypted file.
+                {% endcomment %}
+                  <div class="pub-card-img sealed-img" aria-hidden="true">{% if publication.blur %}<img class="sealed-thumb" src="data:image/jpeg;base64,{{ publication.blur | escape }}" alt="">{% else %}<div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>{% endif %}</div>
                 </div>
                 <div class="pub-card-body">
                   <div class="pub-venue">
