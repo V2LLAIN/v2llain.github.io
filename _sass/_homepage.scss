@@ -492,11 +492,11 @@ body.dark .jrec-bubble b { color: #fb923c; }
   color: var(--text-muted);
 }
 .pub-filter.active .pub-count { background: rgba(255, 255, 255, .25); color: #fff; }
-.pub-grid[data-mode="accepted"] .pub-card[data-status="review"],
-.pub-grid[data-mode="review"] .pub-card[data-status="accepted"] { display: none; }
+.pub-grid[data-mode="accepted"] .pub-card[data-status="pending"],
+.pub-grid[data-mode="pending"] .pub-card[data-status="accepted"] { display: none; }
 .pub-empty { display: none; margin: 4px 0; font-size: .88rem; color: var(--text-muted); }
 .pub-grid[data-mode="accepted"] .pub-empty[data-for="accepted"],
-.pub-grid[data-mode="review"] .pub-empty[data-for="review"] { display: block; }
+.pub-grid[data-mode="pending"] .pub-empty[data-for="pending"] { display: block; }
 
 // sealed (under review) cards
 .pub-venue-tag.review { background: #fff7ed; border-color: #fed7aa; color: #b45309; }

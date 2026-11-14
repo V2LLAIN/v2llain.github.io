@@ -251,21 +251,25 @@
             <p>authors: <sup>†</sup> indicates equal contribution</p>
             <div class="line"></div>
           </div>
-          {% assign pub_accepted = 0 %}{% assign pub_review = 0 %}
+          {% assign pub_accepted = 0 %}{% assign pub_pending = 0 %}
           {% for publication in site.data.publications %}
-            {% if publication.status == 'under_review' or publication.journal contains 'Under Review' %}{% assign pub_review = pub_review | plus: 1 %}{% else %}{% assign pub_accepted = pub_accepted | plus: 1 %}{% endif %}
+            {% if publication.status == 'under_review' or publication.status == 'submitted' or publication.status == 'in_preparation' or publication.journal contains 'Under Review' %}{% assign pub_pending = pub_pending | plus: 1 %}{% else %}{% assign pub_accepted = pub_accepted | plus: 1 %}{% endif %}
           {% endfor %}
           <div class="pub-filters no-print" role="tablist" aria-label="Filter publications">
             <button class="pub-filter active" data-filter="accepted" role="tab" aria-selected="true">Accepted <span class="pub-count">{{ pub_accepted }}</span></button>
-            <button class="pub-filter" data-filter="review" role="tab" aria-selected="false">Under Review <span class="pub-count">{{ pub_review }}</span></button>
+            <button class="pub-filter" data-filter="pending" role="tab" aria-selected="false">In Preparation <span class="pub-count">{{ pub_pending }}</span></button>
             <button class="pub-filter" data-filter="all" role="tab" aria-selected="false">All <span class="pub-count">{{ site.data.publications.size }}</span></button>
           </div>
           <div class="pub-grid" data-mode="accepted">
             {% for publication in site.data.publications %}
-            {% if publication.status == 'under_review' or publication.journal contains 'Under Review' %}
-            {% comment %} Under review: never print title / authors / summary / image here. They live encrypted in sealed/<id>.json. {% endcomment %}
-            {% assign review_venue = publication.journal | default: '' | remove: 'Under Review' | strip %}
-            <div class="pub-card pub-sealed" data-status="review"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
+            {% if publication.status == 'under_review' or publication.status == 'submitted' or publication.status == 'in_preparation' or publication.journal contains 'Under Review' %}
+            {% comment %}
+              Not yet accepted. The venue (journal) is never printed: CVPR-style rules forbid listing a submission on a public site.
+              Title / authors / url are printed only if they are written in publications.yml on purpose (e.g. already on arXiv);
+              otherwise they live encrypted in sealed/<id>.json together with the TL;DR and the figure.
+            {% endcomment %}
+            {% if publication.status == 'submitted' %}{% assign pend_label = 'Submitted' %}{% elsif publication.status == 'in_preparation' %}{% assign pend_label = 'In Preparation' %}{% else %}{% assign pend_label = 'Under Review' %}{% endif %}
+            <div class="pub-card pub-sealed" data-status="pending"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
               <div class="pub-card-img sealed-img" aria-hidden="true">
                 {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
                 <div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -273,18 +277,33 @@
               </div>
               <div class="pub-card-body">
                 <div class="pub-venue">
-                  {% if review_venue != '' %}<span class="pub-venue-tag">{{ review_venue }}</span>{% endif %}
-                  <span class="pub-venue-tag review">Under Review</span>
+                  <span class="pub-venue-tag review">{{ pend_label }}</span>
                 </div>
-                <h3 class="sealed-title"><i class="fas fa-lock"></i> Title withheld during double-blind review</h3>
+                {% if publication.title %}
+                <h3>{{ publication.title }}</h3>
+                {% else %}
+                <h3 class="sealed-title"><i class="fas fa-lock"></i> Title withheld until publication</h3>
+                {% endif %}
+                {% if publication.authors %}
+                <p class="pub-authors">
+                  {% assign author_list = publication.authors | split: ", " %}
+                  {% for author in author_list %}
+                    {% if author contains "Hyeongchan Im" %}<span class="me">{{ author }}</span>{% else %}{{ author }}{% endif %}{% unless forloop.last %}, {% endunless %}
+                  {% endfor %}
+                </p>
+                {% elsif publication.title == nil %}
                 <p class="pub-authors sealed-authors">Authors withheld</p>
+                {% endif %}
                 <div class="pub-links">
+                  {% if publication.url %}
+                  <a class="pub-link pub-public-link" href="{{ publication.url }}" target="_blank" rel="noopener"><i class="fas fa-file-alt"></i> Paper</a>
+                  {% endif %}
                   <span class="sealed-links"></span>
                   <button type="button" class="tldr-toggle tldr-locked">TL;DR <i class="fas fa-lock"></i></button>
                 </div>
                 <div class="tldr-details">
                   <div class="sealed-note">
-                    <p class="resume-item-copy">This paper is under double-blind review, so its title, abstract and figure stay sealed until the review ends.</p>
+                    <p class="resume-item-copy">This work is not published yet, so its details stay sealed until it is.</p>
                     {% if publication.sealed %}
                     <form class="sealed-unlock" autocomplete="off">
                       <button type="button" class="sealed-key" title="Owner unlock" aria-label="Owner unlock"><i class="fas fa-key"></i></button>
@@ -344,7 +363,7 @@
             {% endif %}
             {% endfor %}
             {% if pub_accepted == 0 %}<p class="pub-empty" data-for="accepted">No accepted papers yet.</p>{% endif %}
-            {% if pub_review == 0 %}<p class="pub-empty" data-for="review">No papers under review right now.</p>{% endif %}
+            {% if pub_pending == 0 %}<p class="pub-empty" data-for="pending">Nothing in preparation right now.</p>{% endif %}
           </div>
         </section>
 
@@ -451,7 +470,7 @@
           tick();
         })();
 
-        // Publication filters (Accepted / Under Review / All) — Accepted is shown first
+        // Publication filters (Accepted / In Preparation / All) — Accepted is shown first
         (function () {
           var grid = document.querySelector('.pub-grid');
           var filters = Array.prototype.slice.call(document.querySelectorAll('.pub-filter'));

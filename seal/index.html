@@ -17,7 +17,7 @@
   h2 { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
   label { display: block; font-size: .82rem; font-weight: 600; margin: 12px 0 4px; }
   label small { font-weight: 400; color: var(--muted); }
-  input[type=text], input[type=url], input[type=password], textarea {
+  input[type=text], input[type=url], input[type=password], textarea, select {
     width: 100%; padding: 8px 10px; font: inherit; font-size: .9rem; color: var(--text);
     background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
   }
@@ -42,7 +42,7 @@
 </head>
 <body>
 <main>
-  <h1>🔒 Seal an under-review paper</h1>
+  <h1>🔒 Seal an unpublished paper</h1>
   <p class="lead">여기에 적은 내용은 이 브라우저 안에서만 암호화되고, 어디에도 전송되지 않습니다. 결과로 나오는 암호화 파일만 저장소에 올리면 됩니다.</p>
 
   <section>
@@ -56,6 +56,8 @@
 
   <section>
     <h2>논문 내용 (암호화됨)</h2>
+    <label>학회 / 저널 <small>잠금을 풀었을 때만 보입니다 · 예: CVPR 2027</small></label>
+    <input type="text" id="venue" autocomplete="off">
     <label>제목</label>
     <input type="text" id="title" autocomplete="off">
     <label>저자 <small>쉼표로 구분 · 예: Hyeongchan Im, SungRae Hong, Mun-Yong Yi</small></label>
@@ -73,9 +75,13 @@
   </section>
 
   <section>
-    <h2>공개되는 정보 · 암호</h2>
-    <label>학회 이름 <small>홈페이지에 그대로 보입니다 · 예: CVPR 2027</small></label>
-    <input type="text" id="venue" autocomplete="off">
+    <h2>공개되는 상태 · 암호</h2>
+    <label>상태 <small>홈페이지 카드에 이 글자만 보입니다 (학회 이름은 안 보임)</small></label>
+    <select id="status">
+      <option value="in_preparation">In Preparation</option>
+      <option value="submitted">Submitted</option>
+      <option value="under_review">Under Review</option>
+    </select>
     <div class="row">
       <div><label>암호</label><input type="password" id="pass" autocomplete="new-password"></div>
       <div><label>암호 확인</label><input type="password" id="pass2" autocomplete="new-password"></div>
@@ -92,7 +98,7 @@
         저장소의 <code>sealed/</code> 폴더에 이 파일을 그대로 올리세요 (GitHub: Add file → Upload files).</li>
       <li><code>_data/publications.yml</code> 에 아래 내용을 붙여 넣으세요. <button class="ghost" id="copy" type="button">복사</button>
         <pre id="yaml"></pre></li>
-      <li>홈페이지 Under Review 탭에서 카드의 TL;DR → 🔑 → 암호 입력으로 잘 열리는지 확인하세요.</li>
+      <li>홈페이지 In Preparation 탭에서 카드의 TL;DR → 🔑 → 암호 입력으로 잘 열리는지 확인하세요.</li>
     </ol>
   </section>
 </main>
@@ -145,7 +151,7 @@
     f.text().then(function (t) { return SealCrypto.open(JSON.parse(t), $('oldPass').value); }).then(function (p) {
       state.id = f.name.replace(/\.json$/i, '').replace(/[^a-z0-9-]/gi, '') || null;
       $('title').value = p.title || ''; $('authors').value = p.authors || ''; $('url').value = p.url || '';
-      $('summary').value = p.summary || ''; setImage(p.image || '');
+      $('summary').value = p.summary || ''; $('venue').value = p.venue || ''; setImage(p.image || '');
       if (!$('pass').value) { $('pass').value = $('pass2').value = $('oldPass').value; }
       m.textContent = '열었습니다. 고친 뒤 봉인하면 같은 파일 이름(' + state.id + '.json)으로 나옵니다.';
     }).catch(function () { m.className = 'msg err'; m.textContent = '열 수 없습니다 — 암호나 파일을 확인하세요'; });
@@ -159,7 +165,7 @@
     if (!pw) { m.className = 'msg err'; m.textContent = '암호를 정해 주세요'; return; }
     if (pw !== $('pass2').value) { m.className = 'msg err'; m.textContent = '암호 확인이 다릅니다'; return; }
     var payload = {
-      title: $('title').value.trim(), authors: $('authors').value.trim(), url: $('url').value.trim(),
+      venue: $('venue').value.trim(), title: $('title').value.trim(), authors: $('authors').value.trim(), url: $('url').value.trim(),
       summary: $('summary').value.trim(), image: state.image
     };
     this.disabled = true;
@@ -170,8 +176,7 @@
     }).then(function (rec) {
       if (!state.id) state.id = newId();
       lastBlob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
-      var venue = $('venue').value.trim().replace(/"/g, '');
-      $('yaml').textContent = '- status: under_review\n  journal: "' + (venue || 'Venue') + '"\n  sealed: ' + state.id + '\n';
+      $('yaml').textContent = '- status: ' + $('status').value + '\n  sealed: ' + state.id + '\n';
       Array.prototype.forEach.call(document.querySelectorAll('.fid'), function (e) { e.textContent = state.id; });
       $('out').hidden = false;
       m.textContent = '완료 (' + Math.round(lastBlob.size / 1024) + ' KB)';

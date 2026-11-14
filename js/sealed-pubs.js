@@ -1,4 +1,4 @@
-// Under-review publication cards. Their title / authors / TL;DR / image are not in the page or the repo:
+// Not-yet-accepted publication cards (In Preparation / Submitted / Under Review). Their title / authors / TL;DR / image are not in the page or the repo:
 // they live encrypted in /sealed/<id>.json and are only decrypted here, in the owner's browser, with the passphrase.
 // The passphrase is never stored; reloading the page locks everything again.
 (function () {
@@ -35,10 +35,12 @@
     var links = card.querySelector('.sealed-links');
     if (links) {
       var h = '';
-      if (p.url && /^https?:\/\//i.test(p.url)) h += '<a class="pub-link" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-alt"></i> Paper</a>';
+      if (p.url && /^https?:\/\//i.test(p.url) && !card.querySelector('.pub-public-link')) h += '<a class="pub-link" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-alt"></i> Paper</a>';
       h += '<button type="button" class="pub-link sealed-relock"><i class="fas fa-lock"></i> Lock</button>';
       links.innerHTML = h;
     }
+    var venue = card.querySelector('.pub-venue');
+    if (venue && p.venue) venue.insertAdjacentHTML('afterbegin', '<span class="pub-venue-tag">' + esc(p.venue) + '</span>');
     var tl = card.querySelector('.tldr-locked');
     if (tl) { tl.classList.remove('tldr-locked'); tl.innerHTML = 'TL;DR <i class="fas fa-lock-open"></i>'; }
     var note = card.querySelector('.sealed-note');
