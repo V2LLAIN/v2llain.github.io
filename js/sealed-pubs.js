@@ -80,7 +80,7 @@
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     var text = b64text(card.getAttribute('data-peek') || '').trim();
-    var size = 13.5, lineH = 18.5, maxLines = 3;
+    var size = 12.5, lineH = 16.5, maxLines = 3;
     if (!text) {   // no title given: grey placeholder strokes
       g.fillStyle = 'rgba(255,255,255,.22)';
       g.fillRect(0, 4, w * .82, 9); g.fillRect(0, 23, w * .55, 9);
