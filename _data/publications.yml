@@ -27,6 +27,10 @@
 #    sealed/<id>.json 은 지우면 됩니다.
 # ─────────────────────────────────────────────────────────────────────────────
 - status: in_preparation
+  sealed: 63b39af62162
+  peek: "QWxtaWdodHk6IFBoeXNpY3MtR3JvdW5kZWQgSGF6YXJkIGFuZCBTdXJ2aXZvciBJ"
+
+- status: in_preparation
   sealed: 1e31d9d8c28d
   peek: "VFJBVkVMOiBXaGVuIEZvcmVuc2ljIFZMTXMgUG9pbnQgdG8gdGhlIFdyb25nIFBs"
 
