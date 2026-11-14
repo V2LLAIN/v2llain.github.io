@@ -267,8 +267,9 @@
             {% assign review_venue = publication.journal | default: '' | remove: 'Under Review' | strip %}
             <div class="pub-card pub-sealed" data-status="review"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}>
               <div class="pub-card-img sealed-img" aria-hidden="true">
-                <i class="fas fa-lock"></i>
-                <span>Sealed</span>
+                {% comment %} decoy shapes only — the real figure is never sent to the browser {% endcomment %}
+                <div class="sealed-blur"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <span class="sealed-lock"><i class="fas fa-lock"></i></span>
               </div>
               <div class="pub-card-body">
                 <div class="pub-venue">
