@@ -26,6 +26,9 @@
 #  • 게재가 확정되면: /seal/ 에서 그 파일을 열어 내용을 확인한 뒤, 일반 항목으로 옮기고
 #    sealed/<id>.json 은 지우면 됩니다.
 # ─────────────────────────────────────────────────────────────────────────────
+- status: in_preparation
+  sealed: 1568ffec9477
+  peek: "S1VETzogVW5tYXNraW5nIERlY2VwdGl2ZSBPYnM="
 
 - status: submitted
   sealed: a9d908b436b9
