@@ -269,11 +269,15 @@
               otherwise they live encrypted in sealed/<id>.json together with the TL;DR and the figure.
             {% endcomment %}
             {% if publication.status == 'submitted' %}{% assign pend_label = 'Submitted' %}{% elsif publication.status == 'in_preparation' %}{% assign pend_label = 'In Preparation' %}{% else %}{% assign pend_label = 'Under Review' %}{% endif %}
-            <div class="pub-card pub-sealed" data-status="pending"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}{% if publication.peek %} data-peek="{{ publication.peek | escape }}"{% endif %}>
+            {% comment %} progress: completed | in_progress (default: in_progress while in preparation, completed once submitted) {% endcomment %}
+            {% assign prog = publication.progress %}
+            {% unless prog == 'completed' or prog == 'in_progress' %}{% if publication.status == 'in_preparation' %}{% assign prog = 'in_progress' %}{% else %}{% assign prog = 'completed' %}{% endif %}{% endunless %}
+            {% if prog == 'completed' %}{% assign prog_label = 'Completed' %}{% else %}{% assign prog_label = 'In Progress' %}{% endif %}
+            <div class="pub-card pub-sealed" data-status="pending" data-progress="{{ prog }}"{% if publication.sealed %} data-sealed="{{ publication.sealed | slugify }}"{% endif %}{% if publication.peek %} data-peek="{{ publication.peek | escape }}"{% endif %}>
               {% comment %} The cover with a peeled corner. Only the decoy figure below peeks through it. {% endcomment %}
               <div class="pub-cover-wrap">
-                <div class="pub-cover" role="img" aria-label="In progress — {{ pend_label }}">
-                  <p class="pub-cover-label"><b>IN PROGRESS</b><small>{{ pend_label }}</small></p>
+                <div class="pub-cover" role="img" aria-label="{{ prog_label }} — {{ pend_label }}">
+                  <p class="pub-cover-label prog-{{ prog }}"><b><i class="prog-dot"></i>{{ prog_label | upcase }}</b><small>{{ pend_label }}</small></p>
                   {% if publication.sealed %}
                   <form class="sealed-unlock" autocomplete="off">
                     <input class="sealed-pass" type="password" placeholder="passphrase" aria-label="Passphrase" hidden>
@@ -300,6 +304,7 @@
               <div class="pub-card-body">
                 <div class="pub-venue">
                   <span class="pub-venue-tag review">{{ pend_label }}</span>
+                  <span class="pub-venue-tag prog prog-{{ prog }}"><i class="prog-dot"></i>{{ prog_label }}</span>
                 </div>
                 {% if publication.title %}
                 <h3>{{ publication.title }}</h3>

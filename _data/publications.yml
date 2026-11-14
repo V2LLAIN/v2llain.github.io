@@ -6,6 +6,8 @@
 #
 #  • 아직 게재 전인 논문 → 홈페이지의 "In Preparation" 탭에 잠긴 카드로 나옵니다.
 #    status 는 셋 중 하나:  in_preparation | submitted | under_review   (카드에 이 글자만 보임)
+#    progress 는 둘 중 하나: completed (작성 완료) | in_progress (실험·작성 진행 중)
+#      안 적으면 in_preparation 은 in_progress, submitted·under_review 는 completed 로 표시
 #
 #    이 파일에는 학회 이름·제목·저자·TLDR·이미지를 평문으로 적지 마세요.
 #    이 저장소는 공개라서, 여기에 쓰는 순간 GitHub 검색·구글에 노출됩니다.
@@ -17,6 +19,7 @@
 #
 #      - status: submitted
 #        sealed: 3f9c2a7be1d4         # sealed/3f9c2a7be1d4.json (없으면 빈 잠금 카드)
+#        progress: completed
 #        peek: "QW4gRXhhbXBsZSBUaXRsZQ==" # 덮개 접힌 모서리로 살짝 보일 제목 (base64 — /seal/ 이 만들어 줌)
 #
 #    예외: arXiv 등에 이미 공개한 논문처럼 제목을 일부러 보여주고 싶을 때만
@@ -28,26 +31,32 @@
 # ─────────────────────────────────────────────────────────────────────────────
 - status: in_preparation
   sealed: 63b39af62162
+  progress: in_progress
   peek: "QWxtaWdodHk6IFBoeXNpY3MtR3JvdW5kZWQgSGF6YXJkIGFuZCBTdXJ2aXZvciBJ"
 
 - status: in_preparation
   sealed: 1e31d9d8c28d
+  progress: in_progress
   peek: "VFJBVkVMOiBXaGVuIEZvcmVuc2ljIFZMTXMgUG9pbnQgdG8gdGhlIFdyb25nIFBs"
 
 - status: in_preparation
   sealed: 3a9c8f3ae4f0
+  progress: completed
   peek: "TG9vayB3aXRoIE1SSSwgRHJhdyB3aXRoIFVsdHJhc291bmQ6IFByaW9yLUNvbmRp"
 
 - status: in_preparation
   sealed: 6a30ea136964
+  progress: completed
   peek: "zpMtTklGRTogQ3V0dGluZyBDbGluaWNpYW4gRGlzYWdyZWVtZW50IGludG8="
 
 - status: in_preparation
   sealed: 1568ffec9477
+  progress: completed
   peek: "S1VETzogVW5tYXNraW5nIERlY2VwdGl2ZSBPYnM="
 
 - status: submitted
   sealed: a9d908b436b9
+  progress: completed
   peek: "SENGb3JlbnNpY3M6IFF1YW50aXRhdGl2ZWx5IEdyb3VuZGVkIFJlZ2lvbuKAk0FydGk="
 
 

@@ -85,6 +85,11 @@
       <option value="submitted">Submitted</option>
       <option value="under_review">Under Review</option>
     </select>
+    <label>진행 상황 <small>카드에 Completed / In Progress 라벨로 보입니다</small></label>
+    <select id="progress">
+      <option value="in_progress">In Progress — 실험·작성 진행 중</option>
+      <option value="completed">Completed — 작성 완료</option>
+    </select>
     <div class="row">
       <div><label>암호</label><input type="password" id="pass" autocomplete="new-password"></div>
       <div><label>암호 확인</label><input type="password" id="pass2" autocomplete="new-password"></div>
@@ -152,6 +157,7 @@
     for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
     return btoa(s);
   }
+  $('status').addEventListener('change', function () { if (this.value !== 'in_preparation') $('progress').value = 'completed'; });
   $('pass').addEventListener('input', function () { $('passWarn').hidden = this.value.length === 0 || this.value.length >= 12; });
 
   $('openBtn').addEventListener('click', function () {
@@ -190,6 +196,7 @@
       lastBlob = new Blob([JSON.stringify(rec)], { type: 'application/json' });
       var pk = $('peek').value.trim();
       $('yaml').textContent = '- status: ' + $('status').value + '\n  sealed: ' + state.id + '\n' +
+        '  progress: ' + $('progress').value + '\n' +
         (pk ? '  peek: "' + b64utf8(pk) + '"\n' : '');
       Array.prototype.forEach.call(document.querySelectorAll('.fid'), function (e) { e.textContent = state.id; });
       $('out').hidden = false;
