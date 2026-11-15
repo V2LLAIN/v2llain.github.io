@@ -725,19 +725,32 @@ body.dark .pub-figure {
 .pub-cover-label small { display: block; margin-top: 6px; font-size: .7rem; letter-spacing: .14em; color: var(--text-muted); }
 // Completed vs In Progress label (dot + word on the cover, and a tag once unlocked)
 .prog-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 10px; vertical-align: middle; position: relative; top: -2px; }
-.prog-completed .prog-dot { background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, .18); }
-.prog-in_progress .prog-dot { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, .18); animation: prog-pulse 1.8s ease-in-out infinite; }
-@keyframes prog-pulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(245, 158, 11, .18); } 50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, .05); } }
+// Completed: the same soft ripple as "Open to Collaborations"
+.prog-completed .prog-dot { background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, .5); animation: status-pulse 2s infinite; }
+// In Progress: an amber arc spinning around the dot, like a loader
+.prog-in_progress .prog-dot { background: #f59e0b; }
+.prog-in_progress .prog-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, .15);
+  border-top-color: #f59e0b;
+  border-right-color: rgba(245, 158, 11, .55);
+  animation: prog-spin .9s linear infinite;
+}
+@keyframes prog-spin { to { transform: rotate(360deg); } }
 .pub-cover-label.prog-completed b { color: #15803d; }
 .pub-cover-label.prog-in_progress b { color: #b45309; }
-.pub-venue-tag.prog .prog-dot { width: 6px; height: 6px; margin-right: 5px; top: -1px; box-shadow: none; animation: none; }
+.pub-venue-tag.prog .prog-dot { width: 6px; height: 6px; margin-right: 7px; top: -1px; }
+.pub-venue-tag.prog .prog-dot::after { inset: -3px; border-width: 1.2px; }
 .pub-venue-tag.prog-completed { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
 .pub-venue-tag.prog-in_progress { background: #fffbeb; border-color: #fde68a; color: #b45309; }
 body.dark .pub-cover-label.prog-completed b { color: #4ade80; }
 body.dark .pub-cover-label.prog-in_progress b { color: #fbbf24; }
 body.dark .pub-venue-tag.prog-completed { background: rgba(34, 197, 94, .12); border-color: rgba(34, 197, 94, .35); color: #4ade80; }
 body.dark .pub-venue-tag.prog-in_progress { background: rgba(245, 158, 11, .12); border-color: rgba(245, 158, 11, .35); color: #fbbf24; }
-@media (prefers-reduced-motion: reduce) { .prog-in_progress .prog-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .prog-completed .prog-dot, .prog-in_progress .prog-dot::after { animation: none; } }
 .pub-sealed.unsealed .pub-cover-wrap { opacity: 0; transform: translate(24px, -16px) rotate(1.5deg); }
 .pub-sealed.unsealed .pub-cover { pointer-events: none; }
 
